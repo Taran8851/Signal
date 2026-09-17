@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Signal — Every Opportunity. None of the Scrolling.</title>
-  <meta name="description" content="Signal watches nine sources and surfaces only what matches what you actually care about.">
+  <meta name="description" content="Signal watches hackathon boards, research feeds, your Discord servers and pages you pick, and surfaces only what matches what you actually care about.">
+  <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
@@ -12,8 +13,8 @@
 </head>
 <body>
   <div class="announcement" id="announcement">
-    <p>Signal is module 01 of Student OS. The collector is built.</p>
-    <a href="#honesty">HOW IT WORKS <span>↗</span></a>
+    <p>Signal is module 01 of Student OS. The demo console is open.</p>
+    <a href="app/login.html">TRY THE DEMO <span>↗</span></a>
     <button type="button" aria-label="Close announcement" data-close-announcement>×</button>
   </div>
 
@@ -29,7 +30,7 @@
         <a href="#console">CONSOLE</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <a class="button button-blue button-small" href="#signup">GET MY SIGNAL <span>↗</span></a>
+      <a class="button button-blue button-small" href="app/login.html">TRY THE DEMO <span>↗</span></a>
     </div>
   </header>
 
@@ -41,18 +42,18 @@
       <div class="shell hero-content">
         <p class="eyebrow">THE OPPORTUNITY FILTER FOR STUDENTS</p>
         <h1>Every Opportunity.<br>None of the Scrolling.</h1>
-        <p class="hero-copy">Signal watches nine sources — hackathon boards, research feeds, your Discord servers, your inbox — and surfaces only what matches what you actually care about.</p>
+        <p class="hero-copy">Signal watches eight sources&nbsp;— hackathon boards, research feeds, your Discord servers, pages you pick&nbsp;— and surfaces only what matches what you actually care about.</p>
         <div class="hero-actions">
-          <a class="button button-blue" href="#signup">GET MY SIGNAL <span>↗</span></a>
+          <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
           <a class="button button-ghost" href="#filter">SEE WHAT IT FILTERS</a>
         </div>
 
-        <div class="hero-pipeline" aria-label="Signal pipeline: nine sources, match, dedupe, threshold, sort, then inbox or filtered">
+        <div class="hero-pipeline" aria-label="Signal pipeline: nine sources, eight available now, match, dedupe, threshold, sort, then inbox or filtered">
           <div class="pipeline-inputs">
             <span class="node-pill">INBOUND</span>
             <span class="node-pill">HACKATHONS</span>
             <span class="node-pill">RESEARCH</span>
-            <small>9 SOURCES</small>
+            <small>9 SOURCES<br>8 AVAILABLE NOW</small>
           </div>
           <svg class="pipeline-lines" viewBox="0 0 180 210" aria-hidden="true">
             <path d="M0 35 C100 35 70 105 180 105"></path>
@@ -92,7 +93,7 @@
             <!-- The list appears twice so the loop is seamless; the copy is hidden from screen readers. -->
             <div class="source-marquee">
             <ul class="source-group">
-              <li>GMAIL + LINKEDIN MAIL</li>
+              <li>GMAIL + LINKEDIN MAIL <span class="source-soon">NOT AVAILABLE YET</span></li>
               <li>DISCORD BOT</li>
               <li>DEVPOST</li>
               <li>DEVFOLIO</li>
@@ -103,7 +104,7 @@
               <li>PAGE WATCH</li>
             </ul>
             <ul class="source-group" aria-hidden="true">
-              <li>GMAIL + LINKEDIN MAIL</li>
+              <li>GMAIL + LINKEDIN MAIL <span class="source-soon">NOT AVAILABLE YET</span></li>
               <li>DISCORD BOT</li>
               <li>DEVPOST</li>
               <li>DEVFOLIO</li>
@@ -154,7 +155,7 @@
               <div class="source-groups">
                 <div>
                   <span>INBOUND</span>
-                  <label><input type="checkbox" value="gmail" data-source checked> Gmail + LinkedIn mail</label>
+                  <label class="source-unavailable"><input type="checkbox" value="gmail" data-source disabled> <span>Gmail + LinkedIn mail <small class="source-soon">NOT AVAILABLE YET</small></span></label>
                   <label><input type="checkbox" value="discord" data-source checked> Discord bot</label>
                 </div>
                 <div>
@@ -233,7 +234,7 @@
     <section class="section features" id="decisions">
       <div class="shell">
         <div class="section-heading section-heading-split">
-          <div><p class="eyebrow">HOW SIGNAL WORKS</p><h2>Rules you can read.<br>Results you can trace.</h2></div>
+          <div><p class="eyebrow">HOW SIGNAL WORKS</p><h2>Rules you can read. <br>Results you can trace.</h2></div>
           <p>Signal uses explicit keyword matching, dedupe, a threshold, and a sort order. Every result can show you why it appeared.</p>
         </div>
 
@@ -273,12 +274,12 @@
         <div class="section-heading section-heading-split">
           <div>
             <p class="eyebrow">THE REAL CONSOLE</p>
-            <h2>Your filtered opportunities,<br>with the reason attached.</h2>
+            <h2>Your filtered opportunities, <br>with the reason attached.</h2>
           </div>
-          <p>A static walkthrough of the actual console below. <a class="inline-link" href="app/login.html">Open the demo console ↗</a></p>
+          <p>Below is a static picture of the console. The working demo console runs on public sample rows; any email and password signs you in. <a class="inline-link" href="app/login.html">Open the demo console ↗</a></p>
         </div>
         <div class="console-shell">
-          <div class="console-topbar"><div><i></i><i></i><i></i></div><span>SIGNAL / CONSOLE</span><b>COLLECTOR HEALTHY</b></div>
+          <div class="console-topbar"><div><i></i><i></i><i></i></div><span>SIGNAL / CONSOLE</span><b>STATIC PREVIEW</b></div>
           <div class="console-body">
             <aside>
               <strong>INBOX <b>59</b></strong>
@@ -301,7 +302,7 @@
 
     <section class="section audience-section">
       <div class="shell">
-        <div class="section-heading"><p class="eyebrow">BUILT AROUND YOUR CRITERIA</p><h2>Three students.<br>Three different filters.</h2></div>
+        <div class="section-heading"><p class="eyebrow">BUILT AROUND YOUR CRITERIA</p><h2>Three students. <br>Three different filters.</h2></div>
         <div class="audience-grid">
           <article><span>01</span><h3>Internship hunter</h3><p>Computer vision and security roles, boosted by “research intern” and “stipend.”</p><div><b>COMPUTER VISION</b><b>CYBERSECURITY</b><b>STIPEND</b></div></article>
           <article class="audience-featured"><span>02</span><h3>Hackathon grinder</h3><p>Devpost, Devfolio, Unstop, and MLH with edge AI and IoT at the top.</p><div><b>EDGE AI</b><b>IOT</b><b>HACKATHON</b></div></article>
@@ -313,12 +314,12 @@
     <section class="section honesty-section" id="honesty">
       <div class="ambient-glow honesty-glow" aria-hidden="true"></div>
       <div class="shell">
-        <div class="section-heading section-heading-split"><div><p class="eyebrow">HONEST BY DESIGN</p><h2>The limits are part<br>of the product.</h2></div><p>Signal does less on purpose. These choices protect your account and keep setup from flooding you.</p></div>
+        <div class="section-heading section-heading-split"><div><p class="eyebrow">HONEST BY DESIGN</p><h2>The limits are part <br>of the product.</h2></div><p>Signal does less on purpose. These choices protect your account and keep setup from flooding you.</p></div>
         <div class="honesty-grid">
           <article>
             <div class="honesty-visual mail-flow"><span>LINKEDIN MAIL</span><i>→</i><span>GMAIL</span><i>→</i><b>SIGNAL</b></div>
             <h3>We don't scrape LinkedIn.</h3>
-            <p>We read the notification mail LinkedIn already sends you, and show where every opportunity came from.</p>
+            <p>We read the notification mail LinkedIn already sends you, and show where every opportunity came from. Reading that mail is not available in the hosted app yet.</p>
           </article>
           <article>
             <div class="honesty-visual backfill-flow"><span>FIRST RUN</span><div><i></i><i></i><i></i><i></i></div><b>STORED · SILENT</b></div>
@@ -331,7 +332,7 @@
 
     <section class="section student-os-section">
       <div class="shell student-os-grid">
-        <div><p class="eyebrow">STUDENT OS</p><h2>One module is real.<br>The rest comes later.</h2><p>Signal is the first working layer. Future modules have not been named or built.</p></div>
+        <div><p class="eyebrow">STUDENT OS</p><h2>One module is real. <br>The rest comes later.</h2><p>Signal is the first working layer. Future modules have not been named or built.</p></div>
         <div class="module-map">
           <article class="module-live"><span>MODULE 01</span><h3>Signal</h3><b>BUILT</b></article>
           <article><span>MODULE 02</span><h3>Not named</h3><b>NOT BUILT</b></article>
@@ -344,7 +345,8 @@
       <div class="shell faq-grid">
         <div class="section-heading"><p class="eyebrow">QUESTIONS</p><h2>The short version.</h2></div>
         <div class="faq-list">
-          <details><summary>Does Signal scrape LinkedIn?<span>↓</span></summary><p>No. It reads LinkedIn notification mail received by Gmail.</p></details>
+          <details><summary>Does Signal scrape LinkedIn?<span>↓</span></summary><p>No. Signal reads the LinkedIn notification mail that arrives in Gmail. Reading mail is not available in the hosted app yet.</p></details>
+          <details><summary>Can I try it today?<span>↓</span></summary><p>Yes. The <a class="inline-link" href="app/login.html">demo console</a> runs on public sample rows. Any email and password signs you in, and nothing is sent anywhere.</p></details>
           <details><summary>How does match strength work?<span>↓</span></summary><p>Interest terms add 4 in titles or 3 in bodies. Boost terms add 2. Exclude terms archive rows.</p></details>
           <details><summary>Which notification channels exist?<span>↓</span></summary><p>Telegram. Discord is an inbound source, not a notification channel. There is no email sender.</p></details>
           <details><summary>Will the first run notify me about everything?<span>↓</span></summary><p>No. The first successful run stores the backfill without sending alerts.</p></details>
@@ -355,11 +357,15 @@
     <section class="signup-section" id="signup">
       <div class="signup-glow" aria-hidden="true"></div>
       <div class="shell signup-inner">
-        <div><p class="eyebrow">GET SIGNAL</p><h2>Stop checking.<br>Start choosing.</h2></div>
+        <div>
+          <p class="eyebrow">TRY SIGNAL</p><h2>Stop checking. <br>Start choosing.</h2>
+          <p class="signup-copy">The demo console is open now. It runs on public sample rows, any email and password signs you in, and nothing is sent anywhere.</p>
+          <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
+        </div>
         <form data-preview-form>
-          <label for="email">YOUR EMAIL</label>
-          <div><input id="email" type="email" required placeholder="you@example.com"><button class="button button-blue" type="submit">REQUEST ACCESS <span>↗</span></button></div>
-          <p data-form-status>This preview does not send or store your email.</p>
+          <label for="email">EARLY ACCESS LIST — NOT CONNECTED YET</label>
+          <div><input id="email" type="email" required placeholder="you@example.com"><button class="button button-ghost" type="submit">ADD ME</button></div>
+          <p data-form-status>This form is a preview. It does not send or store your email.</p>
         </form>
       </div>
     </section>
