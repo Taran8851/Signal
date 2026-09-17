@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="app.css?v=5">
-  <link rel="stylesheet" href="ai.css?v=1">
+  <link rel="stylesheet" href="ai.css?v=2">
 </head>
 <body data-page="inbox">
   <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -52,11 +52,26 @@
           <h1>Signals</h1>
           <p class="page-lede" data-lede>Opportunities that match what you care about.</p>
         </div>
-        <button class="button button-primary" type="button" data-add-signal>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Add a signal
-        </button>
+        <div class="page-actions">
+          <button class="button button-secondary" type="button" data-score-all aria-describedby="score-all-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>
+            Score all with AI
+          </button>
+          <button class="button button-primary" type="button" data-add-signal>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Add a signal
+          </button>
+          <p class="page-actions-note" id="score-all-note" data-score-all-note hidden></p>
+        </div>
       </header>
+
+      <!-- Progress for "Score all with AI" (app.js) -->
+      <div class="ai-run glass" data-ai-run role="status" aria-live="polite" hidden>
+        <p class="ai-run-text" data-ai-run-text></p>
+        <button class="button button-secondary button-small" type="button" data-ai-run-stop>Stop</button>
+        <button class="button button-quiet button-small" type="button" data-ai-run-close hidden>Dismiss</button>
+        <span class="ai-run-track" aria-hidden="true"><span class="ai-run-fill" data-ai-run-fill style="width:0%"></span></span>
+      </div>
 
       <div class="summary-grid">
         <button class="summary-card glass" type="button" data-summary="new"><b data-summary-count="new">0</b><span>New for you</span></button>
@@ -146,8 +161,13 @@
     </div>
 
     <div class="sheet-body">
-      <section class="sheet-section" data-view-only>
-        <h3>Why it's here</h3>
+      <section class="sheet-section" data-view-only data-brief-section hidden>
+        <h3>Brief from your model</h3>
+        <div data-ai-brief></div>
+      </section>
+
+      <section class="sheet-section" data-view-only data-why-section>
+        <h3 data-why-heading>Why it's here</h3>
         <div class="why-card">
           <p class="why-summary" data-why-summary></p>
           <ul class="why-list" data-why-list></ul>
@@ -232,7 +252,8 @@
   <p class="toast glass" data-toast role="status" hidden></p>
 
   <script src="app-data.js?v=2"></script>
-  <script src="ai.js?v=2"></script>
-  <script src="app.js?v=5"></script>
+  <script src="sources.js?v=1"></script>
+  <script src="ai.js?v=4"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

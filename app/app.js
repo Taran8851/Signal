@@ -128,8 +128,28 @@
     return { days: days, text: "Closes " + shortDate(iso), cls: "" };
   }
 
+  /* Custom sources (app/sources.js, optional). Every call is guarded: the file may be missing. */
+  function customSources() {
+    try {
+      if (window.SignalSources && typeof window.SignalSources.list === "function") {
+        var list = window.SignalSources.list();
+        return Array.isArray(list) ? list.filter(function (x) { return x && x.id; }) : [];
+      }
+    } catch (e) {}
+    return [];
+  }
+
   function sourceLabel(id) {
     if (id === "manual") return "Added by you";
+    if (typeof id === "string" && id.indexOf("custom:") === 0) {
+      try {
+        if (window.SignalSources && typeof window.SignalSources.label === "function") {
+          var name = window.SignalSources.label(id);
+          if (name) return String(name);
+        }
+      } catch (e) {}
+      return "Your source";
+    }
     var s = D.SOURCES.filter(function (x) { return x.id === id; })[0];
     return s ? s.label : id;
   }
@@ -230,14 +250,26 @@
   ===================================================================== */
   function initInbox() {
     var state = { status: "new", kind: "", source: "", q: "", sort: "recent", closingSoon: false };
+    var AI = window.SignalAI || null;
+    var run = null; // { stop: bool } while "Score all with AI" runs
     var rowsEl = $("[data-rows]");
 
     /* ---------- list ---------- */
+    function customSources() {
+      try { return window.SignalSources ? window.SignalSources.list() : []; } catch (e) { return []; }
+    }
+    function isOffCustom(id) {
+      if (!id || String(id).indexOf("custom:") !== 0) return false;
+      var src = customSources().filter(function (c) { return c.id === id; })[0];
+      return !!src && src.enabled === false;
+    }
     function visible(rows, prefs) {
       var q = state.q.trim().toLowerCase();
       return rows.map(function (r) { return { row: r, m: describeMatch(r, prefs), d: deadlineInfo(r.deadline) }; })
         .filter(function (x) {
           var r = x.row;
+          // Rows from one of your own sources that you switched off stay hidden.
+          if (isOffCustom(r.source)) return false;
           // An excluded row belongs in Archived no matter what its stored status is.
           var status = x.m.excluded ? "archived" : r.status;
           if (state.status !== "all" && status !== state.status) return false;
@@ -257,20 +289,41 @@
             return b.row.received_at - a.row.received_at;
           }
           if (state.sort === "score") return b.m.score - a.m.score || b.row.received_at - a.row.received_at;
+          if (state.sort === "relevance") {
+            var ar = llmRelevance(a.row), br = llmRelevance(b.row);
+            return br - ar || b.m.score - a.m.score || b.row.received_at - a.row.received_at;
+          }
           return b.row.received_at - a.row.received_at;
         });
     }
 
-    /* When the user's model has scored a row (app/ai.js), show its relevance next to the keyword match. */
-    function aiChip(r) {
-      if (!window.SignalAI) return "";
-      var label = window.SignalAI.scoreLabel(r, getPrefs());
-      if (label.source !== "llm") return "";
-      return '<span class="chip chip-ok" title="' + esc(label.reason || "Relevance from your model, 0 to 10") + '">' + esc(label.text) + "</span>";
+    function aiLabel(r) {
+      if (!AI) return null;
+      try { return AI.scoreLabel(r, getPrefs()); } catch (e) { return null; }
+    }
+    /* -1 when the row has no model result, so it sorts after every scored row. */
+    function llmRelevance(r) {
+      var l = aiLabel(r);
+      return l && l.source === "llm" ? l.relevance : -1;
+    }
+
+    /* When the user's model has scored a row (app/ai.js), show its relevance next to the keyword
+       match; when the model was asked and failed, say the keyword score is a fallback. */
+    function aiChip(label) {
+      if (!label) return "";
+      if (label.source === "llm") {
+        return '<span class="ai-badge" data-source="llm" title="' + esc("Relevance " + label.relevance + " of 10 from " + (label.model || "your model")) + '">' + esc(label.text) + "</span>";
+      }
+      if (label.source === "fallback") {
+        return '<span class="chip chip-warn" title="' + esc(label.reason) + '">Keyword fallback</span>';
+      }
+      return "";
     }
 
     function rowHtml(x) {
       var r = x.row, m = x.m, d = x.d;
+      var label = m.excluded ? null : aiLabel(r);
+      var llmSummary = label && label.source === "llm" && label.summary ? label.summary : "";
       var saved = r.status === "saved";
       var archived = r.status === "archived" || m.excluded;
       return (
@@ -280,14 +333,16 @@
             '<div class="row-top"><span class="chip">' + esc(kindLabel(r.kind)) + "</span>" +
               "<span>" + esc(sourceLabel(r.source)) + " · " + esc(timeAgo(r.received_at)) + "</span></div>" +
             '<h2 class="row-title">' + esc(r.title) + "</h2>" +
-            '<p class="row-why">' + esc(shortWhy(m)) + "</p>" +
+            (llmSummary
+              ? '<p class="row-why is-llm">' + esc(llmSummary) + "</p>"
+              : '<p class="row-why">' + esc(shortWhy(m)) + "</p>") +
             (r.note ? '<p class="row-note">Note: ' + esc(r.note) + "</p>" : "") +
           "</div>" +
           '<div class="row-side">' +
             '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">' +
               (d ? '<span class="chip ' + d.cls + '">' + esc(d.text) + "</span>" : "") +
               '<span class="chip ' + m.level.cls + '" title="' + esc(m.score + " points") + '">' + esc(m.level.label) + "</span>" +
-              aiChip(r) +
+              aiChip(label) +
             "</div>" +
             '<div class="row-actions">' +
               (m.excluded ? "" :
@@ -334,12 +389,18 @@
       var enabled = D.SOURCES.filter(function (s) { return prefs.disabled.indexOf(s.id) === -1; });
       var working = enabled.filter(function (s) { return s.status === "ready"; }).length;
       var setup = enabled.filter(function (s) { return s.status === "setup"; }).length;
+      var mine = customSources();
+      var mineOn = mine.filter(function (c) { return c.enabled !== false; }).length;
       $("[data-sources-summary]").innerHTML =
-        "Watching " + working + " of " + D.SOURCES.length + " sources" +
+        "Watching " + (working + mineOn) + " of " + (D.SOURCES.length + mine.length) + " sources" +
         (setup ? ' · <a href="preferences.html#sources">' + plural(setup, "needs setup", "need setup").replace(/^\d+ /, setup + " ") + "</a>" : "");
+
+      syncSourceFilter();
+      syncRelevanceSort();
 
       // The list
       var list = visible(rows, prefs);
+      lastVisible = list;
       var filtered = !!(state.q || state.kind || state.source || state.closingSoon);
       $("[data-list-count]").textContent = plural(list.length, "signal") + (state.closingSoon ? " closing in 7 days" : "");
       rowsEl.innerHTML = list.map(rowHtml).join("");
@@ -352,8 +413,143 @@
         $("[data-empty-text]").textContent = copy[1];
         $("[data-clear-filters]").hidden = !filtered;
       }
+      syncScoreAll();
       updateNavCount();
     }
+
+    var lastVisible = [];
+
+    /* Custom sources go at the end of the source filter, in their own group. */
+    function syncSourceFilter() {
+      var select = $("[data-source-filter]");
+      if (!select) return;
+      var old = select.querySelector("optgroup[data-custom-sources]");
+      var list = customSources();
+      var sig = JSON.stringify(list.map(function (x) { return [x.id, x.name]; }));
+      if (old && old.getAttribute("data-sig") === sig) return;
+      if (old) old.remove();
+      if (!list.length) {
+        if (state.source.indexOf("custom:") === 0) { state.source = ""; select.value = ""; }
+        return;
+      }
+      var group = document.createElement("optgroup");
+      group.label = "Your sources";
+      group.setAttribute("data-custom-sources", "");
+      group.setAttribute("data-sig", sig);
+      list.forEach(function (x) {
+        var o = document.createElement("option");
+        o.value = x.id;
+        o.textContent = x.name || sourceLabel(x.id);
+        group.appendChild(o);
+      });
+      select.appendChild(group);
+      select.value = state.source;
+    }
+
+    /* "Relevance" sort appears once any row has a model result. */
+    function syncRelevanceSort() {
+      var select = $("[data-sort]");
+      if (!select) return;
+      var opt = select.querySelector('option[value="relevance"]');
+      var any = false;
+      try { any = !!(AI && AI.hasLLMResults()); } catch (e) {}
+      if (any && !opt) {
+        opt = document.createElement("option");
+        opt.value = "relevance";
+        opt.textContent = "Relevance (your model)";
+        select.appendChild(opt);
+      } else if (!any && opt) {
+        opt.remove();
+        if (state.sort === "relevance") state.sort = "recent";
+      }
+      select.value = state.sort;
+    }
+
+    /* ---------- Score all with AI ---------- */
+    var scoreAllBtn = $("[data-score-all]");
+    var scoreAllNote = $("[data-score-all-note]");
+    var runBar = $("[data-ai-run]");
+    var runText = $("[data-ai-run-text]");
+    var runFill = $("[data-ai-run-fill]");
+    var runStop = $("[data-ai-run-stop]");
+    var runClose = $("[data-ai-run-close]");
+
+    function syncScoreAll() {
+      if (!scoreAllBtn) return;
+      if (!AI) { scoreAllBtn.hidden = true; return; }
+      if (run) { scoreAllBtn.disabled = true; scoreAllNote.hidden = true; return; }
+      var ready = AI.readiness();
+      var none = !lastVisible.length;
+      scoreAllBtn.disabled = !ready.ok || none;
+      if (!ready.ok) {
+        scoreAllNote.innerHTML = esc(ready.note.replace(/ in Preferences/, "")) + ' <a href="preferences.html#scoring">Open scoring settings</a>';
+      } else if (none) {
+        scoreAllNote.textContent = "No signals in this view to score.";
+      }
+      scoreAllNote.hidden = ready.ok && !none;
+    }
+
+    function runSentence(done, total, model) {
+      return "Reading " + Math.min(done + 1, total) + " of " + plural(total, "signal") + " with " + model + "…";
+    }
+
+    function startScoreAll() {
+      if (!AI || run) return;
+      var ready = AI.readiness();
+      if (!ready.ok) { syncScoreAll(); return; }
+      var rows = lastVisible.map(function (x) { return x.row; });
+      if (!rows.length) return;
+      var settings = AI.getSettings();
+      run = { stop: false };
+      runBar.hidden = false;
+      runBar.setAttribute("data-state", "running");
+      runStop.hidden = false; runStop.disabled = false; runStop.textContent = "Stop";
+      runClose.hidden = true;
+      runFill.style.width = "0%";
+      runText.textContent = runSentence(0, rows.length, settings.model);
+      syncScoreAll();
+      AI.rescoreAll(rows, getPrefs(), function (p) {
+        runFill.style.width = Math.round(p.done / p.total * 100) + "%";
+        runText.textContent = p.done < p.total && !run.stop ? runSentence(p.done, p.total, settings.model) : "Finishing…";
+      }, { shouldStop: function () { return !!(run && run.stop); } }).then(function (res) {
+        var sm = res.summary;
+        var parts = [];
+        parts.push(plural(sm.llm, "brief") + " from " + settings.model);
+        if (sm.cached) parts[0] += " (" + sm.cached + " from this browser's cache)";
+        if (sm.belowPrefilter) parts.push(sm.belowPrefilter + " below the Hybrid prefilter kept keyword scores");
+        if (sm.excluded) parts.push(sm.excluded + " excluded, never sent");
+        if (sm.fallbacks) parts.push(plural(sm.fallbacks, "keyword fallback") + " where the model failed or its reply did not fit the format");
+        var head = sm.stopped ? "Stopped after " + plural(res.results.length, "signal") + ". " : "Done. ";
+        var detail = sm.stoppedBy ? firstError(res.results) : (sm.fallbacks ? firstError(res.results) : "");
+        runText.innerHTML = esc(head + parts.join(". ") + ".") +
+          "<small>" + esc((detail ? detail + " " : "") + "Used today: " + sm.usage.calls + " of " + sm.usage.cap + " model calls.") + "</small>";
+      }, function () {
+        runText.textContent = "Scoring stopped because of an error. Scores you already had are unchanged.";
+      }).then(function () {
+        run = null;
+        runBar.setAttribute("data-state", "done");
+        runFill.style.width = "100%";
+        runStop.hidden = true;
+        runClose.hidden = false;
+        render();
+        refreshOpenSheet();
+        runClose.focus();
+      });
+    }
+
+    function firstError(results) {
+      var r = results.filter(function (x) { return x.fallback && x.error; })[0];
+      return r ? "First problem: " + r.error : "";
+    }
+
+    if (scoreAllBtn) scoreAllBtn.addEventListener("click", startScoreAll);
+    if (runStop) runStop.addEventListener("click", function () {
+      if (!run) return;
+      run.stop = true;
+      runStop.disabled = true;
+      runStop.textContent = "Stopping…";
+    });
+    if (runClose) runClose.addEventListener("click", function () { runBar.hidden = true; if (scoreAllBtn && !scoreAllBtn.disabled) scoreAllBtn.focus(); });
 
     function setStatus(id, status) {
       var rows = getRows();
@@ -411,6 +607,28 @@
     var currentId = null;
     var noteTimer;
     var insight = null; // handle returned by SignalAI.mountRowInsight
+    var insightEl = $("[data-ai-insight]");
+    var whySection = $("[data-why-section]");
+    var briefSection = $("[data-brief-section]");
+
+    /* Show the brief when a model result exists, and move the Ask control with it. */
+    function syncBrief(row) {
+      var result = null;
+      try { result = AI && row ? AI.getResult(row.id) : null; } catch (e) {}
+      var excluded = row ? D.scoreItem(row, getPrefs()).excluded : false;
+      var has = !!(result && result.source === "llm" && !excluded);
+      briefSection.hidden = !has;
+      $("[data-ai-brief]").innerHTML = has ? AI.briefHtml(result) : "";
+      $("[data-why-heading]").textContent = has ? "Keyword check" : "Why it's here";
+      var home = has ? briefSection : whySection;
+      if (insightEl.parentNode !== home) home.appendChild(insightEl);
+    }
+
+    function refreshOpenSheet() {
+      if (!currentId || !sheet.open) return;
+      var row = getRows().filter(function (r) { return r.id === currentId; })[0];
+      if (row) syncBrief(row);
+    }
 
     function showSheet() {
       if (sheet.open) return;
@@ -477,11 +695,12 @@
       }
       $("[data-why-summary]").textContent = summary;
 
-      // AI relevance for this signal (app/ai.js): stored result, reasons, and "Ask the model"
-      if (window.SignalAI) {
+      // The brief from the user's model (app/ai.js) sits above the keyword check; "Ask the model" follows it
+      if (AI) {
         if (insight) insight.destroy();
-        insight = window.SignalAI.mountRowInsight($("[data-ai-insight]"), row, prefs);
+        insight = AI.mountRowInsight(insightEl, row, prefs, { showBrief: false });
       }
+      syncBrief(row);
       $("[data-why-list]").innerHTML = m.breakdown.length
         ? m.breakdown.map(function (b) {
             var what = b.list === "topic" ? "Topic" : "Boost word";
@@ -623,7 +842,11 @@
     }
 
     // Scores from the model change the list labels
-    window.addEventListener("signal-ai-change", function () { render(); });
+    window.addEventListener("signal-ai-change", function (e) {
+      if (run && e.detail && e.detail.what === "usage") return; // the run re-renders when it ends
+      render();
+      refreshOpenSheet();
+    });
 
     render();
     openFromHash();

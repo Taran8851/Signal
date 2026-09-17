@@ -131,7 +131,7 @@
   ];
 
   function slugify(name) {
-    var s = String(name || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
+    var s = String(name || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
     return s || "source";
   }
