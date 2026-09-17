@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Preferences — Signal console (demo)</title>
+  <meta name="description" content="Tell Signal what matters to you: topics, how picky to be, where to look, and how the console looks.">
+  <script src="theme-boot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="app.css?v=4">
+  <link rel="stylesheet" href="preferences.css?v=1">
+</head>
+<body data-page="preferences">
+  <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <div class="app">
+    <aside class="sidebar glass">
+      <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></a>
+      <nav class="nav" aria-label="Console">
+        <a href="inbox.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>
+          <span>Signals</span><span class="nav-count" data-nav-count>0</span>
+        </a>
+        <a href="preferences.html" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+          <span>Preferences</span>
+        </a>
+      </nav>
+      <div class="sidebar-foot">
+        <div>
+          <p class="sidebar-label" id="quick-theme-label">Theme</p>
+          <div class="segmented" role="radiogroup" aria-labelledby="quick-theme-label" style="margin-top:8px">
+            <label><input type="radio" name="quick-mode" value="system"><span>Auto</span></label>
+            <label><input type="radio" name="quick-mode" value="light"><span>Light</span></label>
+            <label><input type="radio" name="quick-mode" value="dark"><span>Dark</span></label>
+          </div>
+        </div>
+        <p class="demo-note">Demo console. Everything stays in this browser.</p>
+        <button class="button button-quiet" type="button" data-logout>Log out</button>
+      </div>
+    </aside>
+
+    <main class="main prefs-main">
+      <header class="page-head">
+        <div>
+          <h1>Preferences</h1>
+          <p class="page-lede">Tell Signal what matters to you. It uses these to decide what reaches you and what stays quiet.</p>
+        </div>
+      </header>
+
+      <div class="prefs">
+        <nav class="prefs-index" aria-label="Preference sections" data-index>
+          <a href="#interests" data-index-link="interests">
+            <span class="tile tile-sky" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3c.6 4.6 3.4 7.4 8 8-4.6.6-7.4 3.4-8 8-.6-4.6-3.4-7.4-8-8 4.6-.6 7.4-3.4 8-8z"/></svg></span>
+            <span>Interests</span>
+          </a>
+          <a href="#pickiness" data-index-link="pickiness">
+            <span class="tile tile-mist" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg></span>
+            <span>Pickiness</span>
+          </a>
+          <a href="#sources" data-index-link="sources">
+            <span class="tile tile-mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg></span>
+            <span>Sources</span>
+          </a>
+          <a href="#notifications" data-index-link="notifications">
+            <span class="tile tile-coral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>
+            <span>Notifications</span>
+          </a>
+          <a href="#appearance" data-index-link="appearance">
+            <span class="tile tile-blend" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></span>
+            <span>Appearance</span>
+          </a>
+        </nav>
+
+        <div class="prefs-content">
+
+          <!-- Interests -->
+          <section class="pset" id="interests" aria-labelledby="h-interests">
+            <header class="pset-head">
+              <span class="tile tile-lg tile-sky" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3c.6 4.6 3.4 7.4 8 8-4.6.6-7.4 3.4-8 8-.6-4.6-3.4-7.4-8-8 4.6-.6 7.4-3.4 8-8z"/></svg></span>
+              <div class="pset-title">
+                <h2 id="h-interests">Interests</h2>
+                <p>Signal reads every opportunity and looks for these words. More matches rank it higher.</p>
+              </div>
+            </header>
+
+            <div class="group glass">
+              <div class="grow grow-stack">
+                <div class="grow-line">
+                  <div class="grow-text">
+                    <p class="grow-label" id="l-interests">Topics you care about</p>
+                    <p class="grow-help">The main things you want to hear about.</p>
+                  </div>
+                  <div class="points"><span class="chip chip-ok">+4 in title</span><span class="chip">+3 in description</span></div>
+                </div>
+                <div class="tags" data-tags="interests" data-placeholder="Add a topic and press Enter" data-label="Add a topic" role="group" aria-labelledby="l-interests"></div>
+                <div class="suggestions" data-suggest="interests"></div>
+              </div>
+
+              <div class="grow grow-stack">
+                <div class="grow-line">
+                  <div class="grow-text">
+                    <p class="grow-label" id="l-boost">Words that make something worth a look</p>
+                    <p class="grow-help">Extra points on top of a topic match.</p>
+                  </div>
+                  <div class="points"><span class="chip chip-ok">+2 anywhere</span></div>
+                </div>
+                <div class="tags" data-tags="boost" data-placeholder="Add a word, like stipend" data-label="Add a word" role="group" aria-labelledby="l-boost"></div>
+                <div class="suggestions" data-suggest="boost"></div>
+              </div>
+
+              <div class="grow grow-stack">
+                <div class="grow-line">
+                  <div class="grow-text">
+                    <p class="grow-label" id="l-exclude">Never show me</p>
+                    <p class="grow-help">Anything containing these goes straight to Archived.</p>
+                  </div>
+                  <div class="points"><span class="chip chip-warn">Archived</span></div>
+                </div>
+                <div class="tags" data-tags="exclude" data-placeholder="Add a word to block" data-label="Add a word to block" role="group" aria-labelledby="l-exclude"></div>
+                <div class="suggestions" data-suggest="exclude"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Pickiness -->
+          <section class="pset" id="pickiness" aria-labelledby="h-picky">
+            <header class="pset-head">
+              <span class="tile tile-lg tile-mist" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg></span>
+              <div class="pset-title">
+                <h2 id="h-picky">Pickiness</h2>
+                <p>Signal notifies you when an opportunity scores at least this much. Messages sent to you and changes on pages you watch always notify you.</p>
+              </div>
+            </header>
+
+            <div class="group glass">
+              <div class="grow grow-stack">
+                <fieldset class="stops" data-stops>
+                  <legend class="visually-hidden">How picky should Signal be?</legend>
+                  <div class="stops-track" aria-hidden="true"><i data-stops-fill></i></div>
+                  <div class="stops-row" data-threshold-choices></div>
+                </fieldset>
+                <p class="stops-meaning" data-threshold-meaning></p>
+              </div>
+            </div>
+
+            <div class="group glass preview">
+              <div class="preview-head">
+                <p class="grow-label">Preview</p>
+                <p class="preview-summary" data-threshold-preview aria-live="polite"></p>
+              </div>
+              <ul class="preview-list" data-preview-list aria-label="Your signals under these settings"></ul>
+            </div>
+          </section>
+
+          <!-- Sources -->
+          <section class="pset" id="sources" aria-labelledby="h-sources">
+            <header class="pset-head">
+              <span class="tile tile-lg tile-mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg></span>
+              <div class="pset-title">
+                <h2 id="h-sources">Sources</h2>
+                <p>Turn places on or off. Some need one extra step before they start.</p>
+              </div>
+              <p class="pset-aside" data-sources-count aria-live="polite"></p>
+            </header>
+
+            <div data-source-list></div>
+
+            <!-- Setup editors: moved into their source rows by preferences.js -->
+            <div hidden data-setup-templates>
+              <div data-setup="wikicfp">
+                <p class="grow-help" id="help-cfp">Category names as WikiCFP writes them, like security or robotics.</p>
+                <div class="tags" data-tags="cfpCategories" data-placeholder="Add a category" data-label="Add a WikiCFP category" role="group" aria-labelledby="help-cfp"></div>
+              </div>
+              <div data-setup="feeds">
+                <p class="grow-help">Any RSS or Atom link. Google Alerts can make one: google.com/alerts → Show options → Deliver to “RSS feed”.</p>
+                <div class="link-list" data-links="feeds" data-noun="feed"></div>
+                <p class="field-error" data-links-error="feeds" role="alert" hidden></p>
+                <button class="button button-secondary button-small" type="button" data-add-link="feeds">+ Add a feed</button>
+              </div>
+              <div data-setup="watch">
+                <p class="grow-help">For fellowship or lab pages with no feed. Signal checks these every 6 hours and tells you when new text appears.</p>
+                <div class="link-list" data-links="watch" data-noun="page"></div>
+                <p class="field-error" data-links-error="watch" role="alert" hidden></p>
+                <button class="button button-secondary button-small" type="button" data-add-link="watch">+ Add a page</button>
+              </div>
+              <div data-setup="discord">
+                <p class="grow-help" id="help-discord">Channel IDs, numbers only. Leave empty to read every channel the bot can see and keep only matches. Direct messages and @mentions always count.</p>
+                <div class="tags" data-tags="discordChannels" data-placeholder="Paste a channel ID" data-label="Add a Discord channel ID" role="group" aria-labelledby="help-discord"></div>
+                <p class="field-error" data-tags-error="discordChannels" role="alert" hidden></p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Notifications -->
+          <section class="pset" id="notifications" aria-labelledby="h-notify">
+            <header class="pset-head">
+              <span class="tile tile-lg tile-coral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>
+              <div class="pset-title">
+                <h2 id="h-notify">Notifications</h2>
+                <p>How Signal reaches you when something clears the bar.</p>
+              </div>
+            </header>
+
+            <div class="group glass">
+              <div class="grow">
+                <div class="grow-text">
+                  <p class="grow-label" id="t-telegram">Telegram</p>
+                  <p class="grow-help">A message on your phone for each match, or one digest when several arrive together.</p>
+                </div>
+                <label class="switch"><input type="checkbox" data-telegram aria-labelledby="t-telegram"><span></span></label>
+              </div>
+            </div>
+            <p class="group-foot">Telegram is the only channel the hosted app sends to. This demo doesn't send anything.</p>
+          </section>
+
+          <!-- Appearance: applies instantly, saved separately from the filter -->
+          <section class="pset" id="appearance" aria-labelledby="h-appearance">
+            <header class="pset-head">
+              <span class="tile tile-lg tile-blend" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></span>
+              <div class="pset-title">
+                <h2 id="h-appearance">Appearance</h2>
+                <p>Changes apply right away and are remembered in this browser.</p>
+              </div>
+            </header>
+
+            <fieldset class="theme-cards">
+              <legend class="visually-hidden">Theme</legend>
+              <label class="theme-card">
+                <input type="radio" name="appearance-mode" value="system">
+                <span class="theme-mock mock-auto" aria-hidden="true">
+                  <span class="mock mock-light"><i></i><b></b><b></b><b></b></span>
+                  <span class="mock mock-dark"><i></i><b></b><b></b><b></b></span>
+                </span>
+                <span class="theme-name">Auto</span>
+                <span class="theme-help">Follows your device</span>
+              </label>
+              <label class="theme-card">
+                <input type="radio" name="appearance-mode" value="light">
+                <span class="theme-mock" aria-hidden="true">
+                  <span class="mock mock-light"><i></i><b></b><b></b><b></b></span>
+                </span>
+                <span class="theme-name">Light</span>
+                <span class="theme-help">Parchment and frosted glass</span>
+              </label>
+              <label class="theme-card">
+                <input type="radio" name="appearance-mode" value="dark">
+                <span class="theme-mock" aria-hidden="true">
+                  <span class="mock mock-dark"><i></i><b></b><b></b><b></b></span>
+                </span>
+                <span class="theme-name">Dark</span>
+                <span class="theme-help">Easier on the eyes at night</span>
+              </label>
+            </fieldset>
+
+            <div class="group glass">
+              <div class="grow">
+                <div class="grow-text">
+                  <p class="grow-label" id="a-glass">Glass</p>
+                  <p class="grow-help">How see-through panels are. Solid is easiest to read.</p>
+                </div>
+                <div class="segmented" role="radiogroup" aria-labelledby="a-glass">
+                  <label><input type="radio" name="appearance-glass" value="frosted"><span>Frosted</span></label>
+                  <label><input type="radio" name="appearance-glass" value="clear"><span>Clear</span></label>
+                  <label><input type="radio" name="appearance-glass" value="solid"><span>Solid</span></label>
+                </div>
+              </div>
+              <div class="grow">
+                <div class="grow-text">
+                  <p class="grow-label" id="a-density">Density</p>
+                  <p class="grow-help">Compact fits more on screen.</p>
+                </div>
+                <div class="segmented" role="radiogroup" aria-labelledby="a-density">
+                  <label><input type="radio" name="appearance-density" value="comfortable"><span>Comfortable</span></label>
+                  <label><input type="radio" name="appearance-density" value="compact"><span>Compact</span></label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="group glass reset-group">
+            <div class="grow">
+              <div class="grow-text">
+                <p class="grow-label">Reset to defaults</p>
+                <p class="grow-help">Puts interests, pickiness, sources and notifications back. Appearance stays as it is.</p>
+              </div>
+              <button class="button button-danger button-small" type="button" data-reset>Reset</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="save-bar glass" data-save-bar hidden>
+    <p>You have unsaved changes</p>
+    <button class="button button-quiet button-small" type="button" data-discard>Discard</button>
+    <button class="button button-primary button-small" type="button" data-save>Save changes</button>
+  </div>
+  <p class="toast glass" data-toast role="status" hidden></p>
+
+  <script src="app-data.js?v=2"></script>
+  <script src="app.js?v=4"></script>
+  <script src="preferences.js?v=1"></script>
+</body>
+</html>

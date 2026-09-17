@@ -9,4 +9,4 @@ node_modules/
 .claude/settings.local.json
 
 # Temporary QA helpers
-app/.qa.html
+app/.qa*.html

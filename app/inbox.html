@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Signals — Signal console (demo)</title>
+  <meta name="description" content="Demo Signal console: opportunities from hackathon boards and research feeds, scored against what you care about.">
+  <script src="theme-boot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="app.css?v=4">
+</head>
+<body data-page="inbox">
+  <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <div class="app">
+    <aside class="sidebar glass">
+      <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></a>
+      <nav class="nav" aria-label="Console">
+        <a href="inbox.html" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>
+          <span>Signals</span><span class="nav-count" data-nav-count>0</span>
+        </a>
+        <a href="preferences.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+          <span>Preferences</span>
+        </a>
+      </nav>
+      <div class="sidebar-foot">
+        <button class="button button-secondary" type="button" data-add-signal>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Add a signal
+        </button>
+        <div>
+          <p class="sidebar-label" id="quick-theme-label">Theme</p>
+          <div class="segmented" role="radiogroup" aria-labelledby="quick-theme-label" style="margin-top:8px">
+            <label><input type="radio" name="quick-mode" value="system"><span>Auto</span></label>
+            <label><input type="radio" name="quick-mode" value="light"><span>Light</span></label>
+            <label><input type="radio" name="quick-mode" value="dark"><span>Dark</span></label>
+          </div>
+        </div>
+        <p class="demo-note">Demo console. Everything stays in this browser.</p>
+        <button class="button button-quiet" type="button" data-logout>Log out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="page-head">
+        <div>
+          <h1>Signals</h1>
+          <p class="page-lede" data-lede>Opportunities that match what you care about.</p>
+        </div>
+        <button class="button button-primary" type="button" data-add-signal>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Add a signal
+        </button>
+      </header>
+
+      <div class="summary-grid">
+        <button class="summary-card glass" type="button" data-summary="new"><b data-summary-count="new">0</b><span>New for you</span></button>
+        <button class="summary-card glass" type="button" data-summary="soon"><b data-summary-count="soon">0</b><span>Closing in 7 days</span></button>
+        <button class="summary-card glass" type="button" data-summary="saved"><b data-summary-count="saved">0</b><span>Saved for later</span></button>
+      </div>
+
+      <div class="toolbar">
+        <div class="segmented" role="radiogroup" aria-label="Show">
+          <label><input type="radio" name="status" value="new" checked><span>New <span class="count" data-tab-count="new">0</span></span></label>
+          <label><input type="radio" name="status" value="saved"><span>Saved <span class="count" data-tab-count="saved">0</span></span></label>
+          <label><input type="radio" name="status" value="applied"><span>Applied <span class="count" data-tab-count="applied">0</span></span></label>
+          <label><input type="radio" name="status" value="archived"><span>Archived <span class="count" data-tab-count="archived">0</span></span></label>
+          <label><input type="radio" name="status" value="all"><span>All <span class="count" data-tab-count="all">0</span></span></label>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <label class="search">
+          <span class="visually-hidden">Search signals</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input class="input" type="search" placeholder="Search titles, descriptions and notes" data-search>
+        </label>
+        <label><span class="visually-hidden">Type</span>
+          <select class="select" data-kind-filter>
+            <option value="">All types</option>
+            <option value="hackathon">Hackathons</option>
+            <option value="cfp">Calls for papers</option>
+            <option value="research">Research</option>
+            <option value="job">Jobs</option>
+            <option value="message">Messages</option>
+            <option value="post">Posts</option>
+            <option value="page">Page changes</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label><span class="visually-hidden">Source</span>
+          <select class="select" data-source-filter>
+            <option value="">All sources</option>
+            <option value="gmail">Gmail + LinkedIn mail</option>
+            <option value="discord">Discord bot</option>
+            <option value="devpost">Devpost</option>
+            <option value="devfolio">Devfolio</option>
+            <option value="unstop">Unstop</option>
+            <option value="mlh">MLH</option>
+            <option value="wikicfp">WikiCFP</option>
+            <option value="feeds">RSS / Google Alerts</option>
+            <option value="watch">Page watch</option>
+            <option value="manual">Added by you</option>
+          </select>
+        </label>
+        <label><span class="visually-hidden">Sort</span>
+          <select class="select" data-sort>
+            <option value="recent">Newest first</option>
+            <option value="deadline">Closing soonest</option>
+            <option value="score">Best match</option>
+          </select>
+        </label>
+      </div>
+
+      <section class="list glass" aria-label="Signals">
+        <div class="list-head">
+          <span data-list-count>0 signals</span>
+          <span data-sources-summary></span>
+        </div>
+        <div data-rows></div>
+        <div class="empty" data-empty hidden>
+          <h2 data-empty-title>Nothing here</h2>
+          <p data-empty-text></p>
+          <button class="button button-secondary button-small" type="button" data-clear-filters hidden>Clear filters</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Signal overlay: opened by tapping a row, "Add a signal", or a #signal=<id> link. -->
+  <dialog class="sheet glass" data-sheet aria-labelledby="sheet-title">
+    <div class="sheet-head">
+      <div class="sheet-head-text">
+        <div class="sheet-kicker" data-sheet-kicker></div>
+        <h2 class="sheet-title" id="sheet-title" tabindex="-1" data-sheet-title>Signal</h2>
+        <p class="sheet-meta" data-sheet-meta></p>
+      </div>
+      <button class="icon-button" type="button" data-sheet-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="sheet-body">
+      <section class="sheet-section" data-view-only>
+        <h3>Why it's here</h3>
+        <div class="why-card">
+          <p class="why-summary" data-why-summary></p>
+          <ul class="why-list" data-why-list></ul>
+        </div>
+      </section>
+
+      <section class="sheet-section" data-view-only>
+        <h3 id="sheet-status-label">Status</h3>
+        <div class="segmented status-picker" role="radiogroup" aria-labelledby="sheet-status-label">
+          <label><input type="radio" name="sheet-status" value="new"><span>New</span></label>
+          <label><input type="radio" name="sheet-status" value="saved"><span>Saved</span></label>
+          <label><input type="radio" name="sheet-status" value="applied"><span>Applied</span></label>
+          <label><input type="radio" name="sheet-status" value="archived"><span>Archived</span></label>
+        </div>
+      </section>
+
+      <section class="sheet-section" data-view-only>
+        <h3><label for="sheet-note">Your notes</label></h3>
+        <textarea class="textarea" id="sheet-note" rows="3" placeholder="Who to contact, what to send, what you already sent" data-sheet-note></textarea>
+        <p class="note-status" data-note-status aria-live="polite"></p>
+      </section>
+
+      <section class="sheet-section" data-view-only data-description-section>
+        <h3>Description</h3>
+        <p class="sheet-description" data-sheet-description></p>
+      </section>
+
+      <details class="edit-block" data-edit-block>
+        <summary data-edit-summary>Edit details</summary>
+        <form class="edit-grid" data-edit-form novalidate>
+          <label class="field span-2">
+            <span class="field-label">Title</span>
+            <input class="input" name="title" required>
+          </label>
+          <label class="field">
+            <span class="field-label">Type</span>
+            <select class="select" name="kind">
+              <option value="hackathon">Hackathon</option>
+              <option value="cfp">Call for papers</option>
+              <option value="research">Research</option>
+              <option value="job">Job</option>
+              <option value="message">Message</option>
+              <option value="post">Post</option>
+              <option value="page">Page change</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Deadline <span class="field-help">(optional)</span></span>
+            <input class="input" name="deadline" type="date">
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Link <span class="field-help">(optional)</span></span>
+            <input class="input" name="url" type="url" placeholder="https://">
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Description</span>
+            <textarea class="textarea" name="body" rows="4" placeholder="Paste the part that matters"></textarea>
+          </label>
+          <p class="field-help span-2" data-edit-error role="alert" hidden></p>
+          <div class="span-2">
+            <button class="button button-primary" type="submit" data-edit-submit>Save changes</button>
+          </div>
+        </form>
+      </details>
+    </div>
+
+    <div class="sheet-foot" data-sheet-foot>
+      <div data-delete-area>
+        <button class="button button-danger button-small" type="button" data-delete>Delete</button>
+        <div class="confirm-row" data-confirm hidden>
+          <span>Delete for good?</span>
+          <button class="button button-danger button-small" type="button" data-confirm-yes>Delete</button>
+          <button class="button button-quiet button-small" type="button" data-confirm-no>Keep it</button>
+        </div>
+      </div>
+      <a class="button button-secondary button-small" target="_blank" rel="noopener noreferrer" data-open-original hidden>Open original ↗</a>
+    </div>
+  </dialog>
+
+  <p class="toast glass" data-toast role="status" hidden></p>
+
+  <script src="app-data.js?v=2"></script>
+  <script src="app.js?v=4"></script>
+</body>
+</html>

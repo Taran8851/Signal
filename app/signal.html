@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Signal — Signal console (demo)</title>
+  <meta name="robots" content="noindex">
+  <!-- Signals now open as an overlay on the Signals page. This keeps old links working. -->
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var id = params.get("id");
+      location.replace("inbox.html" + (id ? "#signal=" + encodeURIComponent(id) : "#new"));
+    })();
+  </script>
+</head>
+<body>
+  <p><a href="inbox.html">Go to Signals</a></p>
+</body>
+</html>

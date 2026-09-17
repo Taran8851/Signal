@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sign in — Signal console (demo)</title>
+  <meta name="description" content="Demo sign-in for the Signal console. No real account is created or checked.">
+  <script src="theme-boot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="app.css?v=4">
+</head>
+<body data-page="login">
+  <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <div class="auth-theme segmented glass" role="radiogroup" aria-label="Theme">
+    <label><input type="radio" name="quick-mode" value="system"><span>Auto</span></label>
+    <label><input type="radio" name="quick-mode" value="light"><span>Light</span></label>
+    <label><input type="radio" name="quick-mode" value="dark"><span>Dark</span></label>
+  </div>
+
+  <main class="auth">
+    <div class="auth-card glass">
+      <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></a>
+      <h1>Welcome back</h1>
+      <p class="page-lede">This is a demo console. Any email and password gets you in, and nothing is sent anywhere.</p>
+
+      <form class="auth-form" data-login-form>
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input class="input" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Password</span>
+          <input class="input" name="password" type="password" autocomplete="current-password" placeholder="Anything works" required>
+        </label>
+        <button class="button button-primary" type="submit">Continue</button>
+      </form>
+
+      <p class="auth-note">Signing in only sets a flag in this browser so you can move between screens. Log out clears it.</p>
+    </div>
+  </main>
+
+  <script src="app-data.js?v=2"></script>
+  <script src="app.js?v=4"></script>
+</body>
+</html>
