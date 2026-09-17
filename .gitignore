@@ -15,3 +15,6 @@ app/.qa*.html
 tools/obscura
 tools/obscura-worker
 tools/*.tar.gz
+
+# SSH keys
+*.pem

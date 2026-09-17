@@ -13,6 +13,10 @@
 //   - robots.txt is honoured for the Signal user agent
 //   - no stealth mode, no proxies, no logins, no cookies
 //   - listens on loopback only; CORS allowed for local console origins only
+//
+// Hosted (deploy/lightsail): Caddy proxies https://<site>/helper/* here, so the console calls
+// it same-origin. TRUST_PROXY=1 reads the client IP from X-Forwarded-For (set by Caddy only)
+// for the per-IP rate limit.
 
 import { createServer } from "node:http";
 import { execFile } from "node:child_process";
@@ -23,7 +27,10 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const PORT = Number(process.env.PORT || 8787);
-const HOST = "127.0.0.1";
+const HOST = process.env.HOST || "127.0.0.1";
+const TRUST_PROXY = process.env.TRUST_PROXY === "1";
+const RATE_PER_MIN = Number(process.env.RATE_PER_MIN || 20);
+const MAX_RENDERS = Number(process.env.MAX_RENDERS || 2);
 const UA = "SignalFetchHelper/0.1 (+student demo; respects robots.txt)";
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIMEOUT_S = 20;
@@ -112,12 +119,32 @@ function runObscura(url, render) {
   });
 }
 
+// Follow redirects by hand so every hop gets the same public-address check.
 async function runPlain(url) {
-  const res = await fetch(url, { headers: { "user-agent": UA, accept: "*/*" }, redirect: "follow", signal: AbortSignal.timeout(TIMEOUT_S * 1000) });
+  let res;
+  for (let hop = 0; ; hop++) {
+    res = await fetch(url, { headers: { "user-agent": UA, accept: "*/*" }, redirect: "manual", signal: AbortSignal.timeout(TIMEOUT_S * 1000) });
+    const loc = res.status >= 300 && res.status < 400 && res.headers.get("location");
+    if (!loc) break;
+    if (hop >= 5) throw httpError(502, "Too many redirects.");
+    url = (await checkUrl(new URL(loc, url).href)).href;
+  }
   const buf = await res.arrayBuffer();
   if (buf.byteLength > MAX_BYTES) throw httpError(413, "That response is too large.");
   return { status: res.status, contentType: res.headers.get("content-type") || "", body: new TextDecoder().decode(buf), engine: "fetch" };
 }
+
+// Per-IP sliding window, and a cap on concurrent Obscura renders (each is a browser).
+const hits = new Map();
+function rateLimited(ip) {
+  const now = Date.now();
+  const list = (hits.get(ip) || []).filter((t) => now - t < 60000);
+  list.push(now);
+  hits.set(ip, list);
+  if (hits.size > 5000) for (const [k, v] of hits) if (now - v[v.length - 1] > 60000) hits.delete(k);
+  return list.length > RATE_PER_MIN;
+}
+let rendering = 0;
 
 function send(res, origin, status, obj) {
   const headers = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", vary: "Origin" };
@@ -131,10 +158,12 @@ function send(res, origin, status, obj) {
 createServer(async (req, res) => {
   const origin = req.headers.origin || "";
   const u = new URL(req.url, `http://${HOST}:${PORT}`);
+  const ip = (TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || req.socket.remoteAddress;
   if (req.method === "OPTIONS") return send(res, origin, 204, {});
   if (req.method !== "GET") return send(res, origin, 405, { ok: false, error: "GET only." });
   if (u.pathname === "/health") return send(res, origin, 200, { ok: true, engine: hasObscura ? "obscura" : "fetch" });
   if (u.pathname !== "/fetch") return send(res, origin, 404, { ok: false, error: "Not found." });
+  if (rateLimited(ip)) return send(res, origin, 429, { ok: false, error: "Too many requests. Wait a minute and try again." });
   try {
     const target = await checkUrl(u.searchParams.get("url") || "");
     if (!(await robotsAllows(target))) throw httpError(403, "This site's robots.txt asks automated readers not to fetch that page, so Signal won't.");
@@ -142,8 +171,11 @@ createServer(async (req, res) => {
     const render = u.searchParams.get("render") === "1";
     let out;
     if (hasObscura) {
+      if (render && rendering >= MAX_RENDERS) throw httpError(503, "The helper is busy rendering other pages. Try again in a moment.");
+      if (render) rendering++;
       try { out = await runObscura(target.href, render); }
       catch (e) { if (render) throw e; out = await runPlain(target.href); }
+      finally { if (render) rendering--; }
     } else {
       out = await runPlain(target.href);
     }

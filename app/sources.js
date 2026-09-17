@@ -570,14 +570,20 @@
     });
   }
 
-  // Local fetch helper. The URL can be changed with localStorage "signal_demo_fetch_helper";
+  // Fetch helper. The URL can be changed with localStorage "signal_demo_fetch_helper";
   // set it to "off" to disable.
   var HELPER_KEY = "signal_demo_fetch_helper";
   function helperUrl() {
     var v = "";
     try { v = localStorage.getItem(HELPER_KEY) || ""; } catch (e) {}
     if (v === "off") return "";
-    return (v || "http://127.0.0.1:8787").replace(/\/+$/, "");
+    if (!v) {
+      // Local dev talks to the helper directly; the hosted site proxies it at /helper.
+      var loc = global.location || {};
+      var local = !loc.hostname || /^(127\.0\.0\.1|localhost)$/.test(loc.hostname);
+      v = local ? "http://127.0.0.1:8787" : loc.origin + "/helper";
+    }
+    return v.replace(/\/+$/, "");
   }
   function viaHelper(def) {
     var base = helperUrl();

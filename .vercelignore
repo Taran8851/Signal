@@ -11,3 +11,4 @@ DESIGN.md
 .claude/
 app/.qa*.html
 app/ai-playground.html
+*.pem
