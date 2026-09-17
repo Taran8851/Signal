@@ -435,3 +435,5 @@
   .csrc-icon { display: none; }
   .src-foot-actions .button { flex: 1; }
 }
+.src-state { margin-top: 4px; color: var(--text-3); font-size: 12px; }
+.src-state.is-error { color: var(--warn-text, var(--text-2)); }

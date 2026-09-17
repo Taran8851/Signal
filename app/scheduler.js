@@ -2,16 +2,21 @@
    Loaded after sources.js and ai.js, before app.js. Runs while a console page is open
    (everything lives in this browser, so nothing runs when every tab is closed).
 
-   One check:
-   1. Fetch every source you added that is switched on and reads from a link.
-      Watched pages are read by your model when one is set up, otherwise by keyword search
-      over the page's links (sources.js → readPage).
-   2. Import new items (duplicates are skipped).
-   3. New items get a brief from your model when Scoring mode allows it and "Brief new signals"
+   One check (the shape comes from reference/signal/collector/index.ts):
+   1. Poll every source that is due: the built-in ones through their own listing APIs
+      (providers.js, each with its own interval), and every source you added that is switched
+      on and reads from a link. Watched pages you added are read by your model when one is set
+      up, otherwise by keyword search over the page's links (sources.js → readPage).
+   2. Import what is new (duplicates are skipped by the listing's own id).
+   3. A source's first successful poll is a backfill: it is stored quietly, without spending
+      model calls on a backlog you have not seen.
+   4. New items get a brief from your model when Scoring mode allows it and "Brief new signals"
       is on. Otherwise they keep keyword scores, which the inbox works out as it renders.
+   A failing source is retried in 15 minutes instead of waiting for its normal interval, and
+   keeps its own last error so Preferences can say which source is broken.
 
    Settings: signal_demo_schedule { on, every (minutes), brief }
-   State:    signal_demo_schedule_state { lastRun, running: { at }, last: {...} }
+   State:    signal_demo_schedule_state { lastRun, running, last, sources: { <id>: {...} } }
    Events:   "signal:schedule" on window whenever the state changes. */
 (function (global) {
   "use strict";
@@ -22,6 +27,7 @@
   var LOCK_MS = 10 * 60 * 1000; // a check that started this long ago is treated as dead
   var TICK_MS = 60 * 1000;
   var FIRST_CHECK_DELAY_MS = 2000;
+  var RETRY_MS = 15 * 60 * 1000; // a failing source is tried again sooner than its interval
 
   function read(key, fallback) {
     try { var v = JSON.parse(global.localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
@@ -50,11 +56,64 @@
 
   function S() { return global.SignalSources || null; }
   function AI() { return global.SignalAI || null; }
+  function P() { return global.SignalProviders || null; }
 
-  /* Sources a check reads: yours, switched on, fetched from a link (pasted samples never change). */
-  function checkable() {
-    if (!S()) return [];
-    return S().list().filter(function (d) { return d.enabled !== false && d.mode !== "paste" && d.url; });
+  function sourceState(id) {
+    var all = getState().sources || {};
+    return all[id] || {};
+  }
+  function setSourceState(id, patch) {
+    var st = getState();
+    var all = st.sources || {};
+    all[id] = Object.assign({}, all[id] || {}, patch);
+    st.sources = all;
+    write(KEYS.state, st);
+  }
+
+  /* Every source a check can poll: the built-in providers plus your own link sources.
+     A built-in one is skipped when Preferences switched it off or it still needs something. */
+  function targets() {
+    var out = [];
+    var p = prefs();
+    var off = p.disabled || [];
+    if (P()) {
+      P().ALL.forEach(function (prov) {
+        var missing = prov.missing(p);
+        if (missing || off.indexOf(prov.id) !== -1) {
+          setSourceState(prov.id, { missing: missing || "switched off in Preferences" });
+          return;
+        }
+        setSourceState(prov.id, { missing: null });
+        out.push({ id: prov.id, name: sourceLabel(prov.id), everyMs: prov.everyMs, provider: prov });
+      });
+    }
+    if (S()) {
+      S().list().forEach(function (d) {
+        if (d.enabled === false || d.mode === "paste" || !d.url) return;
+        out.push({ id: d.id, name: d.name, everyMs: getSettings().every * 60000, custom: d });
+      });
+    }
+    return out;
+  }
+
+  function sourceLabel(id) {
+    var D = global.SignalData;
+    var s = D && D.SOURCES ? D.SOURCES.filter(function (x) { return x.id === id; })[0] : null;
+    return s ? s.label : id;
+  }
+
+  /* Sources the user can see being checked, for the "nothing to check yet" wording. */
+  function checkable() { return targets(); }
+
+  /* The demo rows that ship with the console have no external_id. Once a built-in source
+     answers for real, its sample rows go, so the inbox isn't half real and half made up. */
+  function dropSampleRows(sourceId) {
+    var rows = read(KEYS.rows, null);
+    if (!Array.isArray(rows)) return 0;
+    var keep = rows.filter(function (r) { return !(r.source === sourceId && !r.external_id); });
+    if (keep.length === rows.length) return 0;
+    write(KEYS.rows, keep);
+    return rows.length - keep.length;
   }
 
   function prefs() {
@@ -90,36 +149,72 @@
     };
   }
 
-  function runOnce(reason) {
+  function runOnce(reason, opts) {
+    opts = opts || {};
     var state = getState();
     if (isRunning(state)) return Promise.resolve({ skipped: "running" });
-    var sources = checkable();
-    if (!sources.length) {
-      setState({ lastRun: Date.now(), last: { at: Date.now(), reason: reason, checked: 0, added: 0, briefed: 0, errors: [], methods: {} } });
-      return Promise.resolve({ skipped: "no_sources" });
+    var all = targets();
+    var due = opts.force ? all : all.filter(function (t) { return isDue(t); });
+    if (!all.length || !due.length) {
+      setState({ lastRun: Date.now(), last: { at: Date.now(), reason: reason, checked: 0, added: 0, briefed: 0, errors: [], methods: {}, notes: [], nothingDue: !!all.length } });
+      return Promise.resolve({ skipped: all.length ? "nothing_due" : "no_sources", checked: 0, added: 0 });
     }
-    setState({ running: { at: Date.now(), reason: reason, done: 0, total: sources.length } });
+    setState({ running: { at: Date.now(), reason: reason, done: 0, total: due.length } });
 
-    var summary = { at: Date.now(), reason: reason, checked: 0, added: 0, briefed: 0, errors: [], methods: {}, notes: [] };
+    var summary = { at: Date.now(), reason: reason, checked: 0, added: 0, briefed: 0, quiet: 0, errors: [], methods: {}, notes: [] };
     var newIds = [];
     var i = 0;
 
-    function nextSource() {
-      if (i >= sources.length) return Promise.resolve();
-      var def = sources[i++];
-      return S().fetchPreview(def).then(function (res) {
+    function pollOne(t) {
+      var started = Date.now();
+      var warnings = [];
+      var seeded = !!sourceState(t.id).lastOk;
+      setSourceState(t.id, { lastRun: started });
+      var got;
+      if (t.provider) {
+        got = Promise.resolve().then(function () {
+          return t.provider.poll({
+            prefs: prefs(),
+            cursor: sourceState(t.id).cursor || "",
+            setCursor: function (v) { setSourceState(t.id, { cursor: v }); },
+            warn: function (m) { warnings.push(m); }
+          });
+        }).then(function (items) { return { items: items, method: t.id }; });
+      } else {
+        got = S().fetchPreview(t.custom).then(function (res) {
+          if (!res.ok) throw new Error(res.error);
+          if (res.note) warnings.push(res.note);
+          return { items: res.items, method: res.method };
+        });
+      }
+      return got.then(function (r) {
         summary.checked++;
-        if (!res.ok) {
-          summary.errors.push({ source: def.name, message: res.error });
-          return;
-        }
-        var r = S().importItems(def.id, res.items);
-        summary.added += r.added;
-        newIds = newIds.concat(r.addedIds || []);
-        if (res.method) summary.methods[res.method] = (summary.methods[res.method] || 0) + 1;
-        if (res.note) summary.notes.push(def.name + ": " + res.note);
-      }).then(function () {
-        setState({ running: { at: Date.now(), reason: reason, done: i, total: sources.length } });
+        if (!seeded && t.provider) dropSampleRows(t.id);
+        var imported = S().importItems(t.id, r.items);
+        summary.added += imported.added;
+        // A source's first poll is a backfill: store it, don't spend model calls on it.
+        if (seeded) newIds = newIds.concat(imported.addedIds || []);
+        else summary.quiet += imported.added;
+        if (r.method) summary.methods[r.method] = (summary.methods[r.method] || 0) + 1;
+        warnings.forEach(function (w) { summary.notes.push(t.name + ": " + w); });
+        setSourceState(t.id, {
+          lastOk: Date.now(),
+          lastError: warnings.length ? warnings.join(" · ").slice(0, 300) : null,
+          detail: r.items.length + " seen · " + imported.added + " new" + (seeded ? "" : " · first check, stored quietly")
+        });
+      }, function (e) {
+        summary.checked++;
+        var message = (e && e.message) || "That source couldn't be read.";
+        summary.errors.push({ source: t.name, message: message });
+        setSourceState(t.id, { lastError: String(message).slice(0, 300), detail: "" });
+      });
+    }
+
+    function nextSource() {
+      if (i >= due.length) return Promise.resolve();
+      var t = due[i++];
+      return pollOne(t).then(function () {
+        setState({ running: { at: Date.now(), reason: reason, done: i, total: due.length } });
         return nextSource();
       });
     }
@@ -150,13 +245,35 @@
     });
   }
 
-  function checkNow() { return runOnce("manual"); }
+  function checkNow() { return runOnce("manual", { force: true }); }
+
+  /* Due when it has never run, or its interval has passed. A source whose last run failed is
+     retried after RETRY_MS instead of waiting for its full interval. */
+  function isDue(t) {
+    var st = sourceState(t.id);
+    if (!st.lastRun) return true;
+    var failing = !st.lastOk || st.lastOk < st.lastRun;
+    var wait = failing ? Math.min(t.everyMs, RETRY_MS) : t.everyMs;
+    return Date.now() - st.lastRun >= wait;
+  }
 
   function tick() {
     var settings = getSettings();
     if (!settings.on || document.hidden) return;
     var at = nextAt(settings, getState());
     if (at !== null && Date.now() >= at) runOnce("schedule");
+  }
+
+  /* Per-source rows for Preferences: what each source did last time. */
+  function sources() {
+    return targets().map(function (t) {
+      var st = sourceState(t.id);
+      return {
+        id: t.id, name: t.name, custom: !!t.custom, everyMs: t.everyMs,
+        lastRun: st.lastRun || null, lastOk: st.lastOk || null,
+        lastError: st.lastError || null, detail: st.detail || "", due: isDue(t)
+      };
+    });
   }
 
   var started = false;
@@ -190,8 +307,14 @@
     var reader = st.reader === "model" ? "Pages are read by your model." : "Pages are searched by keyword (add a model key to have your model read them).";
     if (st.last && st.last.at) {
       var l = st.last;
-      parts.push("Checked " + l.checked + (l.checked === 1 ? " source " : " sources ") + relative(l.at - Date.now()) +
-        ": " + (l.added ? l.added + " new" : "nothing new") + (l.briefed ? ", " + l.briefed + " briefed by your model" : "") + ".");
+      if (l.checked) {
+        parts.push("Checked " + l.checked + (l.checked === 1 ? " source " : " sources ") + relative(l.at - Date.now()) +
+          ": " + (l.added ? l.added + " new" : "nothing new") +
+          (l.quiet ? " (" + l.quiet + " stored quietly on a first check)" : "") +
+          (l.briefed ? ", " + l.briefed + " briefed by your model" : "") + ".");
+      } else if (l.nothingDue) {
+        parts.push("Nothing due " + relative(l.at - Date.now()) + "; each source has its own interval.");
+      }
       if (l.errors && l.errors.length) parts.push(l.errors.length + (l.errors.length === 1 ? " source" : " sources") + " couldn't be read (" + l.errors[0].source + ": " + String(l.errors[0].message).split(/(?<=\.)\s/)[0] + ").");
     }
     parts.push(st.settings.on ? "Next check " + relative(Math.max(0, st.nextAt - Date.now())) + "." : "Automatic checks are off.");
@@ -204,6 +327,7 @@
     getSettings: getSettings,
     saveSettings: saveSettings,
     status: status,
+    sources: sources,
     describe: describe,
     checkNow: checkNow,
     start: start,

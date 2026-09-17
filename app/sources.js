@@ -243,6 +243,19 @@
     return "";
   }
 
+  /* Feeds sometimes escape a link twice, so an XML parse still leaves "&amp;" in the URL. */
+  var ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  function decodeEntities(s) {
+    return String(s == null ? "" : s).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, function (m, e) {
+      if (e.charAt(0) === "#") {
+        var n = e.charAt(1).toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+        return isFinite(n) && n > 0 && n < 0x110000 ? String.fromCodePoint(n) : m;
+      }
+      var v = ENTITIES[e.toLowerCase()];
+      return v == null ? m : v;
+    });
+  }
+
   function stripHtml(html) {
     var s = String(html || "");
     if (global.DOMParser && /<[a-z!\/]/i.test(s)) {
@@ -306,8 +319,8 @@
       return makeItem({
         title: stripHtml(childText(n, ["title"])),
         body: stripHtml(body),
-        url: cleanText(link),
-        external_id: childText(n, ["guid", "id"]) || cleanText(link),
+        url: decodeEntities(cleanText(link)),
+        external_id: decodeEntities(childText(n, ["guid", "id"]) || cleanText(link)),
         deadline: null // pubDate/updated are publish dates, never deadlines
       });
     });
@@ -530,7 +543,7 @@
       if (found.length) return { items: found, method: "search", note: note || "" };
       return { items: parsePage(html, def.url), method: "page", note: note || "" };
     }
-    if (def.extract === "off") return Promise.resolve({ items: parsePage(html, def.url), method: "page", note: "" });
+    if (def.extract === "off") return Promise.resolve(watchPage(def, html));
     if (def.extract === "search" || !modelReadyForPages() || !digest.links.length) return Promise.resolve(bySearch());
     return extractWithModel(digest).then(function (r) {
       if (!r.items.length) return bySearch("Your model found nothing on the page, so Signal searched its links.");
@@ -538,6 +551,33 @@
     }, function (e) {
       return bySearch("Your model couldn't read the page (" + ((e && e.message) || "error") + "), so Signal searched its links.");
     });
+  }
+
+  /* A watched page as one signal, but only when its text actually changed. The page's lines
+     are kept in signal_demo_page_snaps, so the first check is a baseline, not news. */
+  var SNAPS = "signal_demo_page_snaps";
+  function watchPage(def, html) {
+    var snaps = read(SNAPS, {});
+    if (!snaps || typeof snaps !== "object") snaps = {};
+    var key = def.id || def.url;
+    var before = snaps[key] && snaps[key].lines;
+    var d = diffPageText(html, before);
+    snaps[key] = { lines: d.lines, at: Date.now() };
+    write(SNAPS, snaps);
+    if (!before) return { items: [], method: "page", note: "First check: Signal saved what the page says now and will tell you what changes." };
+    if (!d.added.length) return { items: [], method: "page", note: "" };
+    var label = hostOf(def.url) || def.name || "Watched page";
+    return {
+      items: [makeItem({
+        title: "Page changed: " + (def.name || label),
+        body: "New on the page: " + d.added.slice(0, 20).join(" · "),
+        url: def.url,
+        external_id: "page:" + hash(d.added.join("\n")),
+        deadline: deadlineFromText(d.added.join(" "))
+      }, "page")],
+      method: "page",
+      note: ""
+    };
   }
 
   /* Like parse, but async: pages may go to the model. Resolves { items, method, note }. */
@@ -767,8 +807,17 @@
   function viaHelper(def) {
     var base = helperUrl();
     if (!base || typeof global.fetch !== "function") return Promise.reject(null);
-    var q = base + "/fetch?url=" + encodeURIComponent(String(def.url).trim()) + (def.type === "page" ? "&render=1" : "");
-    return global.fetch(q, { credentials: "omit", signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(45000) : undefined })
+    var opts = { credentials: "omit", signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(45000) : undefined };
+    var q;
+    if (def.method === "POST") {
+      q = base + "/fetch";
+      opts.method = "POST";
+      opts.headers = { "content-type": "application/json" };
+      opts.body = JSON.stringify({ url: String(def.url).trim(), method: "POST", body: def.body || "", accept: def.accept || "application/json" });
+    } else {
+      q = base + "/fetch?url=" + encodeURIComponent(String(def.url).trim()) + (def.type === "page" ? "&render=1" : "");
+    }
+    return global.fetch(q, opts)
       .then(function (res) { return res.json(); }, function () { throw null; })
       .then(function (j) {
         if (!j || !j.ok) { var err = new Error("helper"); err.helperMessage = (j && j.error) || "The fetch helper couldn't read that source."; throw err; }
@@ -777,6 +826,70 @@
       });
   }
   var lastEngine = "";
+
+  /* Read a URL for the built-in sources (providers.js): the browser first, then the helper.
+     A POST, or an http:// URL on an https page, only ever goes through the helper. */
+  function fetchText(req) {
+    req = req || {};
+    var url = String(req.url || "").trim();
+    if (!validUrl(url)) return Promise.reject(parseError("That isn't a link Signal can read."));
+    // An http:// URL on an https page is blocked by the browser, so it only ever goes through
+    // the helper. Everything else is tried in the browser first, POSTs included.
+    var mustHelp = /^http:/i.test(url) && global.location && global.location.protocol === "https:";
+    var def = { url: url, type: req.render ? "page" : "json", method: req.method, body: req.body, accept: req.accept };
+    function viaBrowser() {
+      if (typeof global.fetch !== "function") return Promise.reject(null);
+      var ctrl = typeof AbortController === "function" ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+      var opts = { credentials: "omit", redirect: "follow", signal: ctrl ? ctrl.signal : undefined };
+      if (req.method === "POST") { opts.method = "POST"; opts.headers = { "content-type": "application/json" }; opts.body = req.body || ""; }
+      return global.fetch(url, opts).then(function (res) {
+        clearTimeout(timer);
+        if (!res.ok) throw parseError("The site answered with an error (HTTP " + res.status + ").");
+        return res.text();
+      }, function (e) { clearTimeout(timer); throw e; });
+    }
+    var p = mustHelp ? Promise.reject(null) : viaBrowser();
+    return p.catch(function (e) {
+      if (e && e.signalParse) throw e;
+      return viaHelper(def).catch(function (e2) {
+        if (e2 && e2.helperMessage) throw parseError(e2.helperMessage);
+        throw parseError("Signal couldn't read " + (hostOf(url) || "that link") + " from this browser, and the fetch helper isn't reachable.");
+      });
+    });
+  }
+
+  /* Line-by-line diff of a page's visible text: only new lines count as news.
+     Returns { lines, added } — an empty `added` on the first sight (the baseline). */
+  function diffPageText(html, before) {
+    var text = "";
+    if (global.DOMParser) {
+      var doc = new global.DOMParser().parseFromString(String(html || ""), "text/html");
+      Array.prototype.forEach.call(doc.querySelectorAll("script, style, noscript, template, svg, iframe"), function (el) { el.remove(); });
+      text = ((doc.body || doc.documentElement).innerText || (doc.body || doc.documentElement).textContent || "");
+      // textContent runs block elements together; innerText is empty for a parsed document,
+      // so put a line break back in for each block-level tag.
+      if (text.indexOf("\n") === -1) {
+        var marked = String(html || "").replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr|\/section|\/article)\b[^>]*>/gi, "\n");
+        var d2 = new global.DOMParser().parseFromString(marked, "text/html");
+        Array.prototype.forEach.call(d2.querySelectorAll("script, style, noscript, template, svg, iframe"), function (el) { el.remove(); });
+        text = (d2.body || d2.documentElement).textContent || "";
+      }
+    } else {
+      text = stripHtml(String(html || "").replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr)\b[^>]*>/gi, "\n"));
+    }
+    var seen = {}, lines = [];
+    text.split(/\n+/).forEach(function (l) {
+      var t = l.replace(/[ \t\u00a0]+/g, " ").trim().slice(0, 300);
+      if (t.length < 3 || seen[t] || lines.length >= 800) return;
+      seen[t] = true;
+      lines.push(t);
+    });
+    var old = {};
+    (before || []).forEach(function (l) { old[l] = true; });
+    var added = before && before.length ? lines.filter(function (l) { return !old[l]; }) : [];
+    return { lines: lines, added: added };
+  }
 
   function countRows(sourceId, rows) {
     return (rows || readRows()).filter(function (r) { return r.source === sourceId; }).length;
@@ -926,7 +1039,14 @@
     removeRows: removeRows,
 
     fetchPreview: fetchPreview,
+    fetchText: fetchText,
     modelReadyForPages: modelReadyForPages,
+    parseFeedText: function (text) { return parseFeed(text); },
+    makeItem: function (o, kind) { return makeItem(o, kind); },
+    parseDate: parseDateValue,
+    clean: cleanText,
+    stripHtml: stripHtml,
+    decodeEntities: decodeEntities,
     importItems: importItems,
     detectMapping: detectMapping,
     hasAI: hasAI,
@@ -944,6 +1064,8 @@
       pageDigest: pageDigest,
       searchPage: searchPage,
       readPage: readPage,
+      diffPageText: diffPageText,
+      watchPage: watchPage,
       parseDateValue: parseDateValue,
       deadlineFromText: deadlineFromText,
       validateMapping: validateMapping,

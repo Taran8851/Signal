@@ -3,8 +3,10 @@
 //
 //   node tools/fetch-helper.mjs            # listens on http://127.0.0.1:8787
 //
-// GET /health                 -> { ok, engine }
-// GET /fetch?url=…&render=1   -> { ok, url, status, contentType, body, engine }
+// GET  /health                -> { ok, engine }
+// GET  /fetch?url=…&render=1  -> { ok, url, status, contentType, body, engine }
+// POST /fetch  {url, method, body, accept}  -> the same, for listing APIs that want a POST
+//      (JSON bodies only, no caller-supplied headers, same rules as GET)
 //
 // It renders with Obscura (tools/obscura, or OBSCURA_BIN) when available, otherwise it
 // uses a plain HTTP fetch. Rules, matching AGENTS.md ("Signal doesn't scrape sites that
@@ -108,6 +110,36 @@ function parseRobots(text) {
   return chosen.flatMap((g) => g.rules);
 }
 
+// A POST body from the console: only a URL, the method, a JSON body and an Accept value.
+// No caller-supplied headers, so this can't be used to forge requests with someone's cookies.
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on("data", (c) => {
+      size += c.length;
+      if (size > 64 * 1024) { reject(httpError(413, "That request is too large.")); req.destroy(); return; }
+      chunks.push(c);
+    });
+    req.on("error", () => reject(httpError(400, "That request couldn't be read.")));
+    req.on("end", () => {
+      let asked;
+      try { asked = JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { return reject(httpError(400, "That request wasn't JSON.")); }
+      if (!asked || typeof asked !== "object") return reject(httpError(400, "That request wasn't JSON."));
+      const method = String(asked.method || "GET").toUpperCase();
+      if (method !== "GET" && method !== "POST") return reject(httpError(400, "Only GET and POST are allowed."));
+      const body = asked.body == null ? "" : String(asked.body);
+      if (body.length > 16 * 1024) return reject(httpError(413, "That request body is too large."));
+      if (method === "POST" && body) {
+        try { JSON.parse(body); } catch { return reject(httpError(400, "The request body has to be JSON.")); }
+      }
+      const accept = String(asked.accept || "*/*").slice(0, 100);
+      if (/[\r\n]/.test(accept)) return reject(httpError(400, "That accept value isn't allowed."));
+      resolve({ url: String(asked.url || ""), method: method, body: body, accept: accept });
+    });
+  });
+}
+
 function runObscura(url, render) {
   const args = ["fetch", url, "--dump", render ? "html" : "original", "--timeout", String(TIMEOUT_S)];
   if (render) args.push("--wait-until", "networkidle0");
@@ -120,10 +152,16 @@ function runObscura(url, render) {
 }
 
 // Follow redirects by hand so every hop gets the same public-address check.
-async function runPlain(url) {
+async function runPlain(url, post) {
   let res;
   for (let hop = 0; ; hop++) {
-    res = await fetch(url, { headers: { "user-agent": UA, accept: "*/*" }, redirect: "manual", signal: AbortSignal.timeout(TIMEOUT_S * 1000) });
+    const init = { headers: { "user-agent": UA, accept: (post && post.accept) || "*/*" }, redirect: "manual", signal: AbortSignal.timeout(TIMEOUT_S * 1000) };
+    if (post && hop === 0) {
+      init.method = "POST";
+      init.body = post.body;
+      init.headers["content-type"] = "application/json";
+    }
+    res = await fetch(url, init);
     const loc = res.status >= 300 && res.status < 400 && res.headers.get("location");
     if (!loc) break;
     if (hop >= 5) throw httpError(502, "Too many redirects.");
@@ -160,17 +198,26 @@ createServer(async (req, res) => {
   const u = new URL(req.url, `http://${HOST}:${PORT}`);
   const ip = (TRUST_PROXY && String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()) || req.socket.remoteAddress;
   if (req.method === "OPTIONS") return send(res, origin, 204, {});
-  if (req.method !== "GET") return send(res, origin, 405, { ok: false, error: "GET only." });
+  if (req.method !== "GET" && req.method !== "POST") return send(res, origin, 405, { ok: false, error: "GET or POST only." });
   if (u.pathname === "/health") return send(res, origin, 200, { ok: true, engine: hasObscura ? "obscura" : "fetch" });
   if (u.pathname !== "/fetch") return send(res, origin, 404, { ok: false, error: "Not found." });
+  let asked = null;
+  if (req.method === "POST") {
+    try { asked = await readJsonBody(req); }
+    catch (e) { return send(res, origin, e.status || 400, { ok: false, error: e.message }); }
+  }
   if (rateLimited(ip)) return send(res, origin, 429, { ok: false, error: "Too many requests. Wait a minute and try again." });
   try {
-    const target = await checkUrl(u.searchParams.get("url") || "");
+    const target = await checkUrl((asked && asked.url) || u.searchParams.get("url") || "");
     if (!(await robotsAllows(target))) throw httpError(403, "This site's robots.txt asks automated readers not to fetch that page, so Signal won't.");
-    // Feeds and JSON don't need rendering; pages do.
-    const render = u.searchParams.get("render") === "1";
+    // Feeds and JSON don't need rendering; pages do. A POST is always a plain request:
+    // Obscura fetches with GET.
+    const render = !asked && u.searchParams.get("render") === "1";
+    const post = asked && asked.method === "POST" ? { body: asked.body, accept: asked.accept } : null;
     let out;
-    if (hasObscura) {
+    if (post) {
+      out = await runPlain(target.href, post);
+    } else if (hasObscura) {
       if (render && rendering >= MAX_RENDERS) throw httpError(503, "The helper is busy rendering other pages. Try again in a moment.");
       if (render) rendering++;
       try { out = await runObscura(target.href, render); }
@@ -180,7 +227,7 @@ createServer(async (req, res) => {
       out = await runPlain(target.href);
     }
     if (out.body.length > MAX_BYTES) throw httpError(413, "That response is too large.");
-    console.log(new Date().toISOString(), out.engine, render ? "render" : "raw", target.href);
+    console.log(new Date().toISOString(), out.engine, render ? "render" : post ? "post" : "raw", target.href);
     send(res, origin, 200, { ok: true, url: target.href, ...out });
   } catch (e) {
     console.log(new Date().toISOString(), "error", e.message);

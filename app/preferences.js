@@ -260,6 +260,7 @@
                   '<p class="grow-label"><span id="src-' + s.id + '">' + esc(s.label) + "</span>" +
                     '<span class="chip ' + st.cls + '">' + st.word + "</span></p>" +
                   '<p class="grow-help">' + esc(s.note) + "</p>" +
+                  '<p class="grow-help src-state" data-src-state="' + s.id + '" aria-live="polite" hidden></p>' +
                   (hasSetup[s.id]
                     ? '<button class="disclose" type="button" data-disclose="' + s.id + '" aria-controls="setup-' + s.id + '">' +
                         CHEVRON + '<span data-disclose-text="' + s.id + '"></span></button>'
@@ -288,6 +289,24 @@
       open.discord = !draft.discordChannels.length;
     }
 
+    /* What each built-in source did on its last check (scheduler.js). */
+    function renderSourceStates() {
+      var SCH = window.SignalSchedule;
+      var by = {};
+      if (SCH && SCH.sources) SCH.sources().forEach(function (x) { by[x.id] = x; });
+      D.SOURCES.forEach(function (s) {
+        var el = $('[data-src-state="' + s.id + '"]');
+        if (!el) return;
+        var x = by[s.id];
+        var text = "";
+        if (x && x.lastError) text = "Last check failed: " + x.lastError;
+        else if (x && x.detail) text = "Last check: " + x.detail;
+        el.textContent = text;
+        el.hidden = !text;
+        el.classList.toggle("is-error", !!(x && x.lastError));
+      });
+    }
+
     function syncSources() {
       D.SOURCES.forEach(function (s) {
         var input = $('[data-source="' + s.id + '"]');
@@ -297,6 +316,7 @@
       });
       renderDisclosure();
       renderSourceCounts();
+      renderSourceStates();
     }
 
     function renderDisclosure() {
@@ -767,7 +787,7 @@
         });
         syncSchedule();
       });
-      window.addEventListener("signal:schedule", syncSchedule);
+      window.addEventListener("signal:schedule", function () { syncSchedule(); renderSourceStates(); });
       window.addEventListener("signal:sources", syncSchedule);
       window.addEventListener("signal-ai-change", syncSchedule);
       setInterval(syncSchedule, 30000);
