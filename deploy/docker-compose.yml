@@ -1,0 +1,152 @@
+# Signal: production stack for one small VPS.
+#
+# Run from the repo root:   docker compose -f deploy/docker-compose.yml ...
+# (the project directory is deploy/, so ${VARS} below and env_file come from deploy/.env)
+#
+# THE FULL STACK CANNOT START YET. `web/` and `collector/` do not exist in the repo.
+# They sit behind the "app" profile so a plain `up` only starts postgres + caddy:
+#
+#   docker compose -f deploy/docker-compose.yml up -d                 # postgres + caddy (smoke test)
+#   docker compose -f deploy/docker-compose.yml --profile app up -d --build   # everything, once web/ and collector/ exist
+#
+# Sized for a ~2 GiB instance. Memory limits add up to about 1.4 GiB, leaving room for the OS
+# and for Docker builds. Build images elsewhere (or add swap) if builds run out of memory.
+
+name: signal
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Conservative settings for a small box. Raise if the instance grows.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=40
+      - -c
+      - work_mem=4MB
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No `ports:` on purpose. Postgres is reachable only on the internal network.
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 384m
+    cpus: 0.75
+    logging: *logging
+
+  web:
+    profiles: ["app"]
+    # Future SvelteKit app (adapter-node). Build context does not exist yet: ../web needs a Dockerfile
+    # that runs `node build` on port 3000.
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOST: 0.0.0.0
+      # adapter-node: pin the public origin to the Vercel URL instead of trusting request headers.
+      ORIGIN: ${PUBLIC_ORIGIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+      - edge
+    # Contract for web/: GET /api/healthz returns 200 without touching auth.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/healthz >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    mem_limit: 384m
+    cpus: 0.75
+    logging: *logging
+
+  collector:
+    profiles: ["app"]
+    # Future polling loop + Discord bot + Telegram notify. Build context does not exist yet:
+    # ../collector needs a Dockerfile. Long-running, no HTTP port.
+    build:
+      context: ..
+      dockerfile: collector/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Needs outbound internet (sources, Discord gateway, Telegram), so it joins edge as well.
+    networks:
+      - internal
+      - edge
+    # Contract for collector/: touch /tmp/collector-heartbeat on every tick (the reference ticks every 20s).
+    healthcheck:
+      test: ["CMD-SHELL", "find /tmp/collector-heartbeat -mmin -2 2>/dev/null | grep -q . || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    mem_limit: 384m
+    cpus: 0.75
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificates live here; do not delete
+      - caddy_config:/config
+    # Deliberately no depends_on: web, so caddy can run alone for the /healthz smoke test.
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2019/config/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    mem_limit: 128m
+    cpus: 0.5
+    logging: *logging
+
+networks:
+  # No outbound internet and no published ports. Only postgres, web and collector join it.
+  internal:
+    internal: true
+  # Normal bridge network: caddy <-> web, and outbound traffic for web/collector.
+  edge: {}
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

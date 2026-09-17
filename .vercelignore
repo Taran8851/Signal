@@ -1,0 +1,13 @@
+# Only the landing page and the static demo console are published.
+# Everything below stays in the repo but is never served by Vercel.
+deploy/
+reference/
+ref/
+docs/
+packages/
+assets/
+AGENTS.md
+DESIGN.md
+.claude/
+app/.qa*.html
+app/ai-playground.html
