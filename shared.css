@@ -13,6 +13,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button, input { font: inherit; }
+b, strong { font-weight: 500; } /* browser default is 700; DESIGN.md §7 caps weight at 500 */
 a { color: inherit; }
 .shell { width: min(100% - 64px, var(--shell)); margin-inline: auto; }
 .eyebrow {
@@ -265,6 +266,23 @@ legend { padding: 0; color: var(--smoke); font-size: 12px; letter-spacing: .12em
 .sort-list span { display: flex; justify-content: space-between; padding: 16px; border: 1px solid var(--graphite); border-radius: var(--radius-pill); font-size: 12px; }
 .sort-list b { color: var(--mint); font-size: 12px; }
 
+/* Section 4 — the two ways to decide (LLM socket / heuristic search), then open sources. */
+.mode-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 24px; }
+.mode-card { display: grid; grid-template-columns: .8fr 1fr; gap: 40px; min-height: auto; }
+.mode-card-plain { grid-template-columns: 1fr; background: var(--parchment); }
+.brief-visual { align-self: end; margin: 0; padding: 24px; border: 1px solid var(--ash); border-radius: var(--radius-soft); background: var(--parchment); }
+.brief-visual > div { display: grid; grid-template-columns: 112px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--ash); font-size: 12px; }
+.brief-visual > .brief-head { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px; border-top: 0; color: var(--smoke); letter-spacing: .1em; }
+.brief-head b { padding: 0 8px; border: 1px solid var(--off-black); border-radius: var(--radius-pill); color: var(--off-black); font-weight: 500; }
+.brief-visual dt { color: var(--smoke); letter-spacing: .1em; }
+.brief-visual dd { margin: 0; color: var(--off-black); }
+.mode-divider { margin: 64px 0 24px; color: var(--smoke); font-size: 12px; letter-spacing: .12em; }
+.open-sources { display: grid; grid-template-columns: .8fr 1fr; gap: 40px; min-height: auto; margin-top: 24px; }
+.source-types { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-self: end; margin: 0; padding: 0; list-style: none; }
+.source-types li { display: grid; gap: 8px; padding: 24px; border: 1px solid var(--ash); border-radius: var(--radius-soft); background: var(--parchment); }
+.source-types b { font-size: 12px; font-weight: 500; letter-spacing: .1em; }
+.source-types span { color: var(--graphite); font-size: 14px; }
+
 .console-section { background: var(--paper); }
 .console-shell { overflow: hidden; border: 1px solid var(--ash); border-radius: var(--radius-card); background: var(--off-black); }
 .console-topbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 16px 24px; color: var(--ash); border-bottom: 1px solid var(--console-edge); font-size: 12px; letter-spacing: .1em; }
@@ -368,7 +386,7 @@ footer { padding: 40px 0; background: var(--off-black); color: var(--parchment);
   .metric-note { grid-column: 1/-1; }
   .filter-demo { grid-template-columns: 1fr; }
   .filter-controls { border-right: 0; border-bottom: 1px solid var(--ash); }
-  .feature-grid, .student-os-grid { grid-template-columns: 1fr; }
+  .feature-grid, .mode-grid, .student-os-grid { grid-template-columns: 1fr; }
   .feature-card-large { grid-template-columns: 1fr 1fr; }
   .audience-grid { grid-template-columns: 1fr; }
   .audience-featured { transform: none; }
@@ -424,6 +442,11 @@ footer { padding: 40px 0; background: var(--off-black); color: var(--parchment);
   .feature-grid, .feature-card-large { grid-template-columns: 1fr; }
   .feature-card { min-height: 360px; padding: 32px; }
   .feature-card-large { min-height: auto; }
+  .mode-card, .open-sources, .source-types { grid-template-columns: 1fr; }
+  .mode-card, .open-sources { gap: 32px; min-height: auto; }
+  .brief-visual { padding: 16px; }
+  .brief-visual > div { grid-template-columns: 1fr; gap: 8px; }
+  .mode-divider { margin-top: 48px; }
   .console-body { grid-template-columns: 1fr; }
   .console-body aside { display: none; }
   .console-tools { grid-template-columns: 1fr 1fr; }

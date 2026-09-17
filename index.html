@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Signal — Every Opportunity. None of the Scrolling.</title>
-  <meta name="description" content="Signal watches hackathon boards, research feeds, your Discord servers and pages you pick, and surfaces only what matches what you actually care about.">
+  <meta name="description" content="Signal watches the places opportunities appear, in the fields you choose, and tells you which ones fit where you are now. Hackathons, calls for papers, research programmes and more. Not a job board.">
   <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="shared.css?v=2">
+  <link rel="stylesheet" href="shared.css?v=5">
 </head>
 <body>
   <div class="announcement" id="announcement">
@@ -40,9 +40,9 @@
       <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
       <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
       <div class="shell hero-content">
-        <p class="eyebrow">THE OPPORTUNITY FILTER FOR STUDENTS</p>
+        <p class="eyebrow">FOR STUDENTS WHO ASSUME IT&rsquo;S TOO EARLY</p>
         <h1>Every Opportunity.<br>None of the Scrolling.</h1>
-        <p class="hero-copy">Signal watches eight sources&nbsp;— hackathon boards, research feeds, your Discord servers, pages you pick&nbsp;— and surfaces only what matches what you actually care about.</p>
+        <p class="hero-copy">Most students miss opportunities because they think they&rsquo;re too early, or never look. Signal watches eight sources&nbsp;— hackathon boards, research feeds, your Discord servers, pages you pick&nbsp;— in the fields you choose, and surfaces only what fits where you are now.</p>
         <div class="hero-actions">
           <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
           <a class="button button-ghost" href="#filter">SEE WHAT IT FILTERS</a>
@@ -90,7 +90,7 @@
         <div class="source-glass">
           <p class="source-label">WATCHING</p>
           <div class="source-viewport">
-            <!-- The list appears twice so the loop is seamless; the copy is hidden from screen readers. -->
+            <!-- The list appears twice so the loop has no gap; the copy is hidden from screen readers. -->
             <div class="source-marquee">
             <ul class="source-group">
               <li>GMAIL + LINKEDIN MAIL <span class="source-soon">NOT AVAILABLE YET</span></li>
@@ -234,17 +234,45 @@
     <section class="section features" id="decisions">
       <div class="shell">
         <div class="section-heading section-heading-split">
-          <div><p class="eyebrow">HOW SIGNAL WORKS</p><h2>Rules you can read. <br>Results you can trace.</h2></div>
-          <p>Signal uses explicit keyword matching, dedupe, a threshold, and a sort order. Every result can show you why it appeared.</p>
+          <div><p class="eyebrow">HOW IT DECIDES</p><h2>Two ways to decide. <br>One pipeline.</h2></div>
+          <p>Plug in a model and every opportunity gets a brief. Or use heuristic search: keyword rules, no key. Either way, exclude terms and dedupe run first, and every result shows where its score came from.</p>
         </div>
+
+        <div class="mode-grid">
+          <article class="feature-card mode-card">
+            <div class="feature-copy">
+              <span>A / LLM SOCKET</span>
+              <h3>Your model. A brief per opportunity.</h3>
+              <p>Connect any compatible model: Anthropic, an OpenAI-compatible endpoint, or a local server. Each opportunity gets a relevance from 0 to 10 and a short brief, always labelled as the model&rsquo;s.</p>
+            </div>
+            <dl class="brief-visual" aria-label="What a model brief covers">
+              <div class="brief-head"><span>EXAMPLE BRIEF · WHAT IT COVERS</span><b>LLM</b></div>
+              <div><dt>FIT</dt><dd>Why it fits the fields you chose</dd></div>
+              <div><dt>STAGE</dt><dd>Whether where you are now is enough</dd></div>
+              <div><dt>GAINS</dt><dd>What you would get out of it</dd></div>
+              <div><dt>ASKS</dt><dd>What it asks you to submit</dd></div>
+              <div><dt>EFFORT</dt><dd>Rough time it takes</dd></div>
+              <div><dt>FIRST STEPS</dt><dd>What to do first</dd></div>
+            </dl>
+          </article>
+          <article class="feature-card mode-card mode-card-plain">
+            <div class="feature-copy">
+              <span>B / HEURISTIC SEARCH</span>
+              <h3>Keyword rules. No key.</h3>
+              <p>Fast, free and explainable. Nothing leaves your browser in the demo. The four steps below are the whole method, and they run for every item even when a model is plugged in.</p>
+            </div>
+          </article>
+        </div>
+
+        <p class="mode-divider">HEURISTIC SEARCH, STEP BY STEP</p>
 
         <div class="feature-grid">
           <article class="feature-card feature-card-large">
             <div class="feature-copy"><span>01 / MATCH</span><h3>Score what you care about.</h3><p>Interest terms add 4 in a title or 3 in the body. Boost terms add 2 anywhere. Exclude terms archive the row.</p></div>
             <div class="score-visual">
-              <div class="sample-title">Edge AI research internship</div>
+              <div class="sample-title">Edge AI research fellowship</div>
               <div class="score-line"><span>EDGE AI · TITLE</span><b>+4</b></div>
-              <div class="score-line"><span>INTERNSHIP · BOOST</span><b>+2</b></div>
+              <div class="score-line"><span>FELLOWSHIP · BOOST</span><b>+2</b></div>
               <div class="score-total"><span>MATCH STRENGTH</span><strong>6</strong></div>
             </div>
           </article>
@@ -266,6 +294,20 @@
             <div class="sort-list"><span>RECENT <b>DEFAULT</b></span><span>DEADLINE</span><span>MATCH</span></div>
           </article>
         </div>
+
+        <article class="feature-card open-sources" id="sources">
+          <div class="feature-copy">
+            <span>OPEN SOURCES</span>
+            <h3>Add your own source.</h3>
+            <p>Beyond the nine built-in sources, point Signal at a URL you are allowed to read. It keeps the name you give it and is never shown as built-in. Signal does not scrape sites that forbid it.</p>
+          </div>
+          <ul class="source-types">
+            <li><b>RSS / ATOM FEED</b><span>A blog, a lab&rsquo;s news page, a Google Alerts feed</span></li>
+            <li><b>JSON API</b><span>With a mapping from its fields to Signal&rsquo;s</span></li>
+            <li><b>PAGE WATCH</b><span>A page you want to hear about when it changes</span></li>
+            <li><b>SOCIAL FEED</b><span>Through a feed URL, such as an X account via an RSS bridge</span></li>
+          </ul>
+        </article>
       </div>
     </section>
 
@@ -300,13 +342,13 @@
       </div>
     </section>
 
-    <section class="section audience-section">
+    <section class="section audience-section" id="audience">
       <div class="shell">
         <div class="section-heading"><p class="eyebrow">BUILT AROUND YOUR CRITERIA</p><h2>Three students. <br>Three different filters.</h2></div>
         <div class="audience-grid">
-          <article><span>01</span><h3>Internship hunter</h3><p>Computer vision and security roles, boosted by “research intern” and “stipend.”</p><div><b>COMPUTER VISION</b><b>CYBERSECURITY</b><b>STIPEND</b></div></article>
-          <article class="audience-featured"><span>02</span><h3>Hackathon grinder</h3><p>Devpost, Devfolio, Unstop, and MLH with edge AI and IoT at the top.</p><div><b>EDGE AI</b><b>IOT</b><b>HACKATHON</b></div></article>
-          <article><span>03</span><h3>Research applicant</h3><p>WikiCFP, feeds, and watched lab pages tuned for neuromorphic and embedded work.</p><div><b>NEUROMORPHIC</b><b>FELLOWSHIP</b><b>RESEARCH</b></div></article>
+          <article><span>01</span><h3>The first-year who thinks it&rsquo;s too early</h3><p>Devpost, MLH and Unstop, with interest terms for web and security, a boost for “beginner” and “first-time”, and “PhD only” excluded.</p><div><b>BEGINNER</b><b>WEB DEVELOPMENT</b><b>SECURITY</b></div></article>
+          <article class="audience-featured"><span>02</span><h3>The student exploring a new field</h3><p>Moving from mechanical engineering toward robotics. Interest terms for the new field, boosts for workshops and summer schools, WikiCFP to see where the research is.</p><div><b>ROBOTICS</b><b>SUMMER SCHOOL</b><b>WORKSHOP</b></div></article>
+          <article><span>03</span><h3>The student building in public</h3><p>Ships side projects and looks for the next place to show them: hackathons, open-source programmes and calls for papers in edge AI.</p><div><b>OPEN SOURCE</b><b>EDGE AI</b><b>CALL FOR PAPERS</b></div></article>
         </div>
       </div>
     </section>
@@ -345,7 +387,10 @@
       <div class="shell faq-grid">
         <div class="section-heading"><p class="eyebrow">QUESTIONS</p><h2>The short version.</h2></div>
         <div class="faq-list">
-          <details><summary>Does Signal scrape LinkedIn?<span>↓</span></summary><p>No. Signal reads the LinkedIn notification mail that arrives in Gmail. Reading mail is not available in the hosted app yet.</p></details>
+          <details><summary>Is this a job board?<span>↓</span></summary><p>No. Signal is not a job board, an internship listing site or a placement service. It watches where opportunities appear in the fields you choose, like hackathons, calls for papers, research programmes, fellowships and internships, and tells you which fit where you are now. It promises no outcome and never ranks by name.</p></details>
+          <details><summary>Do I need an AI key?<span>↓</span></summary><p>No. Heuristic search scores every item with your keyword rules and needs no key. Plug in a compatible model and each opportunity also gets a relevance from 0 to 10 and a brief: fit, stage, gains, asks, effort and first steps. Exclude terms and dedupe run before any model call.</p></details>
+          <details><summary>Can I add my own sources?<span>↓</span></summary><p>Yes. In the demo console you can add an RSS or Atom feed, a JSON API with a field mapping, a page to watch, or a social feed through a feed URL. Each custom source keeps the name you give it. In the hosted app, the server will do the fetching.</p></details>
+          <details><summary>Does Signal scrape X or LinkedIn?<span>↓</span></summary><p>No. For LinkedIn, Signal reads the notification mail that arrives in Gmail; reading mail is not available in the hosted app yet. For X or any other site, you can add a feed URL you are allowed to read. Signal does not scrape sites that forbid it.</p></details>
           <details><summary>Can I try it today?<span>↓</span></summary><p>Yes. The <a class="inline-link" href="app/login.html">demo console</a> runs on public sample rows. Any email and password signs you in, and nothing is sent anywhere.</p></details>
           <details><summary>How does match strength work?<span>↓</span></summary><p>Interest terms add 4 in titles or 3 in bodies. Boost terms add 2. Exclude terms archive rows.</p></details>
           <details><summary>Which notification channels exist?<span>↓</span></summary><p>Telegram. Discord is an inbound source, not a notification channel. There is no email sender.</p></details>
