@@ -87,9 +87,9 @@ cd packages/core && npm test
 2. Framework preset: **Other**. Build command: none. Output directory: the repo root (`.`).
 3. Deploy.
 
-`vercel.json` adds security headers and rewrites `/console/*` and `/api/*` to a VPS. Until the
-app exists, replace `VPS_HOSTNAME` or those two paths will fail; the landing page and `/app/`
-are unaffected. `.vercelignore` keeps `deploy/`, `reference/`, `docs/`, `packages/` and the rule
+`vercel.json` adds security headers only. The rewrites that send `/console/*` and `/api/*` to
+the VPS live in `deploy/vercel.rewrites.json`; merge them into `vercel.json` once the server
+exists and `VPS_HOSTNAME` is replaced. `.vercelignore` keeps `deploy/`, `reference/`, `docs/`, `packages/` and the rule
 files out of the published site.
 
 ## Credits and licences
