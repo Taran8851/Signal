@@ -1,0 +1,16 @@
+{
+  "name": "@signal/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure, dependency-free scoring and pipeline rules for Signal, re-implemented from reference/signal with tests pinning its behaviour.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}
