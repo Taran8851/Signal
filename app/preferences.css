@@ -202,6 +202,10 @@
    7b. Your sources — the user's own feeds, APIs and pages
 --------------------------------------------------------------------------- */
 .custom-sources { display: flex; flex-direction: column; gap: 8px; }
+.schedule-set { margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--panel-border); }
+.schedule-set .segmented { flex: none; }
+.schedule-status { justify-content: space-between; flex-wrap: wrap; min-height: 0; }
+.schedule-status .grow-help { flex: 1 1 240px; min-width: 0; }
 .group-label-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; padding-right: 24px; }
 .group-label-row .group-label { margin-top: 0; }
 .group-label-note { color: var(--text-3); font-size: 12px; }

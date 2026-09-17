@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="app.css?v=5">
-  <link rel="stylesheet" href="preferences.css?v=2">
-  <link rel="stylesheet" href="ai.css?v=1">
+  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="preferences.css?v=3">
+  <link rel="stylesheet" href="ai.css?v=3">
 </head>
 <body data-page="preferences">
   <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -196,6 +196,38 @@
               <p class="pset-aside" data-sources-count aria-live="polite"></p>
             </header>
 
+            <div class="schedule-set" data-schedule-set>
+              <div class="grow">
+                <div class="grow-text">
+                  <p class="grow-label" id="sched-on-label">Check my sources automatically</p>
+                  <p class="grow-help">Runs while Signal is open in this browser. Watched pages are read by your model when one is set up under Scoring, otherwise by keyword search over the page's links.</p>
+                </div>
+                <label class="switch"><input type="checkbox" data-sched="on" aria-labelledby="sched-on-label"><span></span></label>
+              </div>
+              <div class="grow">
+                <div class="grow-text">
+                  <p class="grow-label" id="sched-every-label">How often</p>
+                </div>
+                <div class="segmented" role="radiogroup" aria-labelledby="sched-every-label">
+                  <label><input type="radio" name="sched-every" value="15"><span>15 min</span></label>
+                  <label><input type="radio" name="sched-every" value="30"><span>30 min</span></label>
+                  <label><input type="radio" name="sched-every" value="60"><span>1 h</span></label>
+                  <label><input type="radio" name="sched-every" value="180"><span>3 h</span></label>
+                </div>
+              </div>
+              <div class="grow">
+                <div class="grow-text">
+                  <p class="grow-label" id="sched-brief-label">Brief new signals with my model</p>
+                  <p class="grow-help">Each new signal costs one model call. Without a model, or in Keyword mode, new signals get keyword scores.</p>
+                </div>
+                <label class="switch"><input type="checkbox" data-sched="brief" aria-labelledby="sched-brief-label"><span></span></label>
+              </div>
+              <div class="grow schedule-status">
+                <p class="grow-help" data-sched-status aria-live="polite"></p>
+                <button class="button button-secondary button-small" type="button" data-sched-now>Check now</button>
+              </div>
+            </div>
+
             <div class="custom-sources" data-custom-sources></div>
 
             <div data-source-list></div>
@@ -379,6 +411,16 @@
         </div>
       </section>
 
+      <section class="sheet-section" data-src-extract hidden>
+        <h3 id="src-extract-label">How to read this page</h3>
+        <div class="segmented" role="radiogroup" aria-labelledby="src-extract-label">
+          <label><input type="radio" name="src-extract" value="auto" checked><span>Find opportunities</span></label>
+          <label><input type="radio" name="src-extract" value="search"><span>Keyword search only</span></label>
+          <label><input type="radio" name="src-extract" value="off"><span>Whole page as one signal</span></label>
+        </div>
+        <p class="src-note" data-src-extract-note></p>
+      </section>
+
       <section class="sheet-section" data-src-json hidden>
         <h3>Field mapping</h3>
         <p class="src-help">Dot paths, like <code>data.items</code>. Items is where the list is; the rest are inside one item. Only title is required.</p>
@@ -426,9 +468,10 @@
   <p class="toast glass" data-toast role="status" hidden></p>
 
   <script src="app-data.js?v=3"></script>
-  <script src="sources.js?v=3"></script>
+  <script src="sources.js?v=4"></script>
   <script src="ai.js?v=4"></script>
-  <script src="app.js?v=5"></script>
-  <script src="preferences.js?v=4"></script>
+  <script src="scheduler.js?v=1"></script>
+  <script src="app.js?v=8"></script>
+  <script src="preferences.js?v=5"></script>
 </body>
 </html>

@@ -506,6 +506,7 @@
           return v;
         })(),
         sample: field("sample").value,
+        extract: checkedValue("src-extract") || "auto",
         mapping: mapping
       };
     }
@@ -516,6 +517,7 @@
       field("sample").value = def.sample || "";
       A.syncRadios("src-type", def.type || "rss");
       A.syncRadios("src-mode", def.mode || "fetch");
+      A.syncRadios("src-extract", def.extract || "auto");
       var m = def.mapping || {};
       $all("[data-map]", sheet).forEach(function (i) { i.value = m[i.getAttribute("data-map")] || ""; });
     }
@@ -525,6 +527,14 @@
       var paste = def.mode === "paste";
       $("[data-src-social-note]", sheet).hidden = def.type !== "social";
       $("[data-src-json]", sheet).hidden = def.type !== "json";
+      $("[data-src-extract]", sheet).hidden = def.type !== "page";
+      $("[data-src-extract-note]", sheet).textContent = {
+        auto: S && S.modelReadyForPages && S.modelReadyForPages()
+          ? "Your model lists each opportunity on the page. Every link it gives must be a real link on the page, and deadlines must appear in the page text."
+          : "No model is set up (or Scoring mode is Keyword), so Signal searches the page's links for opportunities and your interests. Add a model key under Scoring to have your model read the page instead.",
+        search: "Signal searches the page's links for opportunity words and your interests. No model calls.",
+        off: "One signal each time the page's text changes."
+      }[def.extract] || "";
       $("[data-src-paste]", sheet).hidden = !paste;
       $("[data-src-paste-label]", sheet).textContent = PASTE_LABELS[def.type];
       $("[data-src-url-label]", sheet).textContent = paste ? "Link (optional, for your reference)" : "Link";
@@ -719,11 +729,50 @@
 
     form.addEventListener("input", function () { setError(""); invalidate(); });
     form.addEventListener("change", function (e) {
-      if (e.target.name === "src-type" || e.target.name === "src-mode") { syncForm(); showCors(false); invalidate(); }
+      if (e.target.name === "src-type" || e.target.name === "src-mode" || e.target.name === "src-extract") { syncForm(); showCors(false); invalidate(); }
     });
     form.addEventListener("submit", function (e) { e.preventDefault(); submit(); });
     sheet.addEventListener("close", function () { removing = null; });
     window.addEventListener("signal:sources", function () { if (!sheet.open) renderCustom(); });
+
+    /* ---------- automatic checks ---------- */
+    var SCH = window.SignalSchedule || null;
+    var schedEl = $("[data-schedule-set]");
+    function syncSchedule() {
+      if (!SCH || !schedEl) { if (schedEl) schedEl.hidden = true; return; }
+      var st = SCH.status();
+      $('[data-sched="on"]', schedEl).checked = st.settings.on;
+      $('[data-sched="brief"]', schedEl).checked = st.settings.brief;
+      A.syncRadios("sched-every", String(st.settings.every));
+      $all('input[name="sched-every"]', schedEl).forEach(function (i) { i.disabled = !st.settings.on; });
+      $("[data-sched-status]", schedEl).textContent = SCH.describe(st);
+      var now = $("[data-sched-now]", schedEl);
+      now.disabled = st.running || !st.sources;
+      now.textContent = st.running ? "Checking…" : "Check now";
+    }
+    if (SCH && schedEl) {
+      // These save straight away and stay out of the unsaved-changes bar.
+      schedEl.addEventListener("change", function (e) {
+        e.stopPropagation();
+        var t = e.target;
+        if (t.getAttribute("data-sched") === "on") SCH.saveSettings({ on: t.checked });
+        else if (t.getAttribute("data-sched") === "brief") SCH.saveSettings({ brief: t.checked });
+        else if (t.name === "sched-every") SCH.saveSettings({ every: Number(t.value) });
+      });
+      schedEl.addEventListener("input", function (e) { e.stopPropagation(); });
+      $("[data-sched-now]", schedEl).addEventListener("click", function () {
+        SCH.checkNow().then(function (r) {
+          renderCustom();
+          if (r && r.checked != null) A.toast(r.added ? "Added " + plural(r.added, "signal") + " from your sources" : "No new signals from your sources");
+        });
+        syncSchedule();
+      });
+      window.addEventListener("signal:schedule", syncSchedule);
+      window.addEventListener("signal:sources", syncSchedule);
+      window.addEventListener("signal-ai-change", syncSchedule);
+      setInterval(syncSchedule, 30000);
+      syncSchedule();
+    }
     window.addEventListener("storage", function (e) { if (e.key === (S && S.KEY)) renderCustom(); });
 
     /* ---------- feeds and watched pages ---------- */

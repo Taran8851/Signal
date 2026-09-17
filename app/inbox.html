@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="app.css?v=5">
-  <link rel="stylesheet" href="ai.css?v=2">
+  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="ai.css?v=3">
 </head>
 <body data-page="inbox">
   <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -64,6 +64,13 @@
           <p class="page-actions-note" id="score-all-note" data-score-all-note hidden></p>
         </div>
       </header>
+
+      <!-- Automatic checks of your own sources (scheduler.js, app.js) -->
+      <div class="schedule-bar glass" data-schedule role="status" aria-live="polite" hidden>
+        <p class="schedule-text" data-schedule-text></p>
+        <button class="button button-secondary button-small" type="button" data-schedule-now>Check now</button>
+        <a class="button button-quiet button-small" href="preferences.html#sources">Schedule</a>
+      </div>
 
       <!-- Progress for "Score all with AI" (app.js) -->
       <div class="ai-run glass" data-ai-run role="status" aria-live="polite" hidden>
@@ -252,8 +259,9 @@
   <p class="toast glass" data-toast role="status" hidden></p>
 
   <script src="app-data.js?v=2"></script>
-  <script src="sources.js?v=3"></script>
+  <script src="sources.js?v=4"></script>
   <script src="ai.js?v=4"></script>
-  <script src="app.js?v=7"></script>
+  <script src="scheduler.js?v=1"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

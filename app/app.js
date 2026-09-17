@@ -841,6 +841,34 @@
       else if (h === "#new") openAdd();
     }
 
+    /* ---------- automatic checks of your own sources ---------- */
+    var SCH = window.SignalSchedule || null;
+    var schedBar = $("[data-schedule]");
+    var schedWasRunning = false;
+    function syncSchedule() {
+      if (!SCH || !schedBar) return;
+      var st = SCH.status();
+      schedBar.hidden = false;
+      $("[data-schedule-text]", schedBar).textContent = SCH.describe(st);
+      var now = $("[data-schedule-now]", schedBar);
+      now.disabled = st.running || !st.sources;
+      now.textContent = st.running ? "Checking…" : "Check now";
+      // A check just finished: new rows and briefs are in storage.
+      if (schedWasRunning && !st.running) render();
+      schedWasRunning = st.running;
+    }
+    if (SCH && schedBar) {
+      $("[data-schedule-now]", schedBar).addEventListener("click", function () {
+        SCH.checkNow().then(function (r) {
+          if (r && r.checked != null) toast(r.added ? "Added " + plural(r.added, "signal") + " from your sources" : "No new signals from your sources");
+        });
+        syncSchedule();
+      });
+      window.addEventListener("signal:schedule", syncSchedule);
+      setInterval(syncSchedule, 30000);
+      syncSchedule();
+    }
+
     // Scores from the model change the list labels
     window.addEventListener("signal-ai-change", function (e) {
       if (run && e.detail && e.detail.what === "usage") return; // the run re-renders when it ends
@@ -871,6 +899,7 @@
     if (page !== "login" && !isAuthed()) { location.replace("login.html"); return; }
     initShell();
     if (page === "login") initLogin();
+    if (page !== "login" && window.SignalSchedule) window.SignalSchedule.start();
     if (page === "inbox") initInbox();
     if (page === "preferences" && window.SignalPreferences) window.SignalPreferences.init();
   });

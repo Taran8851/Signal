@@ -155,3 +155,7 @@ ol.ai-brief-list li { min-height: 24px; padding-top: 2px; }
   .ai-segmented { flex-wrap: nowrap; }
   .ai-segmented label > span { padding: 4px 8px; }
 }
+
+/* Automatic checks of your own sources (inbox) */
+.schedule-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 24px; padding: 12px 24px; border-radius: 24px; }
+.schedule-text { flex: 1 1 240px; min-width: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
