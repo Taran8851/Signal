@@ -527,7 +527,7 @@
   /* =====================================================================
      5. Fetch preview and import
   ===================================================================== */
-  var CORS_MESSAGE = "Your browser can't read this site directly. The hosted app fetches sources on the server. For this demo, paste a sample instead.";
+  var CORS_MESSAGE = "Your browser can't read this site directly. Start the fetch helper (node tools/fetch-helper.mjs) and press Test again, or paste a sample instead.";
 
   function fetchPreview(def) {
     def = def || {};
@@ -558,11 +558,40 @@
           clearTimeout(timer);
           if (e && e.signalParse) return fail(e.message);
           if (e && e.name === "AbortError") return fail("The site took too long to answer.");
-          // fetch() rejects with a TypeError for CORS and network failures alike
-          fail(CORS_MESSAGE, true);
+          // fetch() rejects with a TypeError for CORS and network failures alike.
+          // Try the local fetch helper (tools/fetch-helper.mjs) before giving up.
+          viaHelper(def).then(function (text) {
+            try { done(parse(def, text)); } catch (e2) { fail(e2.signalParse ? e2.message : "That source couldn't be read."); }
+          }, function (e2) {
+            if (e2 && e2.helperMessage) return fail(e2.helperMessage);
+            fail(CORS_MESSAGE, true);
+          });
         });
     });
   }
+
+  // Local fetch helper. The URL can be changed with localStorage "signal_demo_fetch_helper";
+  // set it to "off" to disable.
+  var HELPER_KEY = "signal_demo_fetch_helper";
+  function helperUrl() {
+    var v = "";
+    try { v = localStorage.getItem(HELPER_KEY) || ""; } catch (e) {}
+    if (v === "off") return "";
+    return (v || "http://127.0.0.1:8787").replace(/\/+$/, "");
+  }
+  function viaHelper(def) {
+    var base = helperUrl();
+    if (!base || typeof global.fetch !== "function") return Promise.reject(null);
+    var q = base + "/fetch?url=" + encodeURIComponent(String(def.url).trim()) + (def.type === "page" ? "&render=1" : "");
+    return global.fetch(q, { credentials: "omit", signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(45000) : undefined })
+      .then(function (res) { return res.json(); }, function () { throw null; })
+      .then(function (j) {
+        if (!j || !j.ok) { var err = new Error("helper"); err.helperMessage = (j && j.error) || "The fetch helper couldn't read that source."; throw err; }
+        lastEngine = j.engine || "";
+        return String(j.body || "");
+      });
+  }
+  var lastEngine = "";
 
   function countRows(sourceId, rows) {
     return (rows || readRows()).filter(function (r) { return r.source === sourceId; }).length;
