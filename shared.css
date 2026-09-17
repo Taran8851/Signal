@@ -482,3 +482,10 @@ html.motion-ready .hero-pipeline:not(.is-drawn) .node-pill, html.motion-ready .h
   .pipeline-lines path { stroke-dashoffset: 0 !important; }
   .hero-pipeline .node-pill, .hero-pipeline .output-pill, .hero-pipeline .filter-core { opacity: 1 !important; transform: none !important; }
 }
+
+/* Keyboard focus for controls whose native input is visually hidden or unstyled (QA pass). */
+.segmented input:focus-visible + span,
+.toggle-row input:focus-visible + span { outline: 2px solid var(--off-black); outline-offset: 2px; }
+.signup-inner input:focus-visible,
+.console-tools input:focus-visible { outline: 2px solid var(--off-black); outline-offset: 2px; }
+.console-tools input:focus-visible { outline-color: var(--parchment); }

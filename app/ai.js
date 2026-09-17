@@ -605,6 +605,9 @@
     /* generic words in opportunity listings that say nothing about the topic */
     "open track side hosted host focused based general student students team teams university chapter season edition annual " +
     "international conference workshop symposium call papers paper event events apply application applications deadline " +
+    /* generic listing words: never useful as interests, boosts or blocks */
+    "applied innovations innovation policy general open track tracks hosted university chapter focused based " +
+    "student students team teams build building sovereignty digital " +
     /* source names */
     "mlh devpost devfolio unstop wikicfp"
   ).split(" ").reduce(function (m, w) { if (w) m[w] = true; return m; }, {});
