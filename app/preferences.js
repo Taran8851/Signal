@@ -499,7 +499,12 @@
         name: field("name").value.trim(),
         type: checkedValue("src-type") || "rss",
         mode: checkedValue("src-mode") || "fetch",
-        url: field("url").value.trim(),
+        url: (function () {
+          // Accept "unstop.com" by assuming https://, and show the fixed link in the field.
+          var el = field("url"), v = el.value.trim();
+          if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s\/]+\.[^\s\/]+/.test(v)) { v = "https://" + v.replace(/^\/+/, ""); el.value = v; }
+          return v;
+        })(),
         sample: field("sample").value,
         mapping: mapping
       };
