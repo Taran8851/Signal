@@ -1,0 +1,194 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import {
+  KINDS, SOURCES, STATUSES, ago, archiveMatching, listSignals, listSourceStates, safeUrl, setStatus, sourceHealth,
+  statusCounts, type SignalFilter, type Status,
+} from "../../../lib/signals";
+import { sameOrigin } from "../../../lib/auth";
+
+const PAGE = 50;
+const sp = Astro.url.searchParams;
+const filter: SignalFilter = {
+  status: sp.get("status") ?? "new",
+  kind: sp.get("kind") ?? "",
+  source: sp.get("source") ?? "",
+  q: (sp.get("q") ?? "").trim(),
+  sort: sp.get("sort") ?? "recent",
+};
+const page = Math.max(1, Number(sp.get("page")) || 1);
+
+if (Astro.request.method === "POST") {
+  if (!sameOrigin(Astro.request, Astro.url)) return new Response("Bad origin", { status: 403 });
+  const f = await Astro.request.formData();
+  const action = String(f.get("action") ?? "");
+  const id = Number(f.get("id"));
+  const st = String(f.get("status") ?? "");
+  if (action === "status" && id && (STATUSES as readonly string[]).includes(st)) setStatus(id, st as Status);
+  // only offered on the inbox tab, so saved and applied items are never swept
+  if (action === "archive-listed") archiveMatching({ ...filter, status: "new" });
+  return Astro.redirect(Astro.url.pathname + Astro.url.search, 303);
+}
+
+const { rows, total } = listSignals(filter, PAGE, (page - 1) * PAGE);
+const counts = statusCounts();
+const states = listSourceStates();
+const user = Astro.locals.user;
+
+const qs = (patch: Record<string, string | number>) => {
+  const u = new URLSearchParams(sp);
+  for (const [k, v] of Object.entries(patch)) (v === "" ? u.delete(k) : u.set(k, String(v)));
+  if (!("page" in patch)) u.delete("page");
+  const s = u.toString();
+  return `/admin/signals${s ? `?${s}` : ""}`;
+};
+
+const due = (d: string | null) => {
+  if (!d) return null;
+  const days = Math.ceil((new Date(`${d}T23:59:59`).getTime() - Date.now()) / 86400_000) - 1;
+  if (days < 0) return { text: `closed ${d}`, warn: false };
+  if (days === 0) return { text: "due today", warn: true };
+  return { text: `due in ${days}d`, warn: days <= 3 };
+};
+
+const LED: Record<string, string> = {
+  message: "--c-neon", hackathon: "--c-neon", research: "--c-tele", cfp: "--c-tele",
+  job: "--c-warn", page: "--c-warn", post: "--c-muted", other: "--c-edge",
+};
+const TONE = { off: "rgb(var(--c-edge))", ok: "rgb(var(--c-neon))", failing: "rgb(var(--c-warn))" };
+
+const lastActive = Math.max(0, ...Object.values(states).map((s) => s.last_run_at ?? 0));
+const stale = !lastActive || Date.now() - lastActive > 15 * 60_000;
+
+const tabs = [["new", "Inbox"], ["saved", "Saved"], ["applied", "Applied"], ["archived", "Archived"], ["all", "All"]] as const;
+const sourceIds = ["gmail", "linkedin", "discord", ...SOURCES.map((s) => s.id).filter((id) => !["gmail", "discord"].includes(id)), "manual"];
+const btn = "extrude-sm rounded-sm px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] no-underline";
+const pages = Math.max(1, Math.ceil(total / PAGE));
+---
+<Admin title="Signals — Console" user={user}>
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display text-[1.6rem] font-bold tracking-[-0.02em] text-txt">Signals</h1>
+      <p class="mt-1.5 text-[14px] text-body">Messages, hackathons, calls for papers and research openings, scored against your preferences.</p>
+    </div>
+    <div class="flex gap-2.5">
+      <a href="/admin/signals/preferences" class={`${btn} text-body`} style="border:1px solid rgb(var(--c-edge))">Preferences</a>
+      <a href="/admin/signals/new" class={`${btn} text-neonText`} style="border:1px solid var(--neon-line-strong)">+ Add</a>
+    </div>
+  </div>
+
+  <!-- source health -->
+  <div class="well mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-sm px-4 py-3">
+    {SOURCES.map((s) => {
+      const h = sourceHealth(states[s.id]);
+      return (
+        <span class="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted" title={h.tone === "failing" ? `failing: ${h.note}` : h.note}>
+          <span class="h-1.5 w-1.5 rounded-full" style={`background:${TONE[h.tone]}`}></span>{s.label}
+        </span>
+      );
+    })}
+    <a href="/admin/signals/preferences#sources" class="tele-link ml-auto font-mono text-[10px] uppercase tracking-[0.12em]">Setup →</a>
+  </div>
+  {stale && (
+    <p class="mt-3 font-mono text-[11px]" style="color:rgb(var(--c-warn))">
+      The collector hasn't run {lastActive ? `since ${ago(lastActive)}` : "yet"}. Start it next to the site: <code>npm run signals</code>
+    </p>
+  )}
+
+  <nav class="mt-7 flex flex-wrap gap-5 border-b border-edge/70 pb-2.5 font-mono text-[11px] uppercase tracking-[0.13em]">
+    {tabs.map(([id, label]) => (
+      <a href={qs({ status: id })} class={`no-underline hover:text-neonText ${filter.status === id ? "text-neonText" : "text-muted"}`}>
+        {label} <span class="tabular-nums opacity-70">{counts[id] ?? 0}</span>
+      </a>
+    ))}
+  </nav>
+
+  <form method="GET" class="mt-4 flex flex-wrap items-center gap-2.5">
+    <input type="hidden" name="status" value={filter.status} />
+    <input name="q" value={filter.q} placeholder="Search title, body, sender, notes" class="well min-w-[14rem] flex-1 rounded-sm px-3 py-2 text-[13px] text-txt outline-none" />
+    <select name="kind" class="well rounded-sm px-2.5 py-2 font-mono text-[11px] text-txt outline-none">
+      <option value="">any kind</option>
+      {KINDS.map((k) => <option value={k} selected={filter.kind === k}>{k}</option>)}
+    </select>
+    <select name="source" class="well rounded-sm px-2.5 py-2 font-mono text-[11px] text-txt outline-none">
+      <option value="">any source</option>
+      {sourceIds.map((s) => <option value={s} selected={filter.source === s}>{s}</option>)}
+    </select>
+    <select name="sort" class="well rounded-sm px-2.5 py-2 font-mono text-[11px] text-txt outline-none">
+      <option value="recent" selected={filter.sort === "recent"}>newest</option>
+      <option value="deadline" selected={filter.sort === "deadline"}>deadline</option>
+      <option value="score" selected={filter.sort === "score"}>best match</option>
+    </select>
+    <button class={`${btn} text-body`} style="border:1px solid var(--neon-line)">Filter</button>
+  </form>
+
+  <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+    <p class="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{total} {total === 1 ? "signal" : "signals"}{pages > 1 && ` · page ${page} of ${pages}`}</p>
+    {filter.status === "new" && total > 0 && (
+      <form method="POST" onsubmit="return confirm('Archive every signal in this list?')">
+        <input type="hidden" name="action" value="archive-listed" />
+        <button class={`${btn} text-muted`} style="border:1px solid rgb(var(--c-edge))">Archive all listed</button>
+      </form>
+    )}
+  </div>
+
+  <div class="mt-3 flex flex-col gap-2.5">
+    {total === 0 && (
+      <p class="text-[14px] text-muted">
+        {counts.all === 0
+          ? <>Nothing collected yet. Run <code class="text-neonText">npm run signals</code> — hackathons and CFPs arrive on the first pass.</>
+          : "Nothing matches."}
+      </p>
+    )}
+    {rows.map((r) => {
+      const url = safeUrl(r.url);
+      const d = due(r.deadline);
+      const matched = JSON.parse(r.matched) as string[];
+      const snippet = r.body.replace(/\s+/g, " ").trim().slice(0, 240);
+      return (
+        <div class="extrude-sm rounded-sm p-4" style="border:1px solid rgb(var(--c-edge))">
+          <div class="flex flex-wrap items-start gap-x-3 gap-y-3">
+            <span class={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${r.kind === "message" && r.status === "new" ? "led-live" : ""}`}
+                  style={`background:rgb(var(${LED[r.kind] ?? "--c-edge"}))`}></span>
+            <div class="min-w-0 flex-1 basis-72">
+              <a href={`/admin/signals/${r.id}`} class="font-display text-[15px] font-semibold leading-snug text-txt no-underline hover:text-neonText">{r.title}</a>
+              <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-muted">
+                <span class="uppercase tracking-[0.1em]">{r.kind}</span>
+                <span class="uppercase tracking-[0.1em]">{r.source}</span>
+                {r.author && <span class="max-w-[22rem] truncate">{r.author}</span>}
+                <span>{ago(r.received_at)}</span>
+                {d && <span style={d.warn ? "color:rgb(var(--c-warn))" : ""}>{d.text}</span>}
+                {r.score > 0 && <span class="text-neonText">score {r.score}</span>}
+              </div>
+              {snippet && <p class="mt-2 line-clamp-2 text-[13px] leading-relaxed text-body">{snippet}</p>}
+              {matched.length > 0 && (
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  {matched.map((m) => <span class="rounded-sm px-1.5 py-0.5 font-mono text-[10px] text-neonText" style="border:1px solid var(--neon-line)">{m}</span>)}
+                </div>
+              )}
+              {r.note && <p class="mt-2 font-mono text-[11px] text-teleText">✎ {r.note}</p>}
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center gap-1.5">
+              {url && <a href={url} target="_blank" rel="noopener noreferrer" class={`${btn} text-teleText`} style="border:1px solid rgb(var(--c-tele-text) / 0.4)">Open ↗</a>}
+              <form method="POST" class="flex gap-1.5">
+                <input type="hidden" name="action" value="status" />
+                <input type="hidden" name="id" value={r.id} />
+                {r.status !== "saved" && <button name="status" value="saved" class={`${btn} text-body`} style="border:1px solid var(--neon-line)">Save</button>}
+                {r.status !== "applied" && <button name="status" value="applied" class={`${btn} text-neonText`} style="border:1px solid var(--neon-line)">Applied</button>}
+                {r.status === "archived"
+                  ? <button name="status" value="new" class={`${btn} text-muted`} style="border:1px solid rgb(var(--c-edge))">Restore</button>
+                  : <button name="status" value="archived" class={`${btn} text-muted`} style="border:1px solid rgb(var(--c-edge))">Archive</button>}
+              </form>
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  {pages > 1 && (
+    <div class="mt-6 flex gap-3 font-mono text-[11px] uppercase tracking-[0.12em]">
+      {page > 1 && <a href={qs({ page: page - 1 })} class="tele-link">← Newer</a>}
+      {page < pages && <a href={qs({ page: page + 1 })} class="tele-link">Older →</a>}
+    </div>
+  )}
+</Admin>

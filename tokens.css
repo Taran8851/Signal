@@ -1,0 +1,52 @@
+/* Single source of truth for design tokens. Shared by shared.css (landing page) and
+   app/app.css (demo console). Values come from ref/variables.css (the Monad reference);
+   how Signal applies them is in DESIGN.md. Change a colour here, once. */
+:root {
+  /* Neutrals */
+  --parchment: #f6f3f1;   /* page canvas — never pure white */
+  --paper: #fbfaf8;       /* Signal addition: lighter warm tint for alternating sections */
+  --off-black: #242424;   /* text, selected controls, inverted surfaces */
+  --ink: #000000;         /* announcement bar only */
+  --graphite: #4e4d4d;    /* secondary text */
+  --smoke: #797776;       /* tertiary text, micro-labels */
+  --ash: #cecac8;         /* every 1px hairline */
+
+  /* Accent — the primary action fill, and nothing else */
+  --blue: #2b59d1;        /* ref: Lake Blue */
+  --blue-deep: #173ba0;   /* hover state of the primary action only */
+
+  /* Surfaces and decorative palette (washes, illustrations) */
+  --mist: #cfdaf5;        /* ref: Periwinkle Mist — the one coloured card surface */
+  --sky: #a0b5eb;
+  --mint: #a7fccd;        /* also: surfaced output in the hero pipeline */
+  --coral: #ff9473;       /* also: deadline chip tint */
+  --gold: #ecda98;
+  --crimson: #f37a0a;
+
+  /* Type */
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;      /* for Untitled Serif */
+  --font-mono: "Geist Mono", "JetBrains Mono", "IBM Plex Mono", monospace; /* for ABC Diatype Mono */
+
+  /* Layout and shape */
+  --shell: 1432px;
+  --radius-card: 40px;
+  --radius-soft: 24px;
+  --radius-inner: 16px;   /* minimum radius for anything inside a card that is not a pill */
+  --radius-pill: 9999px;
+
+  /* Elevation — app floating UI only (menus, dialogs). Never on the landing page. */
+  --shadow-md: rgba(0, 0, 0, 0.1) 0px 0px 10px 0px;
+
+  --ease: cubic-bezier(.2,.8,.2,1);
+
+  /* Console sub-theme — the dark operational surface used by the demo console (app/)
+     and the landing page's "real console" section. */
+  --console-bg: #16171c;
+  --console-panel: #1f2027;
+  --console-line: rgba(148, 163, 204, 0.16);
+  --console-text: #eef0f4;
+  --console-muted: #8b90a0;
+  --console-edge: #444444;
+  --console-surface: #1d1d1d;
+  --console-field: #252525;
+}

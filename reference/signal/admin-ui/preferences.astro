@@ -1,0 +1,217 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import {
+  PREF_DEFAULTS, SOURCES, getPrefs, listSourceStates, safeUrl, setPrefs, sourceHealth,
+  type Link, type SignalPrefs,
+} from "../../../lib/signals";
+import { sameOrigin } from "../../../lib/auth";
+
+const list = (v: FormDataEntryValue | null, max = 80) =>
+  [...new Set(String(v ?? "").split(/[\n,]/).map((t) => t.trim().slice(0, 80)).filter(Boolean))].slice(0, max);
+
+/** "Label | https://…" per line; a bare URL gets its hostname as the label. */
+function links(v: FormDataEntryValue | null, bad: string[]): Link[] {
+  const out: Link[] = [];
+  for (const raw of String(v ?? "").split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const bar = line.indexOf("|");
+    const url = safeUrl(bar >= 0 ? line.slice(bar + 1).trim() : line);
+    if (!url) { bad.push(line); continue; }
+    const label = bar >= 0 ? line.slice(0, bar).trim() : "";
+    out.push({ label: (label || new URL(url).hostname).slice(0, 60), url });
+  }
+  return out.slice(0, 50);
+}
+
+if (Astro.request.method === "POST") {
+  if (!sameOrigin(Astro.request, Astro.url)) return new Response("Bad origin", { status: 403 });
+  const f = await Astro.request.formData();
+  if (f.get("reset")) {
+    setPrefs(structuredClone(PREF_DEFAULTS));
+    return Astro.redirect("/admin/signals/preferences?saved=1", 303);
+  }
+  const bad: string[] = [];
+  const threshold = Number(f.get("threshold"));
+  const next: SignalPrefs = {
+    interests: list(f.get("interests")),
+    boost: list(f.get("boost")),
+    exclude: list(f.get("exclude")),
+    threshold: Number.isFinite(threshold) ? Math.min(30, Math.max(1, Math.round(threshold))) : PREF_DEFAULTS.threshold,
+    cfpCategories: list(f.get("cfpCategories"), 20).map((c) => c.toLowerCase()),
+    feeds: links(f.get("feeds"), bad),
+    watch: links(f.get("watch"), bad),
+    discordChannels: list(f.get("discordChannels"), 100).filter((x) => /^\d{5,25}$/.test(x)),
+    desktop: !!f.get("desktop"),
+    telegram: !!f.get("telegram"),
+    disabled: SOURCES.map((s) => s.id).filter((id) => !f.get(`on_${id}`)),
+  };
+  setPrefs(next);
+  return Astro.redirect(`/admin/signals/preferences?saved=1${bad.length ? `&skipped=${bad.length}` : ""}`, 303);
+}
+
+const p = getPrefs();
+const states = listSourceStates();
+const sp = Astro.url.searchParams;
+const saved = sp.get("saved") === "1";
+const skipped = Number(sp.get("skipped")) || 0;
+const user = Astro.locals.user;
+const lines = (xs: string[]) => xs.join("\n");
+const linkLines = (xs: Link[]) => xs.map((l) => `${l.label} | ${l.url}`).join("\n");
+
+const SETUP: Record<string, string> = {
+  gmail: "GMAIL_USER and GMAIL_APP_PASSWORD in .env — the app password comes from myaccount.google.com/apppasswords and needs 2-Step Verification. In LinkedIn's email settings keep Messages, InMail and Job alerts on: that mail is how LinkedIn reaches this.",
+  discord: "DISCORD_BOT_TOKEN (and DISCORD_USER_ID) in .env; add the bot to your own server. For communities you don't run, press Follow on their announcement channel and point it at a channel in your server — the bot reads it there.",
+  devpost: "No setup.", devfolio: "No setup.", unstop: "No setup.", mlh: "No setup.",
+  wikicfp: "No setup — choose categories above.",
+  feeds: "Add feed links above.",
+  watch: "Add pages above.",
+};
+const TONE = { off: "rgb(var(--c-edge))", ok: "rgb(var(--c-neon))", failing: "rgb(var(--c-warn))" };
+
+// Opens a prefilled Add form from whatever page you're on. Top-level navigation, so the
+// session cookie rides along; nothing is saved until you press Add on this site.
+const addUrl = JSON.stringify(Astro.url.origin + "/admin/signals/new?");
+const bookmarklet =
+  "javascript:(()=>{const s=String(getSelection()).slice(0,3000);open(" + addUrl +
+  "+new URLSearchParams({url:location.href,title:document.title,body:s}))})()";
+
+const label = "font-mono text-[10px] uppercase tracking-[0.13em] text-muted";
+const area = "extrude-sm rounded-sm px-3 py-2.5 font-mono text-[12.5px] leading-relaxed text-txt outline-none";
+const legend = "px-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted";
+const hint = "text-[12px] text-muted";
+---
+<Admin title="Signal preferences — Console" user={user}>
+  <a href="/admin/signals" class="font-mono text-[10px] uppercase tracking-[0.13em] text-muted no-underline hover:text-neonText">← Signals</a>
+  <h1 class="mt-4 font-display text-[1.6rem] font-bold tracking-[-0.02em] text-txt">Preferences</h1>
+  <p class="mt-2 max-w-[62ch] text-[14px] text-body">
+    What counts as a match, where to look, and how loud to be. The collector re-reads these on every run — no restart.
+  </p>
+  {saved && (
+    <p class="mt-5 font-mono text-[11px] text-neonText">
+      Saved.{skipped > 0 && <span style="color:rgb(var(--c-warn))"> Skipped {skipped} line{skipped > 1 ? "s" : ""} that weren't http(s) links.</span>}
+    </p>
+  )}
+
+  <form method="POST" class="mt-8 flex flex-col gap-7">
+    <fieldset class="well rounded-sm p-5">
+      <legend class={legend}>What you're looking for</legend>
+      <p class={`mt-2 max-w-[70ch] ${hint}`}>
+        A field is worth 3 points (4 in a title), an opportunity word 2. Anything at or above the threshold
+        pushes a notification. Messages to you and watched-page changes always do. One term per line.
+      </p>
+      <div class="mt-4 grid gap-5 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>Fields &amp; topics</span>
+          <textarea name="interests" rows="9" class={area}>{lines(p.interests)}</textarea>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>Opportunity words</span>
+          <textarea name="boost" rows="9" class={area}>{lines(p.boost)}</textarea>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>Never show</span>
+          <textarea name="exclude" rows="3" placeholder={"unpaid\n5+ years"} class={area}>{lines(p.exclude)}</textarea>
+          <span class={hint}>A hit archives the item on arrival.</span>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>Notify at score</span>
+          <input name="threshold" type="number" min="1" max="30" value={p.threshold} class={`${area} w-28`} />
+          <span class={hint}>3 = one field match is enough. Raise it if your phone gets noisy.</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="well rounded-sm p-5">
+      <legend class={legend}>Research</legend>
+      <div class="mt-3 flex flex-col gap-5">
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>WikiCFP categories</span>
+          <textarea name="cfpCategories" rows="4" class={area}>{lines(p.cfpCategories)}</textarea>
+          <span class={hint}>Names as they appear on wikicfp.com's category list — "security", "machine learning", "robotics".</span>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>Feeds — label | url</span>
+          <textarea name="feeds" rows="5" placeholder="Research intern alerts | https://www.google.com/alerts/feeds/…" class={area}>{linkLines(p.feeds)}</textarea>
+          <span class={hint}>
+            Any RSS or Atom feed. The best one is Google Alerts: google.com/alerts → Show options → Deliver to <em>RSS feed</em>.
+            Queries worth trying: <code>"research intern" "computer vision"</code>,
+            <code>site:linkedin.com/posts "research intern" security</code>, <code>"summer research fellowship" 2027</code>.
+            The site: one surfaces public LinkedIn posts through Google's index, without touching your LinkedIn account.
+          </span>
+        </label>
+        <label class="flex flex-col gap-1.5">
+          <span class={label}>Watch pages — label | url</span>
+          <textarea name="watch" rows="5" placeholder="Summer fellowship | https://…" class={area}>{linkLines(p.watch)}</textarea>
+          <span class={hint}>For fellowship and lab pages with no feed. Checked every 6 hours; you're told only when new text appears.</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="well rounded-sm p-5">
+      <legend class={legend}>Discord</legend>
+      <label class="mt-3 flex flex-col gap-1.5">
+        <span class={label}>Channel ids to read</span>
+        <textarea name="discordChannels" rows="3" class={area}>{lines(p.discordChannels)}</textarea>
+        <span class={hint}>
+          Listed channels are stored in full. Leave empty to read every channel the bot can see and keep only messages
+          that match your terms. DMs to the bot and @mentions of you always count.
+        </span>
+      </label>
+    </fieldset>
+
+    <fieldset id="sources" class="well rounded-sm p-5">
+      <legend class={legend}>Sources &amp; notifications</legend>
+      <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+        <label class="flex items-center gap-2.5">
+          <input type="checkbox" name="desktop" checked={p.desktop} class="h-4 w-4 accent-neon" />
+          <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-body">Desktop</span>
+        </label>
+        <label class="flex items-center gap-2.5">
+          <input type="checkbox" name="telegram" checked={p.telegram} class="h-4 w-4 accent-neon" />
+          <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-body">Telegram</span>
+        </label>
+      </div>
+      <p class={`mt-2 ${hint}`}>
+        Desktop uses notify-send, so it only works where the collector runs with a screen. Test both with
+        <code>npm run signals -- --test-notify</code>.
+      </p>
+
+      <div class="mt-5 flex flex-col gap-2">
+        {SOURCES.map((s) => {
+          const h = sourceHealth(states[s.id]);
+          return (
+            <label class="extrude-sm flex cursor-pointer items-start gap-3 rounded-sm p-3.5" style="border:1px solid rgb(var(--c-edge))">
+              <input type="checkbox" name={`on_${s.id}`} checked={!p.disabled.includes(s.id)} class="mt-0.5 h-4 w-4 shrink-0 accent-neon" />
+              <span class="min-w-0 flex-1">
+                <span class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <span class="h-1.5 w-1.5 rounded-full" style={`background:${TONE[h.tone]}`}></span>
+                  <span class="font-display text-[14px] font-semibold text-txt">{s.label}</span>
+                  <span class="font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{s.group}</span>
+                </span>
+                <span class="mt-1 block font-mono text-[11px]" style={h.tone === "failing" ? "color:rgb(var(--c-warn))" : "color:rgb(var(--c-muted))"}>{h.note}</span>
+                <span class="mt-1 block text-[12.5px] text-body">{SETUP[s.id]}</span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+
+    <div class="flex flex-wrap gap-3">
+      <button class="extrude-sm rounded-sm px-5 py-3 font-mono text-[12px] uppercase tracking-[0.14em] text-neonText" style="border:1px solid var(--neon-line-strong)">Save</button>
+      <button name="reset" value="1" onclick="return confirm('Reset every preference to the defaults?')" class="extrude-sm rounded-sm px-5 py-3 font-mono text-[12px] uppercase tracking-[0.14em] text-muted" style="border:1px solid rgb(var(--c-edge))">Reset to defaults</button>
+    </div>
+  </form>
+
+  <section class="mt-12 border-t border-edge/70 pt-8">
+    <h2 class="font-display text-[1.15rem] font-bold text-txt">Save from any page</h2>
+    <p class="mt-2 max-w-[64ch] text-[14px] text-body">
+      Drag this button to your bookmarks bar. On a LinkedIn post — or anything else — select the part you care about
+      and click the bookmark: it opens a prefilled Add form here. Nothing is scraped; you're the one reading.
+    </p>
+    <a href={bookmarklet} onclick="alert('Drag this to your bookmarks bar.'); return false;"
+       class="extrude-sm mt-4 inline-block rounded-sm px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.13em] text-neonText no-underline"
+       style="border:1px solid var(--neon-line-strong)">＋ Save to Signals</a>
+  </section>
+</Admin>

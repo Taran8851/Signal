@@ -1,0 +1,141 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import {
+  KINDS, STATUSES, createManual, deleteSignal, getSignal, isoDate, safeUrl, updateSignal,
+  type Kind, type SignalEdit, type Status,
+} from "../../../lib/signals";
+import { sameOrigin } from "../../../lib/auth";
+
+const isNew = Astro.params.id === "new";
+const id = Number(Astro.params.id);
+const signal = isNew ? null : getSignal(id);
+if (!isNew && !signal) return Astro.rewrite("/404");
+
+let error = "";
+let typed: SignalEdit | null = null;
+
+if (Astro.request.method === "POST") {
+  if (!sameOrigin(Astro.request, Astro.url)) return new Response("Bad origin", { status: 403 });
+  const f = await Astro.request.formData();
+  if (!isNew && f.get("action") === "delete") {
+    deleteSignal(id);
+    return Astro.redirect("/admin/signals", 303);
+  }
+  const kind = String(f.get("kind") ?? "");
+  const status = String(f.get("status") ?? "");
+  typed = {
+    title: String(f.get("title") ?? "").trim(),
+    kind: (KINDS as readonly string[]).includes(kind) ? (kind as Kind) : "other",
+    url: String(f.get("url") ?? "").trim(),
+    deadline: isoDate(String(f.get("deadline") ?? "").trim()),
+    body: String(f.get("body") ?? ""),
+    note: String(f.get("note") ?? "").trim(),
+    status: (STATUSES as readonly string[]).includes(status) ? (status as Status) : "new",
+  };
+  if (!typed.title) error = "Title is required.";
+  else if (typed.url && !safeUrl(typed.url)) error = "Links must start with http:// or https://.";
+  else {
+    const target = isNew ? createManual(typed) : (updateSignal(id, typed), id);
+    return Astro.redirect(`/admin/signals/${target}?saved=1`, 303);
+  }
+}
+
+// The bookmarklet on the preferences page opens /admin/signals/new?url=…&title=…&body=…
+const sp = Astro.url.searchParams;
+const prefillUrl = sp.get("url") ?? "";
+const v: SignalEdit = typed ?? signal ?? {
+  title: sp.get("title") ?? "",
+  kind: prefillUrl.includes("linkedin.com") ? "post" : "other",
+  url: prefillUrl,
+  deadline: null,
+  body: sp.get("body") ?? "",
+  note: "",
+  status: "saved", // you found it yourself — it's already worth keeping
+};
+const saved = sp.get("saved") === "1";
+const matched = signal ? (JSON.parse(signal.matched) as string[]) : [];
+const link = safeUrl(signal?.url);
+const user = Astro.locals.user;
+const label = "font-mono text-[10px] uppercase tracking-[0.13em] text-muted";
+const field = "well rounded-sm px-3 py-2.5 text-txt outline-none";
+---
+<Admin title={isNew ? "Add signal — Console" : `${v.title} — Console`} user={user}>
+  <a href="/admin/signals" class="font-mono text-[10px] uppercase tracking-[0.13em] text-muted no-underline hover:text-neonText">← Signals</a>
+  <h1 class="mt-4 font-display text-[1.6rem] font-bold tracking-[-0.02em] text-txt">{isNew ? "Add a signal" : "Signal"}</h1>
+  {isNew && (
+    <p class="mt-2 max-w-[62ch] text-[14px] text-body">
+      For things you found yourself — a LinkedIn post, a lab page, a poster in the corridor.
+    </p>
+  )}
+
+  {saved && <p class="mt-5 font-mono text-[11px] text-neonText">Saved.</p>}
+  {error && (
+    <p class="mt-5 rounded-sm px-3 py-2.5 font-mono text-[11px]" style="border:1px solid rgb(var(--c-warn) / 0.55); color:rgb(var(--c-warn)); background:rgb(var(--c-slate2))">{error}</p>
+  )}
+
+  {signal && (
+    <div class="well mt-6 flex flex-wrap gap-x-6 gap-y-2 rounded-sm px-4 py-3 font-mono text-[11px] text-muted">
+      <span>source <span class="text-body">{signal.source}</span></span>
+      {signal.author && <span>from <span class="text-body">{signal.author}</span></span>}
+      <span>received <span class="text-body">{new Date(signal.received_at).toLocaleString()}</span></span>
+      <span>score <span class="text-neonText">{signal.score}</span>{matched.length > 0 && ` · ${matched.join(", ")}`}</span>
+      {link && <a href={link} target="_blank" rel="noopener noreferrer" class="tele-link ml-auto">Open original ↗</a>}
+    </div>
+  )}
+
+  <form method="POST" class="mt-7 flex flex-col gap-5">
+    <label class="flex flex-col gap-1.5">
+      <span class={label}>Title</span>
+      <input name="title" value={v.title} required class={`${field} text-[15px]`} />
+    </label>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <label class="flex flex-col gap-1.5">
+        <span class={label}>Kind</span>
+        <select name="kind" class={`${field} font-mono text-[12px]`}>
+          {KINDS.map((k) => <option value={k} selected={v.kind === k}>{k}</option>)}
+        </select>
+      </label>
+      <label class="flex flex-col gap-1.5">
+        <span class={label}>Status</span>
+        <select name="status" class={`${field} font-mono text-[12px]`}>
+          {STATUSES.map((s) => <option value={s} selected={v.status === s}>{s}</option>)}
+        </select>
+      </label>
+      <label class="flex flex-col gap-1.5">
+        <span class={label}>Deadline</span>
+        <input name="deadline" type="date" value={v.deadline ?? ""} class={`${field} font-mono text-[12px]`} />
+      </label>
+    </div>
+
+    <label class="flex flex-col gap-1.5">
+      <span class={label}>Link</span>
+      <input name="url" value={v.url} placeholder="https://" class={`${field} font-mono text-[12px]`} />
+    </label>
+
+    <label class="flex flex-col gap-1.5">
+      <span class={label}>Your notes — who to contact, what to send, what you already sent</span>
+      <textarea name="note" rows="3" class={`${field} text-[14px]`}>{v.note}</textarea>
+    </label>
+
+    <label class="flex flex-col gap-1.5">
+      <span class={label}>{isNew ? "Details — paste the post or description" : "Content"}</span>
+      <textarea name="body" rows="16" class={`${field} font-mono text-[12.5px] leading-relaxed`}>{v.body}</textarea>
+    </label>
+
+    <div class="flex flex-wrap gap-3">
+      <button class="extrude-sm rounded-sm px-5 py-3 font-mono text-[12px] uppercase tracking-[0.14em] text-neonText" style="border:1px solid var(--neon-line-strong)">
+        {isNew ? "Add signal" : "Save changes"}
+      </button>
+      <a href="/admin/signals" class="extrude-sm rounded-sm px-5 py-3 font-mono text-[12px] uppercase tracking-[0.14em] text-muted no-underline" style="border:1px solid rgb(var(--c-edge))">Back</a>
+    </div>
+  </form>
+
+  {signal && (
+    <form method="POST" class="mt-10" onsubmit="return confirm('Delete this signal permanently?')">
+      <input type="hidden" name="action" value="delete" />
+      <button class="extrude-sm rounded-sm px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em]" style="border:1px solid rgb(var(--c-warn) / 0.5); color:rgb(var(--c-warn))">Delete</button>
+      <span class="ml-3 text-[12px] text-muted">Prefer Archive — a deleted item can be collected again if its source still lists it.</span>
+    </form>
+  )}
+</Admin>

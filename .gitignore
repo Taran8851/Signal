@@ -1,0 +1,12 @@
+.env
+*.db
+*.db-*
+*.swp
+node_modules/
+
+# Local tool state
+.claude/.cc-writes/
+.claude/settings.local.json
+
+# Temporary QA helpers
+app/.qa.html

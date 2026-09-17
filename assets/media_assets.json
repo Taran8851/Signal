@@ -1,0 +1,52 @@
+{
+  "assets": {
+    "e4c88346": {
+      "id": "e4c88346",
+      "type": "image",
+      "src": "../../.adal/sessions/9b83bc6e-89fe-4d46-ac10-621d5c1612ae/images/home_motion_a.png",
+      "duration_s": null,
+      "resolution": null,
+      "provider": "nano-banana-2",
+      "generation": {
+        "prompt": "Edit this existing Signal landing-page screenshot into a polished motion concept frame. Preserve the page layout, all readable text, exact typography hierarchy, cards, spacing, parchment background, and single green functional accent. Add only a very subtle animated-background concept: broad translucent mint, coral, and periwinkle light fields drifting slowly behind the hero headline and product frame, with soft blurred edges and restrained opacity. The frame should suggest calm continuous movement without particles, dark gradients, glow effects, shadows, or generic SaaS styling. Keep all content fully legible and maintain the editorial Monad-inspired aesthetic. This is Concept A: ambient color drift. Preserve every product number and label exactly.",
+        "model": "nano-banana-2",
+        "n": 1,
+        "google_search_grounding": false
+      },
+      "created_at": "2026-09-15T22:32:33Z",
+      "tags": null
+    },
+    "5fa89be5": {
+      "id": "5fa89be5",
+      "type": "image",
+      "src": "../../.adal/sessions/9b83bc6e-89fe-4d46-ac10-621d5c1612ae/images/home_motion_b.png",
+      "duration_s": null,
+      "resolution": null,
+      "provider": "nano-banana-2",
+      "generation": {
+        "prompt": "Edit this existing Signal landing-page screenshot into a polished motion concept frame. Preserve the page layout, all readable text, exact typography hierarchy, cards, spacing, parchment background, and single green functional accent. Add a restrained animated-background concept based on Signal's real pipeline: very thin ash-colored routing lines enter from the outer page edges, bend gently toward the product diagram, and carry a few tiny muted mist/coral/mint signal dots. The paths should feel technical and slow, like data moving through a filter, while staying behind content and never competing with the headline. No shadows, neon, dark mode, particle field, or extra green. This is Concept B: flowing signal routes. Preserve every product number and label exactly.",
+        "model": "nano-banana-2",
+        "n": 1,
+        "google_search_grounding": false
+      },
+      "created_at": "2026-09-15T22:32:51Z",
+      "tags": null
+    },
+    "d386652e": {
+      "id": "d386652e",
+      "type": "image",
+      "src": "../../.adal/sessions/9b83bc6e-89fe-4d46-ac10-621d5c1612ae/images/home_motion_c.png",
+      "duration_s": null,
+      "resolution": null,
+      "provider": "nano-banana-2",
+      "generation": {
+        "prompt": "Edit this existing Signal landing-page screenshot into a polished motion concept frame. Preserve the page layout, all readable text, exact typography hierarchy, cards, spacing, parchment background, and single green functional accent. Add a subtle editorial background-animation concept: oversized translucent concentric contour rings and fine technical registration marks behind the hero and subtraction section, using only ash, mist, mint, and coral at very low opacity. The rings imply a slow pulse or radar scan and visually echo the Signal name. Keep it sparse, calm, and magazine-like. No shadows, neon, dark gradients, floating particles, extra green, or generic tech visuals. This is Concept C: slow signal pulse. Preserve every product number and label exactly.",
+        "model": "nano-banana-2",
+        "n": 1,
+        "google_search_grounding": false
+      },
+      "created_at": "2026-09-15T22:33:07Z",
+      "tags": null
+    }
+  }
+}

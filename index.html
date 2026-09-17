@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal — Every Opportunity. None of the Scrolling.</title>
+  <meta name="description" content="Signal watches nine sources and surfaces only what matches what you actually care about.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="announcement" id="announcement">
+    <p>Signal is module 01 of Student OS. The collector is built.</p>
+    <a href="#honesty">HOW IT WORKS <span>↗</span></a>
+    <button type="button" aria-label="Close announcement" data-close-announcement>×</button>
+  </div>
+
+  <header class="site-header">
+    <div class="shell nav-inner">
+      <a class="brand" href="#top" aria-label="Signal home">
+        <span class="brand-orbit" aria-hidden="true"><i></i></span>
+        <span>SIGNAL</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#filter">FILTER</a>
+        <a href="#decisions">HOW IT DECIDES</a>
+        <a href="#console">CONSOLE</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="button button-blue button-small" href="#signup">GET MY SIGNAL <span>↗</span></a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <canvas class="hero-wave" aria-hidden="true"></canvas>
+      <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
+      <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
+      <div class="shell hero-content">
+        <p class="eyebrow">THE OPPORTUNITY FILTER FOR STUDENTS</p>
+        <h1>Every Opportunity.<br>None of the Scrolling.</h1>
+        <p class="hero-copy">Signal watches nine sources — hackathon boards, research feeds, your Discord servers, your inbox — and surfaces only what matches what you actually care about.</p>
+        <div class="hero-actions">
+          <a class="button button-blue" href="#signup">GET MY SIGNAL <span>↗</span></a>
+          <a class="button button-ghost" href="#filter">SEE WHAT IT FILTERS</a>
+        </div>
+
+        <div class="hero-pipeline" aria-label="Signal pipeline: nine sources, match, dedupe, threshold, sort, then inbox or filtered">
+          <div class="pipeline-inputs">
+            <span class="node-pill">INBOUND</span>
+            <span class="node-pill">HACKATHONS</span>
+            <span class="node-pill">RESEARCH</span>
+            <small>9 SOURCES</small>
+          </div>
+          <svg class="pipeline-lines" viewBox="0 0 180 210" aria-hidden="true">
+            <path d="M0 35 C100 35 70 105 180 105"></path>
+            <path d="M0 105 H180"></path>
+            <path d="M0 175 C100 175 70 105 180 105"></path>
+          </svg>
+          <div class="filter-core">
+            <div class="core-aura" aria-hidden="true"></div>
+            <span class="core-kicker">YOUR RULES</span>
+            <strong>FILTER</strong>
+            <ol>
+              <li>MATCH</li>
+              <li>DEDUPE</li>
+              <li>THRESHOLD</li>
+              <li>SORT</li>
+            </ol>
+          </div>
+          <svg class="pipeline-lines" viewBox="0 0 180 210" aria-hidden="true">
+            <path d="M0 105 C110 105 80 45 180 45"></path>
+            <path d="M0 105 C110 105 80 105 180 105"></path>
+            <path d="M0 105 C110 105 80 165 180 165"></path>
+          </svg>
+          <div class="pipeline-outputs">
+            <span class="output-pill output-pill-blue">INBOX — 59</span>
+            <span class="output-pill output-pill-coral">CLOSES IN 3D</span>
+            <span class="output-pill">FILTERED — <b data-count-to="241">241</b></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="source-strip" aria-label="Signal sources">
+      <div class="shell">
+        <div class="source-glass">
+          <p class="source-label">WATCHING</p>
+          <div class="source-viewport">
+            <!-- The list appears twice so the loop is seamless; the copy is hidden from screen readers. -->
+            <div class="source-marquee">
+            <ul class="source-group">
+              <li>GMAIL + LINKEDIN MAIL</li>
+              <li>DISCORD BOT</li>
+              <li>DEVPOST</li>
+              <li>DEVFOLIO</li>
+              <li>UNSTOP</li>
+              <li>MLH</li>
+              <li>WIKICFP</li>
+              <li>RSS / GOOGLE ALERTS</li>
+              <li>PAGE WATCH</li>
+            </ul>
+            <ul class="source-group" aria-hidden="true">
+              <li>GMAIL + LINKEDIN MAIL</li>
+              <li>DISCORD BOT</li>
+              <li>DEVPOST</li>
+              <li>DEVFOLIO</li>
+              <li>UNSTOP</li>
+              <li>MLH</li>
+              <li>WIKICFP</li>
+              <li>RSS / GOOGLE ALERTS</li>
+              <li>PAGE WATCH</li>
+            </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="metric-band">
+      <div class="ambient-glow metric-glow-one" aria-hidden="true"></div>
+      <div class="ambient-glow metric-glow-two" aria-hidden="true"></div>
+      <div class="shell metric-grid">
+        <div class="metric-intro">
+          <p class="eyebrow">A REAL NINE-HOUR RUN</p>
+          <h2>More arrived than deserved your attention.</h2>
+        </div>
+        <div class="metric-number"><strong>300</strong><span>ARRIVED</span></div>
+        <div class="metric-arrow" aria-hidden="true">→</div>
+        <div class="metric-number metric-number-blue"><strong>59</strong><span>CLEARED THE FILTER</span></div>
+        <p class="metric-note">SEVEN SOURCES. ONE STUDENT. 11 SEPTEMBER 2026.</p>
+      </div>
+    </section>
+
+    <section class="section filter-section" id="filter">
+      <div class="shell">
+        <div class="section-heading">
+          <p class="eyebrow">TUNE YOUR FILTER</p>
+          <h2>You decide what counts as signal.</h2>
+          <p>Change the controls. The same public opportunities are rescored immediately.</p>
+        </div>
+
+        <div class="filter-demo">
+          <aside class="filter-controls">
+            <div class="control-head">
+              <span>FILTER PROFILE</span>
+              <b>LIVE DEMO</b>
+            </div>
+
+            <fieldset>
+              <legend>SOURCES</legend>
+              <div class="source-groups">
+                <div>
+                  <span>INBOUND</span>
+                  <label><input type="checkbox" value="gmail" data-source checked> Gmail + LinkedIn mail</label>
+                  <label><input type="checkbox" value="discord" data-source checked> Discord bot</label>
+                </div>
+                <div>
+                  <span>HACKATHONS</span>
+                  <label><input type="checkbox" value="devpost" data-source checked> Devpost</label>
+                  <label><input type="checkbox" value="devfolio" data-source checked> Devfolio</label>
+                  <label><input type="checkbox" value="unstop" data-source checked> Unstop</label>
+                  <label><input type="checkbox" value="mlh" data-source checked> MLH</label>
+                </div>
+                <div>
+                  <span>RESEARCH</span>
+                  <label><input type="checkbox" value="wikicfp" data-source checked> WikiCFP</label>
+                  <label><input type="checkbox" value="feeds" data-source checked> RSS / Google Alerts</label>
+                  <label><input type="checkbox" value="watch" data-source checked> Page watch</label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>TERMS</legend>
+              <label class="text-control">INTERESTS <input type="text" value="AI, machine learning, security" data-interests></label>
+              <label class="text-control">BOOST <input type="text" value="hackathon, research, internship" data-boost></label>
+              <label class="text-control">EXCLUDE <input type="text" value="" placeholder="e.g. senior only" data-exclude></label>
+            </fieldset>
+
+            <fieldset>
+              <legend>MATCH STRENGTH</legend>
+              <div class="segmented">
+                <label><input type="radio" name="threshold" value="2"> <span>2</span></label>
+                <label><input type="radio" name="threshold" value="3" checked> <span>3</span></label>
+                <label><input type="radio" name="threshold" value="4"> <span>4</span></label>
+                <label><input type="radio" name="threshold" value="6"> <span>6</span></label>
+              </div>
+              <p class="helper">3 = one interest term anywhere</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>SORT</legend>
+              <div class="segmented segmented-wide">
+                <label><input type="radio" name="sort" value="recent" checked> <span>RECENT</span></label>
+                <label><input type="radio" name="sort" value="deadline"> <span>DEADLINE</span></label>
+                <label><input type="radio" name="sort" value="score"> <span>MATCH</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>NOTIFY VIA</legend>
+              <div class="toggle-row">
+                <label><input type="checkbox" checked> <span></span> TELEGRAM</label>
+              </div>
+            </fieldset>
+          </aside>
+
+          <div class="opportunity-panel">
+            <header>
+              <div><span>SIGNAL INBOX</span><strong><b data-visible-count>0</b> / 10 CLEARED</strong></div>
+              <div class="panel-pulse"><i></i> RECALCULATING LIVE</div>
+            </header>
+            <div class="opportunity-list" data-opportunity-list>
+              <article data-id="unstop-1"><div><span>UNSTOP</span><h3>Hack Devengers 2.0</h3></div><time>18 SEP 2026</time><b data-score></b></article>
+              <article data-id="unstop-2"><div><span>UNSTOP</span><h3>PARANOVA</h3></div><time>14 SEP 2026</time><b data-score></b></article>
+              <article data-id="mlh-1"><div><span>MLH</span><h3>Diamondhacks</h3></div><time>04 APR 2027</time><b data-score></b></article>
+              <article data-id="mlh-2"><div><span>MLH</span><h3>MakeCU</h3></div><time>07 NOV 2026</time><b data-score></b></article>
+              <article data-id="mlh-3"><div><span>MLH</span><h3>HackNex Season 2</h3></div><time>25 SEP 2026</time><b data-score></b></article>
+              <article data-id="devpost-1"><div><span>DEVPOST</span><h3>RoadStar Hackathon</h3></div><time>13 SEP 2026</time><b data-score></b></article>
+              <article data-id="wikicfp-1"><div><span>WIKICFP</span><h3>ICDS 2026: Digital Sovereignty</h3></div><time>31 AUG 2026</time><b data-score></b></article>
+              <article data-id="wikicfp-2"><div><span>WIKICFP</span><h3>ICAIIT 2027: Applied Innovations in IT</h3></div><time>10 JAN 2027</time><b data-score></b></article>
+              <article data-id="wikicfp-3"><div><span>WIKICFP</span><h3>9th AccML 2027: Accelerated Machine Learning</h3></div><time>NO DEADLINE</time><b data-score></b></article>
+              <article data-id="wikicfp-4"><div><span>WIKICFP</span><h3>PCS 2027: Picture Coding Symposium</h3></div><time>NO DEADLINE</time><b data-score></b></article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section features" id="decisions">
+      <div class="shell">
+        <div class="section-heading section-heading-split">
+          <div><p class="eyebrow">HOW SIGNAL WORKS</p><h2>Rules you can read.<br>Results you can trace.</h2></div>
+          <p>Signal uses explicit keyword matching, dedupe, a threshold, and a sort order. Every result can show you why it appeared.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card feature-card-large">
+            <div class="feature-copy"><span>01 / MATCH</span><h3>Score what you care about.</h3><p>Interest terms add 4 in a title or 3 in the body. Boost terms add 2 anywhere. Exclude terms archive the row.</p></div>
+            <div class="score-visual">
+              <div class="sample-title">Edge AI research internship</div>
+              <div class="score-line"><span>EDGE AI · TITLE</span><b>+4</b></div>
+              <div class="score-line"><span>INTERNSHIP · BOOST</span><b>+2</b></div>
+              <div class="score-total"><span>MATCH STRENGTH</span><strong>6</strong></div>
+            </div>
+          </article>
+
+          <article class="feature-card feature-card-gradient">
+            <div class="feature-copy"><span>02 / DEDUPE</span><h3>See it once.</h3><p>Every source and external ID pair is unique. Repeats are ignored before they can become noise.</p></div>
+            <div class="dedupe-visual" aria-hidden="true">
+              <div>DEVPOST / 4921</div><div>DEVPOST / 4921</div><div>DEVPOST / 4921</div><span>ONE STORED</span>
+            </div>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-copy"><span>03 / THRESHOLD</span><h3>Control the cut.</h3><p>The default threshold is 3. DMs and watched-page changes can ring regardless of score.</p></div>
+            <div class="threshold-visual"><span>0</span><i></i><b>3</b><i></i><span>6</span></div>
+          </article>
+
+          <article class="feature-card feature-card-dark">
+            <div class="feature-copy"><span>04 / SORT</span><h3>Recent by default.</h3><p>Switch between recent, deadline, and match strength. Deadline puts known dates first.</p></div>
+            <div class="sort-list"><span>RECENT <b>DEFAULT</b></span><span>DEADLINE</span><span>MATCH</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section console-section" id="console">
+      <div class="shell">
+        <div class="section-heading section-heading-split">
+          <div>
+            <p class="eyebrow">THE REAL CONSOLE</p>
+            <h2>Your filtered opportunities,<br>with the reason attached.</h2>
+          </div>
+          <p>A static walkthrough of the actual console below. <a class="inline-link" href="app/login.html">Open the demo console ↗</a></p>
+        </div>
+        <div class="console-shell">
+          <div class="console-topbar"><div><i></i><i></i><i></i></div><span>SIGNAL / CONSOLE</span><b>COLLECTOR HEALTHY</b></div>
+          <div class="console-body">
+            <aside>
+              <strong>INBOX <b>59</b></strong>
+              <span>SAVED</span><span>APPLIED</span><span>ARCHIVED</span>
+              <hr>
+              <small>SOURCES</small>
+              <span>MLH <b>80</b></span><span>WIKICFP <b>78</b></span><span>UNSTOP <b>62</b></span><span>DEVPOST <b>36</b></span>
+            </aside>
+            <div class="console-main">
+              <div class="console-tools"><span>ALL KINDS</span><span>ALL SOURCES</span><span>RECENT ↓</span><input aria-label="Search console" placeholder="SEARCH SIGNALS"></div>
+              <article><span class="console-kind">HACKATHON</span><div><h3>Hack Devengers 2.0</h3><p>UNSTOP · MATCHED HACKATHON · DUE 18 SEP</p></div><b>5</b></article>
+              <article><span class="console-kind">CFP</span><div><h3>9th AccML 2027</h3><p>WIKICFP · MATCHED MACHINE LEARNING</p></div><b>4</b></article>
+              <article><span class="console-kind">HACKATHON</span><div><h3>RoadStar Hackathon</h3><p>DEVPOST · MATCHED HACKATHON · DUE 13 SEP</p></div><b>2</b></article>
+              <article class="console-muted"><span class="console-kind">ARCHIVED</span><div><h3>Opportunity with an excluded term</h3><p>STORED FOR DEDUPE · KEPT OUT OF INBOX</p></div><b>0</b></article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section audience-section">
+      <div class="shell">
+        <div class="section-heading"><p class="eyebrow">BUILT AROUND YOUR CRITERIA</p><h2>Three students.<br>Three different filters.</h2></div>
+        <div class="audience-grid">
+          <article><span>01</span><h3>Internship hunter</h3><p>Computer vision and security roles, boosted by “research intern” and “stipend.”</p><div><b>COMPUTER VISION</b><b>CYBERSECURITY</b><b>STIPEND</b></div></article>
+          <article class="audience-featured"><span>02</span><h3>Hackathon grinder</h3><p>Devpost, Devfolio, Unstop, and MLH with edge AI and IoT at the top.</p><div><b>EDGE AI</b><b>IOT</b><b>HACKATHON</b></div></article>
+          <article><span>03</span><h3>Research applicant</h3><p>WikiCFP, feeds, and watched lab pages tuned for neuromorphic and embedded work.</p><div><b>NEUROMORPHIC</b><b>FELLOWSHIP</b><b>RESEARCH</b></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section honesty-section" id="honesty">
+      <div class="ambient-glow honesty-glow" aria-hidden="true"></div>
+      <div class="shell">
+        <div class="section-heading section-heading-split"><div><p class="eyebrow">HONEST BY DESIGN</p><h2>The limits are part<br>of the product.</h2></div><p>Signal does less on purpose. These choices protect your account and keep setup from flooding you.</p></div>
+        <div class="honesty-grid">
+          <article>
+            <div class="honesty-visual mail-flow"><span>LINKEDIN MAIL</span><i>→</i><span>GMAIL</span><i>→</i><b>SIGNAL</b></div>
+            <h3>We don't scrape LinkedIn.</h3>
+            <p>We read the notification mail LinkedIn already sends you, and show where every opportunity came from.</p>
+          </article>
+          <article>
+            <div class="honesty-visual backfill-flow"><span>FIRST RUN</span><div><i></i><i></i><i></i><i></i></div><b>STORED · SILENT</b></div>
+            <h3>The first run is silent.</h3>
+            <p>Signal stores the initial backfill and notifies you about none of it. Alerts begin with what arrives after setup.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section student-os-section">
+      <div class="shell student-os-grid">
+        <div><p class="eyebrow">STUDENT OS</p><h2>One module is real.<br>The rest comes later.</h2><p>Signal is the first working layer. Future modules have not been named or built.</p></div>
+        <div class="module-map">
+          <article class="module-live"><span>MODULE 01</span><h3>Signal</h3><b>BUILT</b></article>
+          <article><span>MODULE 02</span><h3>Not named</h3><b>NOT BUILT</b></article>
+          <article><span>MODULE 03</span><h3>Not named</h3><b>NOT BUILT</b></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section faq-section" id="faq">
+      <div class="shell faq-grid">
+        <div class="section-heading"><p class="eyebrow">QUESTIONS</p><h2>The short version.</h2></div>
+        <div class="faq-list">
+          <details><summary>Does Signal scrape LinkedIn?<span>↓</span></summary><p>No. It reads LinkedIn notification mail received by Gmail.</p></details>
+          <details><summary>How does match strength work?<span>↓</span></summary><p>Interest terms add 4 in titles or 3 in bodies. Boost terms add 2. Exclude terms archive rows.</p></details>
+          <details><summary>Which notification channels exist?<span>↓</span></summary><p>Telegram. Discord is an inbound source, not a notification channel. There is no email sender.</p></details>
+          <details><summary>Will the first run notify me about everything?<span>↓</span></summary><p>No. The first successful run stores the backfill without sending alerts.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="signup-section" id="signup">
+      <div class="signup-glow" aria-hidden="true"></div>
+      <div class="shell signup-inner">
+        <div><p class="eyebrow">GET SIGNAL</p><h2>Stop checking.<br>Start choosing.</h2></div>
+        <form data-preview-form>
+          <label for="email">YOUR EMAIL</label>
+          <div><input id="email" type="email" required placeholder="you@example.com"><button class="button button-blue" type="submit">REQUEST ACCESS <span>↗</span></button></div>
+          <p data-form-status>This preview does not send or store your email.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <a class="brand" href="#top"><span class="brand-orbit"><i></i></span><span>SIGNAL</span></a>
+      <p>MODULE 01 / STUDENT OS · <a class="inline-link" href="app/login.html">DEMO CONSOLE ↗</a></p>
+      <p>BUILT TO FIND LESS.</p>
+    </div>
+  </footer>
+
+  <script src="wave.js?v=2"></script>
+  <script src="motion.js?v=3"></script>
+  <script src="filter.js?v=2"></script>
+</body>
+</html>
