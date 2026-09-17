@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="app.css?v=5">
-  <link rel="stylesheet" href="preferences.css?v=1">
+  <link rel="stylesheet" href="preferences.css?v=2">
   <link rel="stylesheet" href="ai.css?v=1">
 </head>
 <body data-page="preferences">
@@ -191,10 +191,12 @@
               <span class="tile tile-lg tile-mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg></span>
               <div class="pset-title">
                 <h2 id="h-sources">Sources</h2>
-                <p>Turn places on or off. Some need one extra step before they start.</p>
+                <p>Turn places on or off. Some need one extra step before they start. You can also add your own feed, API or page.</p>
               </div>
               <p class="pset-aside" data-sources-count aria-live="polite"></p>
             </header>
+
+            <div class="custom-sources" data-custom-sources></div>
 
             <div data-source-list></div>
 
@@ -314,7 +316,7 @@
             <div class="grow">
               <div class="grow-text">
                 <p class="grow-label">Reset to defaults</p>
-                <p class="grow-help">Puts interests, pickiness, sources and notifications back. Appearance stays as it is.</p>
+                <p class="grow-help">Puts interests, pickiness, built-in sources and notifications back. Appearance and your own sources stay as they are.</p>
               </div>
               <button class="button button-danger button-small" type="button" data-reset>Reset</button>
             </div>
@@ -325,6 +327,97 @@
     </main>
   </div>
 
+  <!-- Add or edit one of your own sources (preferences.js §4b) -->
+  <dialog class="sheet glass src-sheet" data-src-sheet aria-labelledby="src-sheet-title">
+    <div class="sheet-head">
+      <div class="sheet-head-text">
+        <div class="sheet-kicker"><span class="chip">Your source</span></div>
+        <h2 class="sheet-title" id="src-sheet-title" tabindex="-1" data-src-title>Add a source</h2>
+        <p class="sheet-meta">Saved as soon as you add it, in this browser. Only add links you're allowed to read. Signal doesn't scrape sites that forbid it.</p>
+      </div>
+      <button class="icon-button" type="button" data-src-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <form class="sheet-body src-form" data-src-form novalidate>
+      <section class="sheet-section" data-src-presets>
+        <h3>Try an example</h3>
+        <div class="presets" data-src-preset-list></div>
+      </section>
+
+      <section class="sheet-section">
+        <h3><label for="src-name">Name</label></h3>
+        <input class="input" id="src-name" name="name" maxlength="60" autocomplete="off" placeholder="What you call it, e.g. Lab news" data-src-field="name">
+      </section>
+
+      <section class="sheet-section">
+        <h3 id="src-type-label">Type</h3>
+        <div class="type-cards" role="radiogroup" aria-labelledby="src-type-label" data-src-types></div>
+        <p class="src-note" data-src-social-note hidden>Signal reads a feed URL you provide, for example an X account through an RSS bridge you run or trust. It does not scrape X or any other social site.</p>
+      </section>
+
+      <section class="sheet-section">
+        <h3 id="src-where-label">Where to read it</h3>
+        <div class="segmented src-mode" role="radiogroup" aria-labelledby="src-where-label">
+          <label><input type="radio" name="src-mode" value="fetch" checked><span>Fetch from a link</span></label>
+          <label><input type="radio" name="src-mode" value="paste"><span>Paste a sample</span></label>
+        </div>
+        <div class="src-fields">
+          <label class="src-field">
+            <span class="field-label" data-src-url-label>Link</span>
+            <input class="input" type="url" name="url" inputmode="url" autocomplete="off" placeholder="https://" data-src-field="url">
+          </label>
+          <div class="notice" data-src-cors role="status" hidden>
+            <p class="notice-title">This site can't be read from the browser</p>
+            <p data-src-cors-text></p>
+          </div>
+          <label class="src-field" data-src-paste hidden>
+            <span class="field-label" data-src-paste-label>Sample</span>
+            <textarea class="textarea src-sample" name="sample" spellcheck="false" data-src-field="sample"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="sheet-section" data-src-json hidden>
+        <h3>Field mapping</h3>
+        <p class="src-help">Dot paths, like <code>data.items</code>. Items is where the list is; the rest are inside one item. Only title is required.</p>
+        <div class="map-grid">
+          <label class="src-field"><span class="field-label">Items</span><input class="input mono" name="map-items" placeholder="data.items" data-map="items" autocomplete="off" spellcheck="false"></label>
+          <label class="src-field"><span class="field-label">Title</span><input class="input mono" name="map-title" placeholder="title" data-map="title" autocomplete="off" spellcheck="false"></label>
+          <label class="src-field"><span class="field-label">Description</span><input class="input mono" name="map-body" placeholder="description" data-map="body" autocomplete="off" spellcheck="false"></label>
+          <label class="src-field"><span class="field-label">Link</span><input class="input mono" name="map-url" placeholder="url" data-map="url" autocomplete="off" spellcheck="false"></label>
+          <label class="src-field"><span class="field-label">ID</span><input class="input mono" name="map-id" placeholder="id" data-map="id" autocomplete="off" spellcheck="false"></label>
+          <label class="src-field"><span class="field-label">Deadline</span><input class="input mono" name="map-deadline" placeholder="deadline" data-map="deadline" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="map-actions">
+          <button class="button button-secondary button-small" type="button" data-src-detect>Detect fields</button>
+          <button class="button button-secondary button-small" type="button" data-src-ai hidden>Map fields with AI</button>
+          <p class="src-status" data-src-map-status role="status"></p>
+        </div>
+      </section>
+
+      <p class="field-error" data-src-error role="alert" hidden></p>
+
+      <section class="sheet-section" data-src-preview hidden>
+        <h3>Preview</h3>
+        <div class="src-preview">
+          <p class="src-preview-summary" data-src-preview-summary aria-live="polite"></p>
+          <ul class="preview-list" data-src-preview-list aria-label="First items from this source"></ul>
+        </div>
+      </section>
+    </form>
+
+    <div class="sheet-foot src-foot">
+      <p class="src-foot-note">Test reads the source without saving anything.</p>
+      <div class="src-foot-actions">
+        <button class="button button-quiet button-small" type="button" data-src-close>Cancel</button>
+        <button class="button button-secondary button-small" type="button" data-src-test>Test</button>
+        <button class="button button-primary button-small" type="button" data-src-submit>Add source</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="save-bar glass" data-save-bar hidden>
     <p>You have unsaved changes</p>
     <button class="button button-quiet button-small" type="button" data-discard>Discard</button>
@@ -332,9 +425,10 @@
   </div>
   <p class="toast glass" data-toast role="status" hidden></p>
 
-  <script src="app-data.js?v=2"></script>
+  <script src="app-data.js?v=3"></script>
+  <script src="sources.js?v=1"></script>
   <script src="ai.js?v=2"></script>
   <script src="app.js?v=5"></script>
-  <script src="preferences.js?v=2"></script>
+  <script src="preferences.js?v=3"></script>
 </body>
 </html>

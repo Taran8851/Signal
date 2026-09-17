@@ -7,6 +7,7 @@
    2. Tag inputs (interests, boost, exclude, WikiCFP categories, Discord channels)
    3. Pickiness stops + live preview
    4. Sources (rows with their setup editors) and link lists
+   4b. Your sources — custom feeds, APIs and pages (app/sources.js), saved immediately
    5. Notifications and appearance
    6. Save / discard / reset
    7. Section index with scroll-spy */
@@ -16,6 +17,7 @@
   function init() {
     var A = window.SignalApp;
     var D = window.SignalData;
+    var S = window.SignalSources;
     var $ = A.$, $all = A.$all, esc = A.esc, plural = A.plural;
 
     var main = $(".prefs-main");
@@ -313,7 +315,9 @@
       var enabled = D.SOURCES.filter(function (s) { return draft.disabled.indexOf(s.id) === -1; });
       var working = enabled.filter(function (s) { return s.status === "ready"; }).length;
       var setup = enabled.filter(function (s) { return s.status === "setup"; }).length;
-      var text = "Watching " + working + " of " + D.SOURCES.length + (setup ? " · " + setup + (setup === 1 ? " needs" : " need") + " setup" : "");
+      var custom = S ? S.list() : [];
+      var customOn = custom.filter(function (c) { return c.enabled; }).length;
+      var text = "Watching " + (working + customOn) + " of " + (D.SOURCES.length + custom.length) + (setup ? " · " + setup + (setup === 1 ? " needs" : " need") + " setup" : "");
       var el = $("[data-sources-count]");
       if (el.textContent !== text) el.textContent = text;
     }
@@ -334,6 +338,388 @@
       open[id] = !open[id];
       renderDisclosure();
     });
+
+
+    /* =====================================================================
+       4b. Your sources — definitions live in app/sources.js and save immediately,
+           like Appearance. Imported signals go straight into the Signals list.
+    ===================================================================== */
+    var customEl = $("[data-custom-sources]");
+    var TYPE_ICONS = {
+      rss: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4" fill="currentColor"/></svg>',
+      json: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4c-2 0-3 1-3 3v2.5C5 11 4 12 3 12c1 0 2 1 2 2.5V17c0 2 1 3 3 3M16 4c2 0 3 1 3 3v2.5c0 1.5 1 2.5 2 2.5-1 0-2 1-2 2.5V17c0 2-1 3-3 3"/></svg>',
+      page: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 13h6M7 16h10"/></svg>',
+      social: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'
+    };
+    var removing = null; // id of the row showing its remove confirmation
+
+    function ago(ts) {
+      if (!ts) return "Not fetched yet";
+      var mins = Math.round((Date.now() - ts) / 60000);
+      if (mins < 1) return "Fetched just now";
+      if (mins < 60) return "Fetched " + mins + " min ago";
+      var hours = Math.round(mins / 60);
+      if (hours < 24) return "Fetched " + plural(hours, "hour") + " ago";
+      return "Fetched " + plural(Math.round(hours / 24), "day") + " ago";
+    }
+
+    function renderCustom() {
+      if (!S) { customEl.hidden = true; return; }
+      var list = S.list();
+      var rows = list.map(function (c) {
+        var t = S.typeInfo(c.type);
+        var where = c.url ? S.hostOf(c.url) : "Pasted sample";
+        var sid = "csrc-" + c.id.replace(/[^a-z0-9-]/gi, "-");
+        var confirm = removing === c.id
+          ? '<div class="csrc-confirm" role="group" aria-label="Remove ' + esc(c.name) + '">' +
+              "<p>Remove " + esc(c.name) + "?" + (c.itemCount ? " Its " + plural(c.itemCount, "signal") + " can stay in Signals or go with it." : "") + "</p>" +
+              '<div class="csrc-actions">' +
+                '<button class="button button-quiet button-small" type="button" data-csrc="cancel-remove" data-id="' + esc(c.id) + '">Keep it</button>' +
+                (c.itemCount ? '<button class="button button-secondary button-small" type="button" data-csrc="remove-keep" data-id="' + esc(c.id) + '">Remove source only</button>' : "") +
+                '<button class="button button-danger button-small" type="button" data-csrc="remove-all" data-id="' + esc(c.id) + '">' + (c.itemCount ? "Remove with " + plural(c.itemCount, "signal") : "Remove") + "</button>" +
+              "</div></div>"
+          : "";
+        return '<div class="src csrc' + (c.enabled ? "" : " is-off") + '" data-csrc-row="' + esc(c.id) + '">' +
+          '<div class="grow">' +
+            '<span class="tile tile-mint csrc-icon" aria-hidden="true">' + (TYPE_ICONS[c.type] || TYPE_ICONS.rss) + "</span>" +
+            '<div class="grow-text">' +
+              '<p class="grow-label"><i class="dot ' + (c.enabled ? "dot-ready" : "dot-soon") + '" aria-hidden="true"></i><span id="' + sid + '">' + esc(c.name) + "</span>" +
+                '<span class="chip">' + esc(t.short) + "</span></p>" +
+              '<p class="grow-help csrc-meta"><span>' + esc(where) + "</span><span>" + plural(c.itemCount, "signal") + "</span><span>" + esc(ago(c.lastFetched)) + "</span></p>" +
+              '<div class="csrc-actions">' +
+                '<button class="button button-secondary button-small" type="button" data-csrc="fetch" data-id="' + esc(c.id) + '">Fetch now</button>' +
+                '<button class="button button-quiet button-small" type="button" data-csrc="edit" data-id="' + esc(c.id) + '">Edit</button>' +
+                '<button class="button button-quiet button-small csrc-remove" type="button" data-csrc="remove" data-id="' + esc(c.id) + '">Remove</button>' +
+              "</div>" +
+            "</div>" +
+            '<label class="switch"><input type="checkbox" data-csrc-toggle="' + esc(c.id) + '"' + (c.enabled ? " checked" : "") + ' aria-labelledby="' + sid + '"><span></span></label>' +
+          "</div>" + confirm +
+        "</div>";
+      }).join("");
+
+      customEl.innerHTML =
+        '<div class="group-label-row"><p class="group-label" id="grp-custom">Your sources</p><p class="group-label-note">Saved as soon as you change them</p></div>' +
+        '<div class="group glass" role="group" aria-labelledby="grp-custom">' +
+          (rows || '<div class="grow csrc-empty"><div class="grow-text"><p class="grow-label">Nothing of your own yet</p>' +
+            '<p class="grow-help">Add a feed, a JSON API, a page to watch, or a social feed URL. Only links you are allowed to read.</p></div></div>') +
+          '<div class="grow csrc-add">' +
+            '<button class="button button-secondary button-small" type="button" data-csrc="add">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>Add a source</button>' +
+            '<p class="grow-help">RSS or Atom, JSON APIs, pages, or a social feed URL.</p>' +
+          "</div>" +
+        "</div>";
+      renderSourceCounts();
+    }
+
+    function afterImport() {
+      renderCustom();
+      renderPreview();
+      A.updateNavCount();
+    }
+
+    function importMessage(name, r) {
+      if (r.added) return "Added " + plural(r.added, "signal") + " from " + name;
+      if (r.duplicates) return "No new signals from " + name + ". " + plural(r.duplicates, "item") + " already in Signals.";
+      return "Nothing to add from " + name + " yet";
+    }
+
+    customEl.addEventListener("change", function (e) {
+      var id = e.target.getAttribute("data-csrc-toggle");
+      if (!id) return;
+      S.update(id, { enabled: e.target.checked });
+      renderCustom();
+      A.toast((e.target.checked ? "Turned on " : "Turned off ") + S.label(id));
+    });
+
+    customEl.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-csrc]");
+      if (!btn) return;
+      var action = btn.getAttribute("data-csrc");
+      var id = btn.getAttribute("data-id");
+      if (action === "add") return openEditor(null);
+      if (action === "edit") return openEditor(id);
+      if (action === "remove") { removing = id; renderCustom(); var k = $('[data-csrc="cancel-remove"]', customEl); if (k) k.focus(); return; }
+      if (action === "cancel-remove") { removing = null; renderCustom(); return; }
+      if (action === "remove-keep" || action === "remove-all") {
+        var name = S.label(id);
+        var r = S.remove(id, { removeRows: action === "remove-all" });
+        removing = null;
+        afterImport();
+        A.toast("Removed " + name + (r.removedRows ? " and " + plural(r.removedRows, "signal") : ""));
+        return;
+      }
+      if (action === "fetch") {
+        var def = S.get(id);
+        if (!def) return;
+        btn.disabled = true;
+        btn.textContent = "Fetching…";
+        S.fetchPreview(def).then(function (res) {
+          if (!res.ok) {
+            renderCustom();
+            if (res.corsBlocked) { openEditor(id, { cors: true }); return; }
+            A.toast(def.name + ": " + res.error);
+            return;
+          }
+          var r = S.importItems(id, res.items);
+          afterImport();
+          A.toast(importMessage(def.name, r));
+        });
+      }
+    });
+
+    /* ---------- the add / edit panel ---------- */
+    var sheet = $("[data-src-sheet]");
+    var form = $("[data-src-form]", sheet);
+    var ed = { id: null, tested: null, busy: false };
+
+    $("[data-src-preset-list]", sheet).innerHTML = S ? S.PRESETS.map(function (p) {
+      return '<button class="preset" type="button" data-src-preset="' + p.id + '">' +
+        '<span class="tile tile-sky" aria-hidden="true">' + TYPE_ICONS[p.def.type] + "</span>" +
+        '<span class="preset-text"><span class="preset-name">' + esc(p.label) + "</span>" +
+        '<span class="preset-help">' + esc(p.help) + " Works offline.</span></span></button>";
+    }).join("") : "";
+
+    $("[data-src-types]", sheet).innerHTML = S ? S.TYPES.map(function (t) {
+      return '<label class="type-card"><input type="radio" name="src-type" value="' + t.id + '">' +
+        '<span class="type-card-head"><span class="tile tile-mint" aria-hidden="true">' + TYPE_ICONS[t.id] + "</span>" +
+        '<span class="type-name">' + esc(t.name) + "</span></span>" +
+        '<span class="type-help">' + esc(t.help) + "</span></label>";
+    }).join("") : "";
+
+    var PASTE_LABELS = { rss: "Feed XML", social: "Feed XML", json: "JSON response", page: "Page HTML" };
+    var URL_HOLDERS = { rss: "https://example.org/feed.xml", social: "https://your-rss-bridge.example/x/account", json: "https://api.example.org/opportunities", page: "https://example.org/fellowships" };
+
+    function field(name) { return $('[data-src-field="' + name + '"]', sheet); }
+    function checkedValue(name) { var r = $('input[name="' + name + '"]:checked', sheet); return r ? r.value : ""; }
+
+    function readForm() {
+      var mapping = {};
+      $all("[data-map]", sheet).forEach(function (i) { mapping[i.getAttribute("data-map")] = i.value.trim(); });
+      return {
+        name: field("name").value.trim(),
+        type: checkedValue("src-type") || "rss",
+        mode: checkedValue("src-mode") || "fetch",
+        url: field("url").value.trim(),
+        sample: field("sample").value,
+        mapping: mapping
+      };
+    }
+
+    function fillForm(def) {
+      field("name").value = def.name || "";
+      field("url").value = def.url || "";
+      field("sample").value = def.sample || "";
+      A.syncRadios("src-type", def.type || "rss");
+      A.syncRadios("src-mode", def.mode || "fetch");
+      var m = def.mapping || {};
+      $all("[data-map]", sheet).forEach(function (i) { i.value = m[i.getAttribute("data-map")] || ""; });
+    }
+
+    function syncForm() {
+      var def = readForm();
+      var paste = def.mode === "paste";
+      $("[data-src-social-note]", sheet).hidden = def.type !== "social";
+      $("[data-src-json]", sheet).hidden = def.type !== "json";
+      $("[data-src-paste]", sheet).hidden = !paste;
+      $("[data-src-paste-label]", sheet).textContent = PASTE_LABELS[def.type];
+      $("[data-src-url-label]", sheet).textContent = paste ? "Link (optional, for your reference)" : "Link";
+      field("url").placeholder = URL_HOLDERS[def.type];
+      $("[data-src-ai]", sheet).hidden = !(S && S.hasAI());
+    }
+
+    function setError(text) {
+      var el = $("[data-src-error]", sheet);
+      el.textContent = text || "";
+      el.hidden = !text;
+    }
+    function setMapStatus(text) { $("[data-src-map-status]", sheet).textContent = text || ""; }
+    function showCors(on) {
+      $("[data-src-cors]", sheet).hidden = !on;
+      if (on) $("[data-src-cors-text]", sheet).textContent = S.CORS_MESSAGE;
+    }
+
+    function invalidate() {
+      if (!ed.tested) return;
+      ed.tested = null;
+      var pv = $("[data-src-preview]", sheet);
+      pv.classList.add("is-stale");
+      $("[data-src-preview-summary]", sheet).textContent = "Changed since the last test. Press Test again.";
+    }
+
+    function openEditor(id, opts) {
+      if (!S) return;
+      opts = opts || {};
+      ed = { id: id, tested: null, busy: false };
+      var def = id ? S.get(id) : { name: "", type: "rss", mode: "fetch", url: "", sample: "", mapping: S.EMPTY_MAPPING };
+      fillForm(def);
+      if (opts.cors) A.syncRadios("src-mode", "paste");
+      $("[data-src-title]", sheet).textContent = id ? "Edit " + def.name : "Add a source";
+      $("[data-src-submit]", sheet).textContent = id ? "Save source" : "Add source";
+      $("[data-src-presets]", sheet).hidden = !!id;
+      $("[data-src-preview]", sheet).hidden = true;
+      setError("");
+      setMapStatus("");
+      showCors(!!opts.cors);
+      syncForm();
+      if (typeof sheet.showModal === "function") { if (!sheet.open) sheet.showModal(); }
+      else sheet.setAttribute("open", "");
+      $("[data-src-title]", sheet).focus();
+      $(".sheet-body", sheet).scrollTop = 0;
+    }
+
+    function closeEditor() {
+      if (typeof sheet.close === "function" && sheet.open) sheet.close();
+      else sheet.removeAttribute("open");
+    }
+
+    function validateDef(def) {
+      if (!def.name) return { msg: "Give the source a name.", focus: field("name") };
+      if (def.mode === "fetch" && !def.url) return { msg: "Add the link Signal should read.", focus: field("url") };
+      if (def.url && !S.validUrl(def.url)) return { msg: "Links need to start with http:// or https://.", focus: field("url") };
+      if (def.mode === "paste" && !def.sample.trim()) return { msg: "Paste a sample first.", focus: field("sample") };
+      return null;
+    }
+
+    function renderEditorPreview(items) {
+      var pv = $("[data-src-preview]", sheet);
+      pv.hidden = false;
+      pv.classList.remove("is-stale");
+      var first = items.slice(0, 5);
+      var notify = first.filter(function (it) { return A.describeMatch(it, draft).wouldNotify; }).length;
+      $("[data-src-preview-summary]", sheet).textContent = items.length
+        ? "Found " + plural(items.length, "item") + ". " + (items.length > 5 ? "Of the first 5, " : "") + notify + " would notify you with your current preferences."
+        : "The source is readable but has no items right now.";
+      $("[data-src-preview-list]", sheet).innerHTML = first.map(function (it) {
+        var m = A.describeMatch(it, draft);
+        var state = m.excluded ? "blocked" : m.wouldNotify ? "on" : "off";
+        var spoken = { on: "Would notify: ", off: "Stays quiet: ", blocked: "Blocked: " }[state];
+        return '<li class="pv pv-' + state + '">' +
+          '<span class="pv-mark">' + MARKS[state] + "</span>" +
+          '<span class="pv-main"><span class="pv-title"><span class="visually-hidden">' + spoken + "</span>" + esc(it.title) + "</span>" +
+            '<span class="pv-sub">' + esc(D.KIND_LABELS[it.kind] || "Other") + (it.deadline ? ' · <span>Deadline ' + esc(it.deadline) + "</span>" : "") + "</span></span>" +
+          '<span class="pv-side">' + (m.excluded ? '<span class="chip chip-warn">Blocked</span>'
+            : (m.alwaysNotify ? '<span class="chip">Always</span>' : "") + '<span class="pv-score">' + plural(m.score, "pt", "pts") + "</span>") + "</span>" +
+        "</li>";
+      }).join("");
+    }
+
+    function runTest() {
+      var def = readForm();
+      var bad = validateDef(def);
+      if (bad) { setError(bad.msg); bad.focus.focus(); return Promise.resolve(null); }
+      setError("");
+      showCors(false);
+      var testBtn = $("[data-src-test]", sheet);
+      testBtn.disabled = true;
+      testBtn.textContent = "Testing…";
+      return S.fetchPreview(def).then(function (res) {
+        testBtn.disabled = false;
+        testBtn.textContent = "Test";
+        if (!res.ok) {
+          if (res.corsBlocked) {
+            showCors(true);
+            A.syncRadios("src-mode", "paste");
+            syncForm();
+            field("sample").focus();
+          } else {
+            setError(res.error);
+          }
+          $("[data-src-preview]", sheet).hidden = true;
+          return null;
+        }
+        ed.tested = { items: res.items, key: JSON.stringify(def) };
+        renderEditorPreview(res.items);
+        return ed.tested;
+      });
+    }
+
+    function submit() {
+      if (ed.busy) return;
+      var def = readForm();
+      var ready = ed.tested && ed.tested.key === JSON.stringify(def) ? Promise.resolve(ed.tested) : runTest();
+      ed.busy = true;
+      ready.then(function (tested) {
+        ed.busy = false;
+        if (!tested) return;
+        var saved;
+        try {
+          saved = ed.id ? S.update(ed.id, def) : S.add(Object.assign({ enabled: true }, def));
+        } catch (e) { setError(e.message); return; }
+        var r = S.importItems(saved.id, tested.items);
+        closeEditor();
+        afterImport();
+        if (ed.id) A.toast("Saved " + saved.name + (r.added ? ". Added " + plural(r.added, "signal") : ""));
+        else A.toast(r.added ? "Added " + plural(r.added, "signal") + " from " + saved.name : "Added " + saved.name + ". No signals found yet");
+      });
+    }
+
+    sheet.addEventListener("click", function (e) {
+      if (e.target === sheet) return closeEditor(); // backdrop
+      if (e.target.closest("[data-src-close]")) return closeEditor();
+      if (e.target.closest("[data-src-test]")) return runTest();
+      if (e.target.closest("[data-src-submit]")) return submit();
+      var preset = e.target.closest("[data-src-preset]");
+      if (preset) {
+        var p = S.PRESETS.filter(function (x) { return x.id === preset.getAttribute("data-src-preset"); })[0];
+        fillForm(p.def);
+        syncForm();
+        showCors(false);
+        setError("");
+        setMapStatus(p.def.type === "json" ? "Press Detect fields to fill the mapping." : "");
+        invalidate();
+        $("[data-src-preview]", sheet).hidden = true;
+        return;
+      }
+      if (e.target.closest("[data-src-detect]")) {
+        var text = readForm().sample;
+        var detect = function (t) {
+          try {
+            var d = S.detectMapping(t);
+            fillForm(Object.assign(readForm(), { mapping: d.mapping }));
+            setMapStatus("Found a list of " + plural(d.count, "item") + " at " + (d.mapping.items || "the top level") + ". Check the fields, then press Test.");
+            setError("");
+            invalidate();
+          } catch (err) { setMapStatus(""); setError(err.message); }
+        };
+        if (readForm().mode === "paste") return detect(text);
+        setMapStatus("Reading the response…");
+        // Fetch mode: read the raw response once to inspect it
+        var def0 = readForm();
+        if (!S.validUrl(def0.url)) { setMapStatus(""); setError("Enter a link that starts with http:// or https://."); return; }
+        fetch(def0.url, { credentials: "omit" }).then(function (r) { return r.text(); }).then(detect).catch(function () {
+          setMapStatus("");
+          showCors(true);
+          A.syncRadios("src-mode", "paste");
+          syncForm();
+        });
+        return;
+      }
+      var aiBtn = e.target.closest("[data-src-ai]");
+      if (aiBtn) {
+        var sample = readForm().sample;
+        if (readForm().mode !== "paste" || !sample.trim()) { setError("Paste a sample of the JSON first, so the model can see its fields."); return; }
+        aiBtn.disabled = true;
+        setMapStatus("Asking your model…");
+        S.mapWithAI(sample).then(function (out) {
+          fillForm(Object.assign(readForm(), { mapping: out.mapping }));
+          setMapStatus("Proposed by " + (out.model || "your model") + (out.dropped.length ? ", minus " + out.dropped.join(", ") + " which didn't match the data" : "") + ". Check the fields, then press Test.");
+          setError("");
+          invalidate();
+        }).catch(function (err) {
+          setMapStatus("");
+          setError(err && err.message ? err.message : "The model couldn't propose a mapping.");
+        }).then(function () { aiBtn.disabled = false; });
+      }
+    });
+
+    form.addEventListener("input", function () { setError(""); invalidate(); });
+    form.addEventListener("change", function (e) {
+      if (e.target.name === "src-type" || e.target.name === "src-mode") { syncForm(); showCors(false); invalidate(); }
+    });
+    form.addEventListener("submit", function (e) { e.preventDefault(); submit(); });
+    sheet.addEventListener("close", function () { removing = null; });
+    window.addEventListener("signal:sources", function () { if (!sheet.open) renderCustom(); });
+    window.addEventListener("storage", function (e) { if (e.key === (S && S.KEY)) renderCustom(); });
 
     /* ---------- feeds and watched pages ---------- */
     function renderLinks(key) {
@@ -543,6 +929,7 @@
     }
 
     /* ---------- first render ---------- */
+    renderCustom();
     renderSources();
     wireLinks("feeds");
     wireLinks("watch");
