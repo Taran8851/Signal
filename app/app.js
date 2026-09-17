@@ -261,6 +261,14 @@
         });
     }
 
+    /* When the user's model has scored a row (app/ai.js), show its relevance next to the keyword match. */
+    function aiChip(r) {
+      if (!window.SignalAI) return "";
+      var label = window.SignalAI.scoreLabel(r, getPrefs());
+      if (label.source !== "llm") return "";
+      return '<span class="chip chip-ok" title="' + esc(label.reason || "Relevance from your model, 0 to 10") + '">' + esc(label.text) + "</span>";
+    }
+
     function rowHtml(x) {
       var r = x.row, m = x.m, d = x.d;
       var saved = r.status === "saved";
@@ -279,6 +287,7 @@
             '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">' +
               (d ? '<span class="chip ' + d.cls + '">' + esc(d.text) + "</span>" : "") +
               '<span class="chip ' + m.level.cls + '" title="' + esc(m.score + " points") + '">' + esc(m.level.label) + "</span>" +
+              aiChip(r) +
             "</div>" +
             '<div class="row-actions">' +
               (m.excluded ? "" :
@@ -401,6 +410,7 @@
     var noteEl = $("[data-sheet-note]");
     var currentId = null;
     var noteTimer;
+    var insight = null; // handle returned by SignalAI.mountRowInsight
 
     function showSheet() {
       if (sheet.open) return;
@@ -466,6 +476,12 @@
           (m.wouldNotify ? "would notify you." : "stays quietly in your list.");
       }
       $("[data-why-summary]").textContent = summary;
+
+      // AI relevance for this signal (app/ai.js): stored result, reasons, and "Ask the model"
+      if (window.SignalAI) {
+        if (insight) insight.destroy();
+        insight = window.SignalAI.mountRowInsight($("[data-ai-insight]"), row, prefs);
+      }
       $("[data-why-list]").innerHTML = m.breakdown.length
         ? m.breakdown.map(function (b) {
             var what = b.list === "topic" ? "Topic" : "Boost word";
@@ -605,6 +621,9 @@
       if (h.indexOf("#signal=") === 0) openSheet(decodeURIComponent(h.slice(8)));
       else if (h === "#new") openAdd();
     }
+
+    // Scores from the model change the list labels
+    window.addEventListener("signal-ai-change", function () { render(); });
 
     render();
     openFromHash();

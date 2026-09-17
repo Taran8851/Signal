@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="app.css?v=4">
   <link rel="stylesheet" href="preferences.css?v=1">
+  <link rel="stylesheet" href="ai.css?v=1">
 </head>
 <body data-page="preferences">
   <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -59,6 +60,10 @@
           <a href="#pickiness" data-index-link="pickiness">
             <span class="tile tile-mist" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg></span>
             <span>Pickiness</span>
+          </a>
+          <a href="#scoring" data-index-link="scoring">
+            <span class="tile tile-sky" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg></span>
+            <span>AI scoring</span>
           </a>
           <a href="#sources" data-index-link="sources">
             <span class="tile tile-mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg></span>
@@ -125,6 +130,17 @@
             </div>
           </section>
 
+          <!-- Suggest my terms (app/ai.js): two engines, nothing applied until you accept -->
+          <div class="group glass ai-mount">
+            <div class="grow grow-stack">
+              <div class="grow-text">
+                <p class="grow-label">Not sure what to add?</p>
+                <p class="grow-help">Get suggestions from what you saved and archived, or describe yourself and let your model suggest terms. Nothing is added until you accept it, and you still press Save.</p>
+              </div>
+              <div data-ai-suggest></div>
+            </div>
+          </div>
+
           <!-- Pickiness -->
           <section class="pset" id="pickiness" aria-labelledby="h-picky">
             <header class="pset-head">
@@ -152,6 +168,20 @@
                 <p class="preview-summary" data-threshold-preview aria-live="polite"></p>
               </div>
               <ul class="preview-list" data-preview-list aria-label="Your signals under these settings"></ul>
+            </div>
+          </section>
+
+          <!-- AI scoring (app/ai.js) -->
+          <section class="pset" id="scoring" aria-labelledby="h-scoring">
+            <header class="pset-head">
+              <span class="tile tile-lg tile-sky" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg></span>
+              <div class="pset-title">
+                <h2 id="h-scoring">AI scoring</h2>
+                <p>Keep the keyword filter, or let your own model judge relevance from 0 to 10. These settings save as soon as you change them.</p>
+              </div>
+            </header>
+            <div class="group glass ai-mount">
+              <div class="grow grow-stack"><div data-ai-settings></div></div>
             </div>
           </section>
 
@@ -303,7 +333,8 @@
   <p class="toast glass" data-toast role="status" hidden></p>
 
   <script src="app-data.js?v=2"></script>
-  <script src="app.js?v=4"></script>
-  <script src="preferences.js?v=1"></script>
+  <script src="ai.js?v=1"></script>
+  <script src="app.js?v=5"></script>
+  <script src="preferences.js?v=2"></script>
 </body>
 </html>

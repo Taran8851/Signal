@@ -514,6 +514,34 @@
       if (a) setCurrent(a.getAttribute("data-index-link"));
     });
 
+    /* ---------- AI scoring and "Suggest my terms" (app/ai.js) ---------- */
+    if (window.SignalAI) {
+      window.SignalAI.mountSettings($("[data-ai-settings]"));
+      window.SignalAI.mountSuggest($("[data-ai-suggest]"), {
+        getPrefs: function () { return draft; },
+        getRows: A.getRows,
+        // Accepted suggestions go into the draft like typed terms; the user still presses Save.
+        onApply: function (patch) {
+          var added = 0;
+          ["interests", "boost", "exclude", "cfpCategories"].forEach(function (key) {
+            (patch[key] || []).forEach(function (term) {
+              var before = draft[key].length;
+              addTag(key, term);
+              added += draft[key].length - before;
+            });
+            renderTags(key);
+          });
+          renderSources();
+          changed();
+          var queries = (patch.alertQueries || []).length;
+          // One toast only: a second call would replace the first before anyone reads it.
+          var msg = added ? plural(added, "term") + " added. Press Save to keep them." : "Those terms are already in your lists.";
+          if (queries) msg += " Alert queries go into google.com/alerts; add the feed under Sources.";
+          A.toast(msg);
+        }
+      });
+    }
+
     /* ---------- first render ---------- */
     renderSources();
     wireLinks("feeds");

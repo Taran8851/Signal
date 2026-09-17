@@ -1,0 +1,95 @@
+/* Signal demo console — AI blocks (scoring settings, row insight, Suggest my terms).
+   Reads only the theme tokens from app.css, so light, dark, glass strength and density all
+   apply. Reuses .button, .field, .input, .segmented, .chip from app.css; adds what is missing.
+   Lake Blue appears only on the "Add N accepted terms" primary button (.button-primary). */
+
+.ai-settings,
+.ai-suggest,
+.ai-insight { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.ai-insight { gap: 16px; }
+
+.ai-group { display: flex; flex-direction: column; gap: 8px; }
+.ai-heading { color: var(--text-3); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+.ai-help { color: var(--text-3); font-size: 12px; line-height: 1.5; }
+.ai-segmented { align-self: flex-start; }
+
+.ai-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.ai-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ai-span-2 { grid-column: 1 / -1; }
+.ai-grid .field-help { line-height: 1.4; }
+.input:disabled { opacity: .5; cursor: not-allowed; }
+.button:disabled { opacity: .45; cursor: not-allowed; }
+.button-primary:disabled:hover { background: var(--blue); }
+
+/* Honest note about where the key lives */
+.ai-notice { display: flex; flex-direction: column; gap: 8px; padding: 16px 24px; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--muted-bg); color: var(--text-2); font-size: 12px; line-height: 1.5; }
+.ai-notice b { color: var(--text); font-weight: 500; }
+
+.ai-key-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ai-key-row .input { flex: 1 1 240px; width: auto; }
+.ai-key-saved { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ai-mono-key { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+
+.ai-status { min-height: 18px; color: var(--text-3); font-size: 12px; }
+.ai-status[data-tone="good"] { color: var(--good-text); }
+.ai-status[data-tone="error"] { color: var(--warn-text); }
+.ai-inline-note { padding: 8px 16px; border-radius: 16px; background: var(--chip-bg); color: var(--text-2); font-size: 12px; line-height: 1.5; }
+.ai-inline-note[data-tone="warn"] { background: var(--warn-bg); color: var(--warn-text); }
+
+.ai-details { border-top: 1px solid var(--line); padding-top: 16px; }
+.ai-details summary { color: var(--text-2); font-size: 12px; font-weight: 500; cursor: pointer; }
+.ai-details[open] summary { margin-bottom: 16px; }
+.ai-prompt { min-height: 160px; font-size: 12px; }
+
+/* Row insight (signal overlay) */
+.ai-insight-head { display: flex; align-items: flex-start; gap: 16px; }
+.ai-badge { flex: none; display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; letter-spacing: .04em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ai-badge[data-source="llm"] { background: var(--selected-bg); color: var(--selected-text); }
+.ai-badge[data-source="keyword"] { background: var(--chip-bg); color: var(--chip-text); }
+.ai-insight-summary { font-size: 14px; line-height: 1.5; }
+.ai-reasons { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.ai-reasons li { padding: 8px 0; border-top: 1px solid var(--line); color: var(--text-2); font-size: 12px; }
+.ai-reasons li:before { content: "· "; color: var(--text-3); }
+.ai-insight-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.ai-insight-actions .ai-help { flex: 1 1 200px; }
+
+/* Suggest my terms */
+.ai-panel { display: flex; flex-direction: column; gap: 16px; }
+.ai-empty { padding: 16px 24px; border: 1px dashed var(--panel-border); border-radius: 16px; color: var(--text-2); font-size: 14px; line-height: 1.5; }
+
+.ai-sugg-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--panel-strong); overflow: hidden; }
+.ai-sugg { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 8px 16px; border-top: 1px solid var(--line); transition: background .15s linear; }
+.ai-sugg:first-child { border-top: 0; }
+.ai-sugg-text { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.ai-sugg-term { color: var(--text); font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.ai-evidence { flex-basis: 100%; color: var(--text-3); font-size: 12px; }
+.ai-sugg-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.ai-sugg-state { padding: 0 8px; color: var(--text-2); font-size: 12px; }
+.ai-sugg[data-state="accepted"] { background: var(--good-bg); }
+.ai-sugg[data-state="accepted"] .ai-sugg-state { color: var(--good-text); font-weight: 500; }
+.ai-sugg[data-state="accepted"] .ai-evidence { color: var(--good-text); opacity: .8; }
+.ai-sugg[data-state="rejected"] .ai-sugg-term { color: var(--text-3); text-decoration: line-through; }
+.ai-sugg[data-state="rejected"] .chip { opacity: .6; }
+
+.ai-dry { display: flex; flex-direction: column; gap: 8px; padding: 16px 24px; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--panel-strong); }
+.ai-dry-line { font-size: 14px; }
+.ai-dry-line b { font-family: var(--font-display); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.ai-dry-sub { color: var(--text-2); font-size: 12px; line-height: 1.5; }
+
+.ai-apply { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.ai-apply .ai-help { flex: 1 1 200px; }
+
+@media (max-width: 720px) {
+  .ai-grid, .ai-grid-3 { grid-template-columns: 1fr; }
+  .ai-notice, .ai-dry { padding: 16px; }
+  .ai-sugg-actions { margin-left: 0; }
+}
+
+/* The key field is type=text (no password-manager prompts, no form needed) with masked glyphs. */
+.ai-key-input { -webkit-text-security: disc; text-security: disc; }
+.ai-key-input:placeholder-shown { -webkit-text-security: none; text-security: none; }
+[data-ai-saved]:empty { display: none; }
+@media (max-width: 420px) {
+  .ai-segmented { flex-wrap: nowrap; }
+  .ai-segmented label > span { padding: 4px 8px; }
+}

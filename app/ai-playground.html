@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AI playground — Signal console (demo)</title>
+  <!-- Test page for app/ai.js. Query params (all optional):
+       ?mode=light|dark   theme, written to signal_demo_appearance before theme-boot runs
+       ?reset=1           clear AI settings, key, usage, cache and results
+       ?key=1             store a fake key (sk-test-…a41f) to show the saved-key state
+       ?ai=hybrid|llm     set the scoring mode
+       ?accept=2          accept the first N history suggestions -->
+  <script>
+    (function () {
+      var p = new URLSearchParams(location.search);
+      try {
+        var m = p.get("mode");
+        if (m) {
+          var a = JSON.parse(localStorage.getItem("signal_demo_appearance") || "{}") || {};
+          a.mode = m;
+          localStorage.setItem("signal_demo_appearance", JSON.stringify(a));
+        }
+        if (p.get("reset")) ["signal_demo_ai", "signal_demo_ai_key", "signal_demo_ai_usage", "signal_demo_ai_cache", "signal_demo_ai_results"].forEach(function (k) { localStorage.removeItem(k); });
+      } catch (e) {}
+    })();
+  </script>
+  <script src="theme-boot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="ai.css">
+  <style>
+    .pg { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 24px; max-width: 880px; margin: 0 auto; padding: 32px 16px 96px; }
+    .pg-card { display: flex; flex-direction: column; gap: 24px; padding: 32px; border-radius: 24px; }
+    .pg-card h2 { font-size: 32px; }
+    .pg-patch { padding: 16px; border-radius: 16px; background: var(--muted-bg); font-size: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <main class="pg">
+    <header>
+      <h1 style="font-size:48px">AI playground</h1>
+      <p class="page-lede">Test page for scoring settings, Suggest my terms and the row insight.</p>
+    </header>
+    <section class="pg-card glass">
+      <h2>Scoring</h2>
+      <div id="settings"></div>
+    </section>
+    <section class="pg-card glass">
+      <h2>Suggest my terms</h2>
+      <div id="suggest"></div>
+      <pre class="pg-patch" id="patch" hidden></pre>
+    </section>
+    <section class="pg-card glass">
+      <h2 id="row-title"></h2>
+      <div id="insight"></div>
+    </section>
+  </main>
+  <script src="app-data.js"></script>
+  <script src="ai.js"></script>
+  <script>
+    (function () {
+      var p = new URLSearchParams(location.search);
+      var AI = window.SignalAI, D = window.SignalData;
+      if (p.get("key")) AI.setKey("sk-test-playground-a41f");
+      if (p.get("ai")) AI.saveSettings({ mode: p.get("ai") });
+
+      function getPrefs() {
+        var saved = {};
+        try { saved = JSON.parse(localStorage.getItem("signal_demo_prefs") || "{}") || {}; } catch (e) {}
+        return Object.assign(JSON.parse(JSON.stringify(D.DEFAULT_PREFS)), saved);
+      }
+
+      AI.mountSettings(document.getElementById("settings"));
+      AI.mountSuggest(document.getElementById("suggest"), {
+        getPrefs: getPrefs,
+        onApply: function (patch) {
+          var el = document.getElementById("patch");
+          el.hidden = false;
+          el.textContent = "onApply(patch)\n" + JSON.stringify(patch, null, 2);
+        }
+      });
+      var row = D.RAW_ROWS[0];
+      document.getElementById("row-title").textContent = row.title;
+      AI.mountRowInsight(document.getElementById("insight"), row, getPrefs());
+
+      var n = parseInt(p.get("accept"), 10) || 0;
+      for (var i = 0; i < n; i++) {
+        var b = document.querySelector('#suggest [data-ai-sugg="accept"]');
+        if (b) b.click();
+      }
+    })();
+  </script>
+</body>
+</html>
