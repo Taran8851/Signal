@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal — questions, answered plainly</title>
+  <meta name="description" content="What Signal is, what it refuses to do, whether you need an AI key, and how match strength works.">
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="shared.css?v=6">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell nav-inner">
+      <a class="brand" href="index.html" aria-label="Signal home">
+        <span class="brand-orbit" aria-hidden="true"><i></i></span>
+        <span>SIGNAL</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html#filter">TRY THE FILTER</a>
+        <a href="how-it-works.html">HOW IT WORKS</a>
+        <a href="index.html#console">CONSOLE</a>
+        <a href="faq.html" aria-current="page">FAQ</a>
+      </nav>
+      <a class="button button-blue button-small" href="app/login.html">TRY THE DEMO <span>↗</span></a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="page-top">
+      <div class="shell">
+        <p class="eyebrow">QUESTIONS</p>
+        <h1>Questions,<br>answered plainly.</h1>
+        <p class="page-lede">Including the ones where the answer is &ldquo;no&rdquo; or &ldquo;not yet&rdquo;.</p>
+      </div>
+    </section>
+    <section class="section faq-section" id="faq">
+      <div class="shell faq-single">
+        
+        <div class="faq-list">
+          <details><summary>Is this a job board?<span>↓</span></summary><p>No. Nobody pays to be listed, nothing is ranked by company name, and Signal will never tell you it can get you hired. It watches where opportunities turn up in the fields you pick &mdash; hackathons, calls for papers, research programmes, fellowships, internships &mdash; and tells you which ones fit where you are now.</p></details>
+          <details><summary>Do I need an AI key?<span>↓</span></summary><p>No, and the free path isn&rsquo;t a crippled one: your words score every listing, in your browser, at no cost. A key buys you a second opinion per opportunity &mdash; can I do this yet, what would I get, what does it ask for. Your blocked words and duplicate-checking run first, so the model never sees things you&rsquo;ve ruled out.</p></details>
+          <details><summary>Can I add my own sources?<span>↓</span></summary><p>Yes, and you should &mdash; the best source for you is usually one we&rsquo;ve never heard of. A feed, a JSON API, a page with no feed at all, or an account through a feed URL. It keeps the name you give it and is never passed off as built-in.</p></details>
+          <details><summary>Does Signal scrape X or LinkedIn?<span>↓</span></summary><p>No, and not out of politeness &mdash; logging in as you is how accounts get banned. LinkedIn already mails you its notifications, so Signal reads those (not in the hosted app yet). For anything else, add a feed URL you&rsquo;re allowed to read. Sites whose robots.txt says no are left alone.</p></details>
+          <details><summary>Can I try it today?<span>↓</span></summary><p>Right now. The <a class="inline-link" href="app/login.html">console</a> is open: any email and password gets you in, there is no account, and everything stays in your browser until you clear it.</p></details>
+          <details><summary>How does match strength work?<span>↓</span></summary><p>Your topics are worth 4 points in a title, 3 in the description. Words like &ldquo;fellowship&rdquo; add 2 anywhere. Blocked words send a listing straight to Archived. Every score in the console shows the arithmetic that produced it.</p></details>
+          <details><summary>Where does it reach me?<span>↓</span></summary><p>Telegram, once the hosted app runs the fetching for you. Discord is somewhere Signal reads from, not somewhere it writes to, and there is no email sender. In the demo, everything stays in the console.</p></details>
+          <details><summary>Will the first run bury me?<span>↓</span></summary><p>No. The first check of any source stores what is already there without announcing a word of it. You only hear about what shows up afterwards.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section student-os-section">
+      <div class="shell student-os-grid">
+        <div><p class="eyebrow">STUDENT OS</p><h2>One module is real. <br>The rest comes later.</h2><p>Signal is the part that works today. The other modules are an intention, not a roadmap, and we would rather say so than draw you a diagram of things that do not exist.</p></div>
+        <div class="module-map">
+          <article class="module-live"><span>MODULE 01</span><h3>Signal</h3><b>BUILT</b></article>
+          <article><span>MODULE 02</span><h3>Not named</h3><b>NOT BUILT</b></article>
+          <article><span>MODULE 03</span><h3>Not named</h3><b>NOT BUILT</b></article>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="signup-section">
+      <div class="signup-glow" aria-hidden="true"></div>
+      <div class="shell signup-inner">
+        <div>
+          <p class="eyebrow">TRY SIGNAL</p><h2>Nothing left to read.</h2>
+          <p class="signup-copy">The console is open. Any email and password gets you in, and nothing you type leaves your browser.</p>
+          <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <a class="brand" href="index.html"><span class="brand-orbit"><i></i></span><span>SIGNAL</span></a>
+      <p><a class="inline-link" href="how-it-works.html">HOW IT WORKS</a> · <a class="inline-link" href="faq.html">FAQ</a> · <a class="inline-link" href="app/login.html">DEMO CONSOLE ↗</a></p>
+      <p>BUILT TO FIND LESS.</p>
+    </div>
+  </footer>
+
+  <script src="motion.js?v=3"></script>
+</body>
+</html>

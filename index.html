@@ -9,11 +9,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="shared.css?v=5">
+  <link rel="stylesheet" href="shared.css?v=6">
 </head>
 <body>
   <div class="announcement" id="announcement">
-    <p>Signal is module 01 of Student OS. The demo console is open.</p>
+    <p>The demo console is open. No sign-up, nothing sent anywhere.</p>
     <a href="app/login.html">TRY THE DEMO <span>↗</span></a>
     <button type="button" aria-label="Close announcement" data-close-announcement>×</button>
   </div>
@@ -25,10 +25,10 @@
         <span>SIGNAL</span>
       </a>
       <nav class="nav-links" aria-label="Main navigation">
-        <a href="#filter">FILTER</a>
-        <a href="#decisions">HOW IT DECIDES</a>
+        <a href="#filter">TRY THE FILTER</a>
+        <a href="how-it-works.html">HOW IT WORKS</a>
         <a href="#console">CONSOLE</a>
-        <a href="#faq">FAQ</a>
+        <a href="faq.html">FAQ</a>
       </nav>
       <a class="button button-blue button-small" href="app/login.html">TRY THE DEMO <span>↗</span></a>
     </div>
@@ -40,12 +40,13 @@
       <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
       <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
       <div class="shell hero-content">
-        <p class="eyebrow">FOR STUDENTS WHO ASSUME IT&rsquo;S TOO EARLY</p>
+        <p class="eyebrow">FOR STUDENTS WHO THINK IT&rsquo;S TOO EARLY</p>
         <h1>Every Opportunity.<br>None of the Scrolling.</h1>
-        <p class="hero-copy">Most students miss opportunities because they think they&rsquo;re too early, or never look. Signal watches eight sources&nbsp;— hackathon boards, research feeds, your Discord servers, pages you pick&nbsp;— in the fields you choose, and surfaces only what fits where you are now.</p>
+        <p class="hero-copy">You found the hackathon the day after registration closed. You bookmarked the fellowship and never opened it again. So you keep checking Unstop, MLH, Discord and that one lab page, in case you&rsquo;re missing something.</p>
+        <p class="hero-copy hero-copy-lead">Signal checks them for you, in the fields you pick, and puts up the few worth your time &mdash; including the ones you&rsquo;d skip because you assume you&rsquo;re too early for them.</p>
         <div class="hero-actions">
           <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
-          <a class="button button-ghost" href="#filter">SEE WHAT IT FILTERS</a>
+          <a class="button button-ghost" href="#filter">TRY THE FILTER</a>
         </div>
 
         <div class="hero-pipeline" aria-label="Signal pipeline: nine sources, eight available now, match, dedupe, threshold, sort, then inbox or filtered">
@@ -125,22 +126,22 @@
       <div class="ambient-glow metric-glow-two" aria-hidden="true"></div>
       <div class="shell metric-grid">
         <div class="metric-intro">
-          <p class="eyebrow">A REAL NINE-HOUR RUN</p>
-          <h2>More arrived than deserved your attention.</h2>
+          <p class="eyebrow">ONE STUDENT, ONE DAY</p>
+          <h2>300 things arrived. 59 were worth opening.</h2>
         </div>
         <div class="metric-number"><strong>300</strong><span>ARRIVED</span></div>
         <div class="metric-arrow" aria-hidden="true">→</div>
         <div class="metric-number metric-number-blue"><strong>59</strong><span>CLEARED THE FILTER</span></div>
-        <p class="metric-note">SEVEN SOURCES. ONE STUDENT. 11 SEPTEMBER 2026.</p>
+        <p class="metric-note">SEVEN SOURCES, NINE HOURS, 11 SEPTEMBER 2026. THE OTHER 241 WERE REAL TOO &mdash; JUST NOT FOR HIM.</p>
       </div>
     </section>
 
     <section class="section filter-section" id="filter">
       <div class="shell">
         <div class="section-heading">
-          <p class="eyebrow">TUNE YOUR FILTER</p>
-          <h2>You decide what counts as signal.</h2>
-          <p>Change the controls. The same public opportunities are rescored immediately.</p>
+          <p class="eyebrow">TRY IT RIGHT HERE</p>
+          <h2>You decide what counts.</h2>
+          <p>Type in what you care about and watch the list below re-sort itself. This is the same scoring the console runs, on real listings.</p>
         </div>
 
         <div class="filter-demo">
@@ -235,79 +236,35 @@
       <div class="shell">
         <div class="section-heading section-heading-split">
           <div><p class="eyebrow">HOW IT DECIDES</p><h2>Two ways to decide. <br>One pipeline.</h2></div>
-          <p>Plug in a model and every opportunity gets a brief. Or use heuristic search: keyword rules, no key. Either way, exclude terms and dedupe run first, and every result shows where its score came from.</p>
+          <p>Use it with no key at all, or plug in your own model for a second opinion on each one. Whichever you use, you can see why something scored what it did &mdash; nothing is ranked by company name, and nothing is hidden behind &ldquo;the algorithm&rdquo;.</p>
         </div>
 
         <div class="mode-grid">
           <article class="feature-card mode-card">
             <div class="feature-copy">
-              <span>A / LLM SOCKET</span>
-              <h3>Your model. A brief per opportunity.</h3>
-              <p>Connect any compatible model: Anthropic, an OpenAI-compatible endpoint, or a local server. Each opportunity gets a relevance from 0 to 10 and a short brief, always labelled as the model&rsquo;s.</p>
+              <span>A / WITH YOUR OWN MODEL</span>
+              <h3>&ldquo;Am I ready for this one?&rdquo;</h3>
+              <p>The question you actually ask before applying. Plug in your own model &mdash; Anthropic, anything OpenAI-compatible, or a server on your own machine &mdash; and each opportunity comes back with a straight answer, scored 0 to 10 and always labelled as the model&rsquo;s words, not ours.</p>
             </div>
             <dl class="brief-visual" aria-label="What a model brief covers">
-              <div class="brief-head"><span>EXAMPLE BRIEF · WHAT IT COVERS</span><b>LLM</b></div>
-              <div><dt>FIT</dt><dd>Why it fits the fields you chose</dd></div>
-              <div><dt>STAGE</dt><dd>Whether where you are now is enough</dd></div>
-              <div><dt>GAINS</dt><dd>What you would get out of it</dd></div>
-              <div><dt>ASKS</dt><dd>What it asks you to submit</dd></div>
-              <div><dt>EFFORT</dt><dd>Rough time it takes</dd></div>
-              <div><dt>FIRST STEPS</dt><dd>What to do first</dd></div>
+              <div class="brief-head"><span>WHAT EACH BRIEF ANSWERS</span><b>LLM</b></div>
+              <div><dt>FIT</dt><dd>Why this one is in front of you</dd></div>
+              <div><dt>STAGE</dt><dd>Whether you&rsquo;re far enough along</dd></div>
+              <div><dt>GAINS</dt><dd>What you&rsquo;d walk away with</dd></div>
+              <div><dt>ASKS</dt><dd>What you have to submit</dd></div>
+              <div><dt>EFFORT</dt><dd>Roughly what it costs you</dd></div>
+              <div><dt>FIRST STEPS</dt><dd>What to do tonight</dd></div>
             </dl>
           </article>
           <article class="feature-card mode-card mode-card-plain">
             <div class="feature-copy">
-              <span>B / HEURISTIC SEARCH</span>
-              <h3>Keyword rules. No key.</h3>
-              <p>Fast, free and explainable. Nothing leaves your browser in the demo. The four steps below are the whole method, and they run for every item even when a model is plugged in.</p>
+              <span>B / NO KEY, NO MODEL</span>
+              <h3>Your words, counted.</h3>
+              <p>Tell Signal the things you care about and the words that put you off. It scores every listing on those, in your browser, for free. You get fewer details than a model gives you, but you can check the arithmetic yourself &mdash; and it runs on everything either way.</p>
+              <p class="mode-more"><a class="inline-link" href="how-it-works.html">See the four steps it runs &mdash; match, dedupe, threshold, sort &rarr;</a></p>
             </div>
           </article>
         </div>
-
-        <p class="mode-divider">HEURISTIC SEARCH, STEP BY STEP</p>
-
-        <div class="feature-grid">
-          <article class="feature-card feature-card-large">
-            <div class="feature-copy"><span>01 / MATCH</span><h3>Score what you care about.</h3><p>Interest terms add 4 in a title or 3 in the body. Boost terms add 2 anywhere. Exclude terms archive the row.</p></div>
-            <div class="score-visual">
-              <div class="sample-title">Edge AI research fellowship</div>
-              <div class="score-line"><span>EDGE AI · TITLE</span><b>+4</b></div>
-              <div class="score-line"><span>FELLOWSHIP · BOOST</span><b>+2</b></div>
-              <div class="score-total"><span>MATCH STRENGTH</span><strong>6</strong></div>
-            </div>
-          </article>
-
-          <article class="feature-card feature-card-gradient">
-            <div class="feature-copy"><span>02 / DEDUPE</span><h3>See it once.</h3><p>Every source and external ID pair is unique. Repeats are ignored before they can become noise.</p></div>
-            <div class="dedupe-visual" aria-hidden="true">
-              <div>DEVPOST / 4921</div><div>DEVPOST / 4921</div><div>DEVPOST / 4921</div><span>ONE STORED</span>
-            </div>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-copy"><span>03 / THRESHOLD</span><h3>Control the cut.</h3><p>The default threshold is 3. DMs and watched-page changes can ring regardless of score.</p></div>
-            <div class="threshold-visual"><span>0</span><i></i><b>3</b><i></i><span>6</span></div>
-          </article>
-
-          <article class="feature-card feature-card-dark">
-            <div class="feature-copy"><span>04 / SORT</span><h3>Recent by default.</h3><p>Switch between recent, deadline, and match strength. Deadline puts known dates first.</p></div>
-            <div class="sort-list"><span>RECENT <b>DEFAULT</b></span><span>DEADLINE</span><span>MATCH</span></div>
-          </article>
-        </div>
-
-        <article class="feature-card open-sources" id="sources">
-          <div class="feature-copy">
-            <span>OPEN SOURCES</span>
-            <h3>Add your own source.</h3>
-            <p>Beyond the nine built-in sources, point Signal at a URL you are allowed to read. It keeps the name you give it and is never shown as built-in. Signal does not scrape sites that forbid it.</p>
-          </div>
-          <ul class="source-types">
-            <li><b>RSS / ATOM FEED</b><span>A blog, a lab&rsquo;s news page, a Google Alerts feed</span></li>
-            <li><b>JSON API</b><span>With a mapping from its fields to Signal&rsquo;s</span></li>
-            <li><b>PAGE WATCH</b><span>A page you want to hear about when it changes</span></li>
-            <li><b>SOCIAL FEED</b><span>Through a feed URL, such as an X account via an RSS bridge</span></li>
-          </ul>
-        </article>
       </div>
     </section>
 
@@ -316,9 +273,9 @@
         <div class="section-heading section-heading-split">
           <div>
             <p class="eyebrow">THE REAL CONSOLE</p>
-            <h2>Your filtered opportunities, <br>with the reason attached.</h2>
+            <h2>What&rsquo;s left is short enough <br>to read over coffee.</h2>
           </div>
-          <p>Below is a static picture of the console. The working demo console runs on public sample rows; any email and password signs you in. <a class="inline-link" href="app/login.html">Open the demo console ↗</a></p>
+          <p>Every row says where it came from and why it&rsquo;s here. Save it, mark it applied, or archive it and never see it again. The picture below is static &mdash; the working console is one click away, and any email and password gets you in. <a class="inline-link" href="app/login.html">Open the demo console ↗</a></p>
         </div>
         <div class="console-shell">
           <div class="console-topbar"><div><i></i><i></i><i></i></div><span>SIGNAL / CONSOLE</span><b>STATIC PREVIEW</b></div>
@@ -344,57 +301,11 @@
 
     <section class="section audience-section" id="audience">
       <div class="shell">
-        <div class="section-heading"><p class="eyebrow">BUILT AROUND YOUR CRITERIA</p><h2>Three students. <br>Three different filters.</h2></div>
+        <div class="section-heading"><p class="eyebrow">SAME SOURCES, DIFFERENT LISTS</p><h2>Three students. <br>Three different filters.</h2></div>
         <div class="audience-grid">
-          <article><span>01</span><h3>The first-year who thinks it&rsquo;s too early</h3><p>Devpost, MLH and Unstop, with interest terms for web and security, a boost for “beginner” and “first-time”, and “PhD only” excluded.</p><div><b>BEGINNER</b><b>WEB DEVELOPMENT</b><b>SECURITY</b></div></article>
-          <article class="audience-featured"><span>02</span><h3>The student exploring a new field</h3><p>Moving from mechanical engineering toward robotics. Interest terms for the new field, boosts for workshops and summer schools, WikiCFP to see where the research is.</p><div><b>ROBOTICS</b><b>SUMMER SCHOOL</b><b>WORKSHOP</b></div></article>
-          <article><span>03</span><h3>The student building in public</h3><p>Ships side projects and looks for the next place to show them: hackathons, open-source programmes and calls for papers in edge AI.</p><div><b>OPEN SOURCE</b><b>EDGE AI</b><b>CALL FOR PAPERS</b></div></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section honesty-section" id="honesty">
-      <div class="ambient-glow honesty-glow" aria-hidden="true"></div>
-      <div class="shell">
-        <div class="section-heading section-heading-split"><div><p class="eyebrow">HONEST BY DESIGN</p><h2>The limits are part <br>of the product.</h2></div><p>Signal does less on purpose. These choices protect your account and keep setup from flooding you.</p></div>
-        <div class="honesty-grid">
-          <article>
-            <div class="honesty-visual mail-flow"><span>LINKEDIN MAIL</span><i>→</i><span>GMAIL</span><i>→</i><b>SIGNAL</b></div>
-            <h3>We don't scrape LinkedIn.</h3>
-            <p>We read the notification mail LinkedIn already sends you, and show where every opportunity came from. Reading that mail is not available in the hosted app yet.</p>
-          </article>
-          <article>
-            <div class="honesty-visual backfill-flow"><span>FIRST RUN</span><div><i></i><i></i><i></i><i></i></div><b>STORED · SILENT</b></div>
-            <h3>The first run is silent.</h3>
-            <p>Signal stores the initial backfill and notifies you about none of it. Alerts begin with what arrives after setup.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section student-os-section">
-      <div class="shell student-os-grid">
-        <div><p class="eyebrow">STUDENT OS</p><h2>One module is real. <br>The rest comes later.</h2><p>Signal is the first working layer. Future modules have not been named or built.</p></div>
-        <div class="module-map">
-          <article class="module-live"><span>MODULE 01</span><h3>Signal</h3><b>BUILT</b></article>
-          <article><span>MODULE 02</span><h3>Not named</h3><b>NOT BUILT</b></article>
-          <article><span>MODULE 03</span><h3>Not named</h3><b>NOT BUILT</b></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section faq-section" id="faq">
-      <div class="shell faq-grid">
-        <div class="section-heading"><p class="eyebrow">QUESTIONS</p><h2>The short version.</h2></div>
-        <div class="faq-list">
-          <details><summary>Is this a job board?<span>↓</span></summary><p>No. Signal is not a job board, an internship listing site or a placement service. It watches where opportunities appear in the fields you choose, like hackathons, calls for papers, research programmes, fellowships and internships, and tells you which fit where you are now. It promises no outcome and never ranks by name.</p></details>
-          <details><summary>Do I need an AI key?<span>↓</span></summary><p>No. Heuristic search scores every item with your keyword rules and needs no key. Plug in a compatible model and each opportunity also gets a relevance from 0 to 10 and a brief: fit, stage, gains, asks, effort and first steps. Exclude terms and dedupe run before any model call.</p></details>
-          <details><summary>Can I add my own sources?<span>↓</span></summary><p>Yes. In the demo console you can add an RSS or Atom feed, a JSON API with a field mapping, a page to watch, or a social feed through a feed URL. Each custom source keeps the name you give it. In the hosted app, the server will do the fetching.</p></details>
-          <details><summary>Does Signal scrape X or LinkedIn?<span>↓</span></summary><p>No. For LinkedIn, Signal reads the notification mail that arrives in Gmail; reading mail is not available in the hosted app yet. For X or any other site, you can add a feed URL you are allowed to read. Signal does not scrape sites that forbid it.</p></details>
-          <details><summary>Can I try it today?<span>↓</span></summary><p>Yes. The <a class="inline-link" href="app/login.html">demo console</a> runs on public sample rows. Any email and password signs you in, and nothing is sent anywhere.</p></details>
-          <details><summary>How does match strength work?<span>↓</span></summary><p>Interest terms add 4 in titles or 3 in bodies. Boost terms add 2. Exclude terms archive rows.</p></details>
-          <details><summary>Which notification channels exist?<span>↓</span></summary><p>Telegram. Discord is an inbound source, not a notification channel. There is no email sender.</p></details>
-          <details><summary>Will the first run notify me about everything?<span>↓</span></summary><p>No. The first successful run stores the backfill without sending alerts.</p></details>
+          <article><span>01</span><h3>Thinks she&rsquo;s too early for any of it</h3><p>First year, hasn&rsquo;t shipped anything public yet. Hackathon boards only, &ldquo;beginner&rdquo; and &ldquo;first-time&rdquo; pushed up, anything asking for a PhD pushed out of sight.</p><div><b>BEGINNER</b><b>WEB DEVELOPMENT</b><b>SECURITY</b></div></article>
+          <article class="audience-featured"><span>02</span><h3>Moving into a field he didn&rsquo;t study</h3><p>Mechanical engineering, wants to end up in robotics. Terms for the new field, workshops and summer schools boosted, and WikiCFP on so he can see what that world is actually working on.</p><div><b>ROBOTICS</b><b>SUMMER SCHOOL</b><b>WORKSHOP</b></div></article>
+          <article><span>03</span><h3>Has the projects, needs the rooms</h3><p>Ships things and wants somewhere to put them: hackathons, open-source programmes, and calls for papers close enough to edge AI to be worth a weekend.</p><div><b>OPEN SOURCE</b><b>EDGE AI</b><b>CALL FOR PAPERS</b></div></article>
         </div>
       </div>
     </section>
@@ -404,7 +315,7 @@
       <div class="shell signup-inner">
         <div>
           <p class="eyebrow">TRY SIGNAL</p><h2>Stop checking. <br>Start choosing.</h2>
-          <p class="signup-copy">The demo console is open now. It runs on public sample rows, any email and password signs you in, and nothing is sent anywhere.</p>
+          <p class="signup-copy">The console is open right now. Any email and password gets you in, nothing you type leaves your browser, and you can delete the lot by clearing site data. <a class="inline-link" href="faq.html">Questions first?</a></p>
           <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
         </div>
         <form data-preview-form>
@@ -419,7 +330,7 @@
   <footer>
     <div class="shell footer-inner">
       <a class="brand" href="#top"><span class="brand-orbit"><i></i></span><span>SIGNAL</span></a>
-      <p>MODULE 01 / STUDENT OS · <a class="inline-link" href="app/login.html">DEMO CONSOLE ↗</a></p>
+      <p><a class="inline-link" href="how-it-works.html">HOW IT WORKS</a> · <a class="inline-link" href="faq.html">FAQ</a> · <a class="inline-link" href="app/login.html">DEMO CONSOLE ↗</a></p>
       <p>BUILT TO FIND LESS.</p>
     </div>
   </footer>

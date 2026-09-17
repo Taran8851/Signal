@@ -253,7 +253,10 @@ legend { padding: 0; color: var(--smoke); font-size: 12px; letter-spacing: .12em
 .score-line, .score-total { display: flex; justify-content: space-between; padding: 16px 0; border-top: 1px solid var(--ash); font-size: 12px; }
 .score-line b { color: var(--off-black); }
 .score-total strong { font-family: var(--font-display); font-size: 44px; font-weight: 400; line-height: .7; }
-.dedupe-visual { position: absolute; right: 30px; bottom: 36px; width: 60%; height: 180px; }
+/* The card stacks: copy first, then the shuffled duplicates, so longer copy never runs
+   underneath them. */
+.feature-card-gradient { display: flex; flex-direction: column; }
+.dedupe-visual { position: relative; width: 100%; min-height: 180px; margin-top: 32px; }
 .dedupe-visual div { position: absolute; width: 180px; padding: 16px; border: 1px solid var(--ash); border-radius: var(--radius-inner); background: rgba(246,243,241,.82); font-size: 12px; }
 .dedupe-visual div:nth-child(1) { top: 0; left: 0; transform: rotate(-4deg); }
 .dedupe-visual div:nth-child(2) { top: 42px; left: 28px; transform: rotate(2deg); }
@@ -512,3 +515,14 @@ html.motion-ready .hero-pipeline:not(.is-drawn) .node-pill, html.motion-ready .h
 .signup-inner input:focus-visible,
 .console-tools input:focus-visible { outline: 2px solid var(--off-black); outline-offset: 2px; }
 .console-tools input:focus-visible { outline-color: var(--parchment); }
+
+/* ---------------------------------------------------------------------------
+   Sub-pages (how-it-works, faq): a quiet header instead of the hero wave
+--------------------------------------------------------------------------- */
+.page-top { padding: 118px 0 24px; }
+.page-top h1 { margin: 12px 0 20px; font-size: clamp(40px, 6vw, 76px); line-height: 1.02; }
+.page-top .page-lede { max-width: 62ch; color: var(--graphite); font-size: 18px; line-height: 1.55; }
+.page-top + .section, .page-top + .section.features { padding-top: 24px; }
+.mode-more { margin-top: 16px; }
+.faq-single .faq-list { max-width: 940px; }
+@media (max-width: 720px) { .page-top { padding: 108px 0 16px; } }
