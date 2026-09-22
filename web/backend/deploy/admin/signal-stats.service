@@ -1,0 +1,14 @@
+[Unit]
+Description=Signal site statistics (GoAccess report for /admin)
+After=network.target
+
+[Service]
+Type=oneshot
+# Crawlers are left out, so the numbers are people. --persist/--restore keep the totals across
+# log rotation; each run reads only what is new.
+ExecStart=/usr/bin/goaccess /var/log/caddy/access.log --log-format=CADDY \
+  --persist --restore --db-path=/var/lib/signal-stats \
+  --ignore-crawlers --no-query-string --anonymize-ip \
+  --html-report-title="Signal: visits and downloads" \
+  -o /var/www/admin/index.html
+Nice=10

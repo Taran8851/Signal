@@ -1,5 +1,5 @@
 # Signal: Caddy in front of the web container.
-# SITE_HOST comes from deploy/.env, e.g. 203-0-113-10.sslip.io. Caddy gets a certificate for it
+# SITE_HOST comes from web/backend/deploy/.env, e.g. 203-0-113-10.sslip.io. Caddy gets a certificate for it
 # automatically, which needs ports 80 and 443 reachable from the internet.
 
 {

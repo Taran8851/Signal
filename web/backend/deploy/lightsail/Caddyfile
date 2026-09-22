@@ -1,4 +1,4 @@
-# Signal on one Lightsail box: static site + fetch helper. Installed to /etc/caddy/Caddyfile.
+# Signal's server: static site, downloads, fetch helper, self-hosted Firecrawl and the admin stats. Installed to /etc/caddy/Caddyfile.
 # SITE_HOST is set in /etc/default/caddy (e.g. 3-110-178-244.sslip.io).
 
 {$SITE_HOST} {
@@ -21,13 +21,65 @@
 		reverse_proxy 127.0.0.1:8787
 	}
 
+	# Self-hosted Firecrawl (web/backend/deploy/firecrawl). Only with Signal's key; everything else is 401.
+	# The key is FIRECRAWL_SIGNAL_KEY in /etc/default/caddy.
+	@firecrawl_ok {
+		path /firecrawl/*
+		header Authorization "Bearer {$FIRECRAWL_SIGNAL_KEY}"
+	}
+	handle @firecrawl_ok {
+		log_skip
+		uri strip_prefix /firecrawl
+		reverse_proxy 127.0.0.1:3002 {
+			transport http {
+				read_timeout 120s
+			}
+		}
+	}
+	handle /firecrawl/* {
+		log_skip
+		respond "Unauthorized" 401
+	}
+
+	# Site statistics (web/backend/deploy/admin): GoAccess report, behind a login. ADMIN_USER and ADMIN_HASH
+	# are in /etc/default/caddy (deploy.sh puts a locked placeholder there until setup.sh runs).
+	redir /admin /admin/ 308
+	handle_path /admin/* {
+		log_skip
+		basic_auth {
+			{$ADMIN_USER} {$ADMIN_HASH}
+		}
+		header Cache-Control "no-store"
+		root * /var/www/admin
+		file_server
+	}
+
 	handle {
 		root * /var/www/signal
 		file_server
 	}
 
+	# Access log for the stats. IP addresses are masked before they are written (the last part of an
+	# IPv4 address, most of an IPv6 one), so only rough, anonymous counts exist. Keys never logged.
 	log {
-		output stdout
-		format console
+		output file /var/log/caddy/access.log {
+			roll_size 50MiB
+			roll_keep 20
+		}
+		format filter {
+			wrap json
+			fields {
+				request>remote_ip ip_mask {
+					ipv4 24
+					ipv6 48
+				}
+				request>client_ip ip_mask {
+					ipv4 24
+					ipv6 48
+				}
+				request>headers>Authorization delete
+				request>headers>Cookie delete
+			}
+		}
 	}
 }

@@ -1,0 +1,100 @@
+/* Ask (research.html, agent.js) and the research sections in Settings. Console tokens only. */
+
+/* ---- Ask: a full-height chat, content in a centred column, like a chat app ---- */
+.page-chat .main.chat-main { display: flex; max-width: none; height: calc(100vh - 32px); padding: 0; }
+.chat { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 800px; margin: 0 auto; padding: 16px 24px 8px; }
+.chat-title { overflow: hidden; color: var(--text-2); font-family: inherit; font-size: 14px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.chat-ready { width: 100%; max-width: 800px; margin: 0 auto; padding: 0 24px; }
+.chat-log { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 8px 0 24px; list-style: none; }
+.chat-log > li { width: 100%; max-width: 800px; margin: 0 auto 12px; padding: 0 24px; }
+.chat-log.is-empty { display: flex; flex-direction: column; justify-content: center; }
+
+.chat-empty h2 { font-size: 40px; line-height: 1.15; }
+.chat-empty .grow-help { max-width: 56ch; margin-top: 8px; font-size: 14px; }
+.ask-suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 24px; }
+.ask-suggestion { padding: 12px 16px; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--panel-strong); color: var(--text-2); font: inherit; font-size: 14px; line-height: 1.4; text-align: left; cursor: pointer; }
+.ask-suggestion:hover { border-color: var(--text-3); color: var(--text); }
+
+.msg p + p, .msg p + ul, .msg ul + p { margin-top: 8px; }
+.msg ul { margin: 8px 0 0; padding-left: 20px; }
+.msg li + li { margin-top: 4px; }
+.msg strong { font-weight: 500; }
+.msg-head { margin-top: 16px; color: var(--text); font-weight: 500; }
+.msg-head:first-child { margin-top: 0; }
+.msg a { color: inherit; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.chat-log > .msg-user { display: flex; justify-content: flex-end; }
+.msg-user p { max-width: 85%; padding: 10px 16px; border-radius: 20px; background: var(--selected-bg); color: var(--selected-text); }
+.msg-agent { line-height: 1.6; }
+.msg-note { color: var(--text-3); font-size: 12px; }
+.msg-error { color: var(--warn-text); }
+
+/* Tool steps: one quiet line each, open for the details */
+.step details { border-left: 1px solid var(--line); padding-left: 16px; }
+.step summary { cursor: pointer; color: var(--text-2); font-size: 12px; line-height: 1.6; list-style-position: outside; }
+.step summary:hover { color: var(--text); }
+.step ul { margin: 8px 0; padding-left: 16px; font-size: 12px; }
+.step li { margin-top: 4px; }
+.step li span { display: block; color: var(--text-3); }
+.step p { margin-top: 8px; font-size: 12px; color: var(--text-2); }
+.step a { color: inherit; }
+.step-note { color: var(--text-3); overflow-wrap: anywhere; }
+
+/* What the agent found, and a repeating search it suggests */
+.found, .proposal { padding: 16px; border-radius: 16px; }
+.found-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.found-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.found-item { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 8px 0; }
+.found-item + .found-item { border-top: 1px solid var(--line); }
+.found-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.found-text a { color: var(--text); overflow-wrap: anywhere; }
+.found-actions { display: flex; gap: 8px; }
+.proposal ul { margin: 8px 0; padding-left: 20px; }
+.proposal-actions, .auto-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+/* "Open to me?" results */
+.elig { flex-basis: 100%; padding: 8px 16px; border-radius: 16px; background: var(--chip-bg); font-size: 12px; line-height: 1.5; }
+.elig p + ul { margin-top: 4px; }
+.elig ul { margin: 0; padding-left: 16px; }
+.elig .chip { margin-right: 8px; }
+.chip-open { background: var(--good-bg); color: var(--good-text); }
+.chip-likely { background: var(--ok-bg); color: var(--ok-text); }
+.chip-not { background: var(--warn-bg); color: var(--warn-text); }
+
+/* The composer, pinned under the conversation */
+.chat-form { display: flex; flex-direction: column; gap: 8px; width: calc(100% - 48px); max-width: 752px; margin: 0 auto 24px; padding: 12px 16px; border-radius: 24px; }
+.chat-input { width: 100%; min-height: 24px; max-height: 200px; resize: none; border: 0; background: none; color: var(--text); font: inherit; font-size: 16px; line-height: 1.5; outline: 0; }
+.chat-input::placeholder { color: var(--text-3); }
+.chat-actions { display: flex; align-items: center; gap: 8px; }
+.chat-actions .grow-help { flex: 1; margin: 0; }
+
+/* ---- Settings: Your profile, Search & reading, Repeating searches ---- */
+.auto-row { align-items: flex-start; }
+.provider-top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; }
+.provider-top .grow-text { align-self: start; }
+.provider-up:disabled { visibility: hidden; }
+.provider-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.provider-meta label { display: inline-flex; align-items: center; gap: 8px; }
+.provider-key { display: flex; flex-wrap: wrap; gap: 8px; }
+.provider-key .input { flex: 1; min-width: 200px; }
+.provider-limit { width: 80px; min-height: 32px; padding: 4px 8px; }
+.auto-sheet { width: min(560px, calc(100vw - 32px)); }
+.auto-sheet .field + .field { margin-top: 16px; }
+.profile-file { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.profile-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.profile-actions { flex-wrap: wrap; }
+.profile-actions .grow-help { flex: 1; min-width: 160px; margin: 0; }
+.pset > .button { align-self: flex-start; }
+
+@media (max-width: 900px) {
+  .page-chat .main.chat-main { height: calc(100vh - 96px); }
+  .ask-suggestions, .profile-facts { grid-template-columns: 1fr; }
+  .chat-empty h2 { font-size: 32px; }
+}
+
+/* Live progress while the agent works (agent.js setStatus) */
+.chat-status { display: flex; align-items: center; gap: 12px; color: var(--text-2); font-size: 14px; }
+.pulse { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--text-2); animation: pulse 1.2s linear infinite; }
+@keyframes pulse { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+.step.is-running summary { color: var(--text); }
+.step.is-running summary::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 8px; border-radius: 50%; background: currentColor; vertical-align: middle; animation: pulse 1.2s linear infinite; }

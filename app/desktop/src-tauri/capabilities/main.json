@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "The console window: listen for tray, tick and notification events. Fetching goes through the app's own fetch_url command, which enforces the public-address and robots.txt rules.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

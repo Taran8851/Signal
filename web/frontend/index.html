@@ -9,12 +9,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="shared.css?v=6">
+  <link rel="stylesheet" href="shared.css?v=7">
 </head>
 <body>
   <div class="announcement" id="announcement">
-    <p>The demo console is open. No sign-up, nothing sent anywhere.</p>
-    <a href="app/login.html">TRY THE DEMO <span>↗</span></a>
+    <p>Signal is a desktop app now. No sign-up, nothing sent anywhere.</p>
+    <a href="#download">DOWNLOAD <span>↓</span></a>
     <button type="button" aria-label="Close announcement" data-close-announcement>×</button>
   </div>
 
@@ -27,10 +27,10 @@
       <nav class="nav-links" aria-label="Main navigation">
         <a href="#filter">TRY THE FILTER</a>
         <a href="how-it-works.html">HOW IT WORKS</a>
-        <a href="#console">CONSOLE</a>
+        <a href="#download">DOWNLOAD</a>
         <a href="faq.html">FAQ</a>
       </nav>
-      <a class="button button-blue button-small" href="app/login.html">TRY THE DEMO <span>↗</span></a>
+      <a class="button button-blue button-small" href="#download">DOWNLOAD <span>↓</span></a>
     </div>
   </header>
 
@@ -45,7 +45,7 @@
         <p class="hero-copy">You found the hackathon the day after registration closed. You bookmarked the fellowship and never opened it again. So you keep checking Unstop, MLH, Discord and that one lab page, in case you&rsquo;re missing something.</p>
         <p class="hero-copy hero-copy-lead">Signal checks them for you, in the fields you pick, and puts up the few worth your time &mdash; including the ones you&rsquo;d skip because you assume you&rsquo;re too early for them.</p>
         <div class="hero-actions">
-          <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
+          <a class="button button-blue" href="#download">DOWNLOAD THE APP <span>↓</span></a>
           <a class="button button-ghost" href="#filter">TRY THE FILTER</a>
         </div>
 
@@ -141,7 +141,7 @@
         <div class="section-heading">
           <p class="eyebrow">TRY IT RIGHT HERE</p>
           <h2>You decide what counts.</h2>
-          <p>Type in what you care about and watch the list below re-sort itself. This is the same scoring the console runs, on real listings.</p>
+          <p>Type in what you care about and watch the list below re-sort itself. This is the same scoring the app runs, on real listings.</p>
         </div>
 
         <div class="filter-demo">
@@ -268,17 +268,48 @@
       </div>
     </section>
 
-    <section class="section console-section" id="console">
+    <section class="section features" id="new">
+      <div class="shell">
+        <div class="section-heading section-heading-split">
+          <div><p class="eyebrow">NEW IN THE DESKTOP APP</p><h2>Ask it to look. <br>Ask if it&rsquo;s open to you.</h2></div>
+          <p>Two things the app does that a website couldn&rsquo;t: it reads the web on your machine, and it keeps your CV there too. Both use your own model, and both show you where every answer came from.</p>
+        </div>
+
+        <div class="mode-grid">
+          <article class="feature-card mode-card mode-card-plain">
+            <div class="feature-copy">
+              <span>RESEARCH</span>
+              <h3>&ldquo;Find ML summer schools that close in October.&rdquo;</h3>
+              <p>Ask in plain words. Signal searches, reads the pages and shows you what it found, each with the page it came from. Nothing lands in your inbox until you add it, and it only sets up a search that repeats when you ask it to.</p>
+            </div>
+          </article>
+          <article class="feature-card mode-card mode-card-plain">
+            <div class="feature-copy">
+              <span>YOUR PROFILE</span>
+              <h3>&ldquo;Is this one actually open to me?&rdquo;</h3>
+              <p>Add your CV once. Signal reads the opportunity&rsquo;s own eligibility rules and answers Open, Likely, Unclear or Not open, quoting the rule it checked. If the page doesn&rsquo;t say who can apply, the answer is Unclear &mdash; never a guess.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section console-section" id="download">
       <div class="shell">
         <div class="section-heading section-heading-split">
           <div>
-            <p class="eyebrow">THE REAL CONSOLE</p>
+            <p class="eyebrow">DOWNLOAD SIGNAL</p>
             <h2>What&rsquo;s left is short enough <br>to read over coffee.</h2>
           </div>
-          <p>Every row says where it came from and why it&rsquo;s here. Save it, mark it applied, or archive it and never see it again. The picture below is static &mdash; the working console is one click away, and any email and password gets you in. <a class="inline-link" href="app/login.html">Open the demo console ↗</a></p>
+          <p>Every row says where it came from and why it&rsquo;s here. Save it, mark it applied, or archive it and never see it again. Everything runs on your own machine: no account, and nothing leaves it unless you add a key.</p>
+        </div>
+        <div class="download-row">
+          <a class="button button-blue" href="download/Signal_0.2.1_amd64.AppImage" download>LINUX · APPIMAGE <span>↓</span></a>
+          <a class="button button-ghost" href="download/Signal_0.2.1_amd64.deb" download>UBUNTU / DEBIAN · .DEB <span>↓</span></a>
+          <p>VERSION 0.2.1 · 64-BIT LINUX. WINDOWS AND MAC BUILDS ARE NOT READY YET.</p>
         </div>
         <div class="console-shell">
-          <div class="console-topbar"><div><i></i><i></i><i></i></div><span>SIGNAL / CONSOLE</span><b>STATIC PREVIEW</b></div>
+          <div class="console-topbar"><div><i></i><i></i><i></i></div><span>SIGNAL / DESKTOP</span><b>V0.2.1</b></div>
           <div class="console-body">
             <aside>
               <strong>INBOX <b>59</b></strong>
@@ -315,8 +346,8 @@
       <div class="shell signup-inner">
         <div>
           <p class="eyebrow">TRY SIGNAL</p><h2>Stop checking. <br>Start choosing.</h2>
-          <p class="signup-copy">The console is open right now. Any email and password gets you in, nothing you type leaves your browser, and you can delete the lot by clearing site data. <a class="inline-link" href="faq.html">Questions first?</a></p>
-          <a class="button button-blue" href="app/login.html">TRY THE DEMO <span>↗</span></a>
+          <p class="signup-copy">Signal runs as a desktop app now. Your sources, scores and keys stay on your machine. <a class="inline-link" href="faq.html">Questions first?</a></p>
+          <a class="button button-blue" href="#download">DOWNLOAD THE APP <span>↓</span></a>
         </div>
         <form data-preview-form>
           <label for="email">EARLY ACCESS LIST — NOT CONNECTED YET</label>
@@ -330,7 +361,7 @@
   <footer>
     <div class="shell footer-inner">
       <a class="brand" href="#top"><span class="brand-orbit"><i></i></span><span>SIGNAL</span></a>
-      <p><a class="inline-link" href="how-it-works.html">HOW IT WORKS</a> · <a class="inline-link" href="faq.html">FAQ</a> · <a class="inline-link" href="app/login.html">DEMO CONSOLE ↗</a></p>
+      <p><a class="inline-link" href="how-it-works.html">HOW IT WORKS</a> · <a class="inline-link" href="faq.html">FAQ</a> · <a class="inline-link" href="#download">DOWNLOAD</a></p>
       <p>BUILT TO FIND LESS.</p>
     </div>
   </footer>

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Push the static site and fetch helper to the Lightsail box.
-#   deploy/lightsail/deploy.sh [--setup]      (run from anywhere; --setup installs packages first)
-# Env: SIGNAL_HOST (default 3.110.178.244), SIGNAL_KEY (default ./LightsailDefaultKey-ap-south-1.pem)
+#   web/backend/deploy/lightsail/deploy.sh [--setup]      (run from anywhere; --setup installs packages first)
+# Env: SIGNAL_HOST (default 100.59.200.218, the 8 GB EC2 instance), SIGNAL_KEY (default ~/.ssh/id_ed25519)
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-IP="${SIGNAL_HOST:-3.110.178.244}"
-KEY="${SIGNAL_KEY:-$ROOT/LightsailDefaultKey-ap-south-1.pem}"
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+IP="${SIGNAL_HOST:-100.59.200.218}"
+KEY="${SIGNAL_KEY:-$HOME/.ssh/id_ed25519}"
 SITE_HOST="${IP//./-}.sslip.io"
 SSH=(ssh -i "$KEY" -o ConnectTimeout=15 "ubuntu@$IP")
 
@@ -28,7 +28,10 @@ id signal >/dev/null 2>&1 || sudo useradd --system --home /opt/signal-helper --s
 sudo mkdir -p /var/www/signal /opt/signal-helper/.cache
 sudo chown -R ubuntu: /var/www/signal
 sudo chown -R signal: /opt/signal-helper
-echo "SITE_HOST=$SITE_HOST" | sudo tee /etc/default/caddy >/dev/null
+# Only this line is ours; the Firecrawl key and the admin login live in the same file.
+sudo touch /etc/default/caddy
+sudo sed -i "/^SITE_HOST=/d" /etc/default/caddy
+echo "SITE_HOST=$SITE_HOST" | sudo tee -a /etc/default/caddy >/dev/null
 sudo mkdir -p /etc/systemd/system/caddy.service.d
 printf '[Service]\nEnvironmentFile=/etc/default/caddy\n' | sudo tee /etc/systemd/system/caddy.service.d/env.conf >/dev/null
 if [[ ! -x /opt/signal-helper/obscura ]]; then
@@ -40,18 +43,35 @@ fi
 REMOTE
 fi
 
-# Static site: same set Vercel publishes (see .vercelignore), never keys or tooling.
+# Static site: web/frontend only, the same folder Vercel publishes. download/ is excluded so
+# --delete leaves the desktop builds below alone.
 rsync -az --delete -e "ssh -i $KEY" \
-  --exclude-from="$ROOT/.vercelignore" \
-  --exclude='.git/' --exclude='.gitignore' --exclude='tools/' --exclude='*.pem' \
-  --exclude='README.md' --exclude='vercel.json' --exclude='.vercelignore' \
-  "$ROOT/" "ubuntu@$IP:/var/www/signal/"
+  --exclude='download/' \
+  "$ROOT/web/frontend/" "ubuntu@$IP:/var/www/signal/"
 
-scp -q -i "$KEY" "$ROOT/tools/fetch-helper.mjs" "$ROOT/deploy/lightsail/signal-helper.service" \
-  "$ROOT/deploy/lightsail/Caddyfile" "ubuntu@$IP:/tmp/"
+# Desktop builds, served at /download/. Build first: cd app/desktop && npx tauri build
+BUNDLE="$ROOT/app/desktop/src-tauri/target/release/bundle"
+"${SSH[@]}" 'mkdir -p /var/www/signal/download'
+rsync -az --delete -e "ssh -i $KEY" \
+  "$BUNDLE"/appimage/*.AppImage "$BUNDLE"/deb/*.deb "ubuntu@$IP:/var/www/signal/download/"
+
+scp -q -i "$KEY" "$ROOT/web/backend/fetch-helper.mjs" "$ROOT/web/backend/deploy/lightsail/signal-helper.service" \
+  "$ROOT/web/backend/deploy/lightsail/Caddyfile" "ubuntu@$IP:/tmp/"
 "${SSH[@]}" 'set -e
 sudo install -o signal -m 644 /tmp/fetch-helper.mjs /opt/signal-helper/fetch-helper.mjs
 sudo install -m 644 /tmp/signal-helper.service /etc/systemd/system/signal-helper.service
+# The admin login must exist for the config to load: until web/backend/deploy/admin/setup.sh sets a real one,
+# use the hash of a random password that is thrown away (so /admin stays locked).
+if ! sudo grep -q "^ADMIN_HASH=." /etc/default/caddy; then
+  printf "ADMIN_USER=alphx\nADMIN_HASH=%s\n" "$(caddy hash-password --plaintext "$(openssl rand -hex 32)")" | sudo tee -a /etc/default/caddy >/dev/null
+fi
+sudo mkdir -p /var/log/caddy && sudo chown caddy: /var/log/caddy
+# Never install a config Caddy would reject: the site would go down with it.
+# (the env file is passed as plain words, never shell-expanded: the password hash is full of "$")
+sudo env $(sudo grep "^[A-Z_]*=" /etc/default/caddy) caddy validate --config /tmp/Caddyfile --adapter caddyfile >/dev/null 2>&1 \
+  || { echo "Caddyfile is invalid; not installed." >&2; exit 1; }
+# Validating as root creates the log file as root; Caddy must own it or it will not start.
+sudo chown -R caddy: /var/log/caddy
 sudo install -m 644 /tmp/Caddyfile /etc/caddy/Caddyfile
 sudo systemctl daemon-reload
 sudo systemctl enable --now signal-helper caddy >/dev/null 2>&1

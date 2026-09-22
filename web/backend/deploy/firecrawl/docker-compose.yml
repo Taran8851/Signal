@@ -1,0 +1,133 @@
+# Self-hosted Firecrawl for Signal, on its own instance (2 vCPU, 8 GB RAM + 4 GB swap).
+# Firecrawl's own compose (github.com/firecrawl/firecrawl, AGPL-3.0) trimmed for a small machine:
+#   - prebuilt images instead of building on the box
+#   - 2 queue workers, 4 concurrent pages, 2 browsers, memory caps that fit together
+#   - no FoundationDB (the queue runs on Postgres, Firecrawl's default)
+#   - SearXNG for /search (without it self-hosted Firecrawl falls back to scraping DuckDuckGo)
+#   - the API listens on 127.0.0.1 only: Firecrawl self-hosted has no auth, so Caddy is the only
+#     way in and requires Signal's key (see Caddyfile.firecrawl)
+# Deploy: web/backend/deploy/firecrawl/deploy.sh
+name: firecrawl
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "5m", max-file: "2", compress: "true" }
+
+x-env: &env
+  REDIS_URL: redis://redis:6379
+  REDIS_RATE_LIMIT_URL: redis://redis:6379
+  PLAYWRIGHT_MICROSERVICE_URL: http://playwright-service:3000/scrape
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+  POSTGRES_DB: postgres
+  POSTGRES_HOST: nuq-postgres
+  POSTGRES_PORT: "5432"
+  USE_DB_AUTHENTICATION: "false"
+  # The harness starts one Node process per queue worker (5 by default); on 2 vCPU that thrashes
+  # the box (load 29 on a 2 GB machine). Two workers, and a heap cap on every Node process.
+  NUQ_WORKER_COUNT: "2"
+  NODE_OPTIONS: "--max-old-space-size=1024"
+  NUM_WORKERS_PER_QUEUE: "2"
+  CRAWL_CONCURRENT_REQUESTS: "4"
+  MAX_CONCURRENT_JOBS: "2"
+  BROWSER_POOL_SIZE: "2"
+  SEARXNG_ENDPOINT: http://searxng:8080
+  LOGGING_LEVEL: info
+
+services:
+  playwright-service:
+    image: ghcr.io/firecrawl/playwright-service:latest
+    environment:
+      PORT: "3000"
+      MAX_CONCURRENT_PAGES: "4"
+      BLOCK_MEDIA: "true"
+    networks: [backend]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    mem_limit: 1536m
+    tmpfs: ["/tmp/.cache:noexec,nosuid,size=256m"]
+    restart: unless-stopped
+    logging: *logging
+
+  api:
+    image: ghcr.io/firecrawl/firecrawl:latest
+    environment:
+      <<: *env
+      HOST: 0.0.0.0
+      PORT: "3002"
+      EXTRACT_WORKER_PORT: "3004"
+      WORKER_PORT: "3005"
+      NUQ_RABBITMQ_URL: amqp://rabbitmq:5672
+      HARNESS_STARTUP_TIMEOUT_MS: "600000"
+      ENV: local
+    command: node dist/src/harness.js --start-docker
+    ports: ["127.0.0.1:3002:3002"]
+    networks: [backend]
+    ulimits: { nofile: { soft: 65535, hard: 65535 } }
+    mem_limit: 4g
+    depends_on:
+      redis: { condition: service_started }
+      playwright-service: { condition: service_started }
+      rabbitmq: { condition: service_healthy }
+      nuq-postgres: { condition: service_healthy }
+      searxng: { condition: service_started }
+    restart: unless-stopped
+    logging: *logging
+
+  redis:
+    image: redis:alpine
+    command: redis-server --bind 0.0.0.0 --maxmemory 96mb --maxmemory-policy allkeys-lru
+    networks: [backend]
+    mem_limit: 128m
+    restart: unless-stopped
+    logging: *logging
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    command: rabbitmq-server
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks: [backend]
+    mem_limit: 300m
+    restart: unless-stopped
+    logging: *logging
+
+  nuq-postgres:
+    image: ghcr.io/firecrawl/nuq-postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: postgres
+    command: postgres -c shared_buffers=64MB -c max_connections=50
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    networks: [backend]
+    mem_limit: 300m
+    restart: unless-stopped
+    logging: *logging
+
+  searxng:
+    image: searxng/searxng:latest
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:?set in .env}
+    volumes: ["./searxng:/etc/searxng:ro"]
+    networks: [backend]
+    mem_limit: 256m
+    restart: unless-stopped
+    logging: *logging
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pgdata:

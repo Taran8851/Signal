@@ -9,12 +9,18 @@ node_modules/
 .claude/settings.local.json
 
 # Temporary QA helpers
-app/.qa*.html
+app/frontend/.qa*.html
 
 # Local fetch helper binaries
-tools/obscura
-tools/obscura-worker
-tools/*.tar.gz
+web/backend/obscura
+web/backend/obscura-worker
+web/backend/*.tar.gz
 
 # SSH keys
 *.pem
+
+# Desktop build output
+app/desktop/dist/
+app/desktop/src-tauri/target/
+app/desktop/src-tauri/gen/
+

@@ -1,5 +1,5 @@
 /* Single source of truth for design tokens. Shared by shared.css (landing page) and
-   app/app.css (demo console). Values come from ref/variables.css (the Monad reference);
+   app/frontend/app.css (demo console). Values come from ref/variables.css (the Monad reference);
    how Signal applies them is in DESIGN.md. Change a colour here, once. */
 :root {
   /* Neutrals */

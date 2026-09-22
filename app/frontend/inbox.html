@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Signals — Signal console (demo)</title>
   <meta name="description" content="Demo Signal console: opportunities from hackathon boards and research feeds, scored against what you care about.">
+  <script src="desktop-bridge.js?v=2"></script>
   <script src="theme-boot.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,30 +18,23 @@
 
   <div class="app">
     <aside class="sidebar glass">
-      <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></a>
-      <nav class="nav" aria-label="Console">
-        <a href="inbox.html" aria-current="page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>
-          <span>Signals</span><span class="nav-count" data-nav-count>0</span>
-        </a>
-        <a href="preferences.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
-          <span>Preferences</span>
-        </a>
-      </nav>
+      <a class="brand" href="research.html"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></a>
+      <a class="button button-secondary new-ask" href="research.html#new" data-new-ask>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        New ask
+      </a>
+      <nav class="chat-history" aria-label="Your questions" data-chat-history data-desktop-only hidden></nav>
       <div class="sidebar-foot">
-        <button class="button button-secondary" type="button" data-add-signal>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Add a signal
-        </button>
-        <div>
-          <p class="sidebar-label" id="quick-theme-label">Theme</p>
-          <div class="segmented" role="radiogroup" aria-labelledby="quick-theme-label" style="margin-top:8px">
-            <label><input type="radio" name="quick-mode" value="system"><span>Auto</span></label>
-            <label><input type="radio" name="quick-mode" value="light"><span>Light</span></label>
-            <label><input type="radio" name="quick-mode" value="dark"><span>Dark</span></label>
-          </div>
-        </div>
+        <nav class="nav" aria-label="Console">
+          <a href="inbox.html" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>
+            <span>Inbox</span><span class="nav-count" data-nav-count>0</span>
+          </a>
+          <a href="preferences.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
         <p class="demo-note">Demo console. Everything stays in this browser.</p>
         <button class="button button-quiet" type="button" data-logout>Log out</button>
       </div>
@@ -258,11 +252,13 @@
 
   <p class="toast glass" data-toast role="status" hidden></p>
 
+  <script src="chats.js?v=1"></script>
   <script src="app-data.js?v=2"></script>
-  <script src="sources.js?v=5"></script>
-  <script src="ai.js?v=4"></script>
+  <script src="sources.js?v=7"></script>
+  <script src="ai.js?v=5"></script>
   <script src="providers.js?v=1"></script>
-  <script src="scheduler.js?v=2"></script>
-  <script src="app.js?v=9"></script>
+  <script src="automations.js?v=1"></script>
+  <script src="scheduler.js?v=3"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

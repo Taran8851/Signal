@@ -30,14 +30,14 @@ Signal is module 01 of Student OS. No other module is built.
 
 | Part | State |
 |---|---|
-| Landing page (`index.html`) | **Works.** Static HTML and CSS. The "Tune your filter" widget rescores 10 real public rows in the browser with the same matching rules as the collector. |
-| Demo console (`app/`) | **Works, as a demo.** Static pages. Sign-in accepts anything and only sets a flag. Signals, notes, statuses, preferences and your own sources live in this browser's `localStorage`. No real accounts and no server-side collection. |
+| Landing page (`web/frontend/`) | **Works.** Static HTML and CSS. The "Tune your filter" widget rescores 10 real public rows in the browser with the same matching rules as the collector. |
+| Demo console (`app/frontend/`) | **Works, as a demo.** Static pages. Sign-in accepts anything and only sets a flag. Signals, notes, statuses, preferences and your own sources live in this browser's `localStorage`. No real accounts and no server-side collection. |
 | Heuristic search in the demo console | **Works, no key.** Keyword scoring with the reference rules; every row says which terms matched. Default scoring mode. Sends nothing. |
-| LLM socket with brief (`app/ai.js`) | **Works, with your own model.** Providers: Anthropic, OpenAI-compatible endpoint, Local (Ollama, LM Studio). Scoring mode Keyword / Hybrid / LLM, "Score all with AI" on the Signals page, a per-item brief (fits you, your stage, you'd gain, it asks for, first steps, effort, fields) in the signal overlay, daily call cap, fallback to the keyword score on errors, and "Suggest my terms" (a no-LLM history engine plus an LLM engine, with a dry run). The key is kept in `localStorage` and requests go straight from the browser to the provider. |
-| Custom sources (`app/sources.js`) | **Works, in the demo console.** Preferences → Sources → Your sources → Add a source: RSS/Atom, JSON API with field mapping (Detect fields, or Map fields with AI), web page to watch, social feed via a feed URL. Two offline sample presets. Fetching from a link runs in the browser, so sites that block cross-origin requests cannot be read; paste a sample instead. |
+| LLM socket with brief (`app/frontend/ai.js`) | **Works, with your own model.** Providers: Anthropic, OpenAI-compatible endpoint, Local (Ollama, LM Studio). Scoring mode Keyword / Hybrid / LLM, "Score all with AI" on the Signals page, a per-item brief (fits you, your stage, you'd gain, it asks for, first steps, effort, fields) in the signal overlay, daily call cap, fallback to the keyword score on errors, and "Suggest my terms" (a no-LLM history engine plus an LLM engine, with a dry run). The key is kept in `localStorage` and requests go straight from the browser to the provider. |
+| Custom sources (`app/frontend/sources.js`) | **Works, in the demo console.** Preferences → Sources → Your sources → Add a source: RSS/Atom, JSON API with field mapping (Detect fields, or Map fields with AI), web page to watch, social feed via a feed URL. Two offline sample presets. Fetching from a link runs in the browser, so sites that block cross-origin requests cannot be read; paste a sample instead. |
 | Collector | **Exists as reference code** in `reference/signal/`: the shipped single-user collector (SQLite, keyword scoring, Telegram). It is not deployed from this repo and the demo console does not talk to it. |
 | Shared scoring rules (`packages/core/`) | **In progress.** TypeScript re-implementation of the reference rules with tests. Not used by any page yet. |
-| Hosted app and backend (`/console`, `/api`) | **Planned.** SvelteKit app, Postgres and collector on a VPS behind a Vercel rewrite; the server will fetch custom sources and run LLM scoring with encrypted keys. `deploy/` holds unverified scaffolding. See `docs/platform_plan.md` §9. |
+| Hosted app and backend (`/console`, `/api`) | **Planned.** SvelteKit app, Postgres and collector on a VPS behind a Vercel rewrite; the server will fetch custom sources and run LLM scoring with encrypted keys. `web/backend/deploy/` holds unverified scaffolding. See `docs/platform_plan.md` §9. |
 | Developer mode, themes editor | **Planned.** Specified in `AGENTS.md`, not built. |
 | Gmail + LinkedIn mail in the hosted app | **Not available yet.** The reference collector reads it; the hosted app will not at launch. |
 
@@ -67,14 +67,21 @@ match strength.
 ## Repo layout
 
 ```
-index.html, shared.css, tokens.css   landing page
-filter.js, wave.js, motion.js        landing scripts: filter widget, hero wave, reveals
-app/                                 static demo console (login, inbox, preferences, ai.js, sources.js)
-vercel.json, .vercelignore           static hosting config
+web/                                 everything the website needs
+  frontend/                          landing page: index.html, faq.html, how-it-works.html,
+                                     shared.css, tokens.css, filter.js, wave.js, motion.js
+  backend/                           fetch-helper.mjs (+ gitignored Obscura binaries)
+    deploy/                          server config: lightsail/ (Caddy + helper, live),
+                                     firecrawl/, admin/, docker-compose scaffolding (unverified)
+app/                                 the desktop app
+  frontend/                          the console: pages, scripts, styles (tokens.css is a
+                                     symlink to web/frontend/tokens.css)
+  desktop/                           Tauri 2 project; scripts/copy-app.mjs copies ../frontend
+                                     into dist/, src-tauri/ is the Rust side
+vercel.json, .vercelignore           static hosting config (publishes web/frontend only)
 packages/core/                       shared scoring rules + tests (in progress)
-deploy/                              VPS scaffolding for the planned app (unverified)
 reference/signal/                    the real collector and admin UI (read-only reference)
-docs/                                platform plan, demo script
+docs/                                plans, handoff, demo script, stack reading list
 ref/                                 visual design reference
 AGENTS.md, DESIGN.md                 product rules and design rules
 ```
@@ -89,8 +96,13 @@ python3 -m http.server 8000
 
 Then open:
 
-- http://localhost:8000/index.html (landing page)
-- http://localhost:8000/app/login.html (demo console; any email and password)
+- http://localhost:8000/web/frontend/index.html (landing page)
+- http://localhost:8000/app/frontend/login.html (demo console; any email and password)
+
+Optional, for sources that block browser requests: `node web/backend/fetch-helper.mjs`
+(listens on http://127.0.0.1:8787).
+
+Desktop app: `cd app/desktop && npx tauri dev` (or `npx tauri build` for the .deb/AppImage).
 
 To reset the demo console, clear these `localStorage` keys in the browser dev tools:
 `signal_demo_rows`, `signal_demo_prefs`, `signal_demo_session`, `signal_demo_appearance`, and the AI
@@ -106,13 +118,14 @@ cd packages/core && npm test
 ## Deploy the static site to Vercel
 
 1. Import the repo in Vercel.
-2. Framework preset: **Other**. Build command: none. Output directory: the repo root (`.`).
+2. Framework preset: **Other**. Build command: none. Output directory: `web/frontend` (already set
+   by `outputDirectory` in `vercel.json`).
 3. Deploy.
 
 `vercel.json` adds security headers only. The rewrites that send `/console/*` and `/api/*` to
-the VPS live in `deploy/vercel.rewrites.json`; merge them into `vercel.json` once the server
-exists and `VPS_HOSTNAME` is replaced. `.vercelignore` keeps `deploy/`, `reference/`, `docs/`, `packages/` and the rule
-files out of the published site.
+the VPS live in `web/backend/deploy/vercel.rewrites.json`; merge them into `vercel.json` once the server
+exists and `VPS_HOSTNAME` is replaced. `.vercelignore` keeps `app/`, `web/backend/`, `reference/`, `docs/`, `packages/` and the rule
+files from being uploaded at all.
 
 ## Credits and licences
 

@@ -128,7 +128,7 @@
     return { days: days, text: "Closes " + shortDate(iso), cls: "" };
   }
 
-  /* Custom sources (app/sources.js, optional). Every call is guarded: the file may be missing. */
+  /* Custom sources (app/frontend/sources.js, optional). Every call is guarded: the file may be missing. */
   function customSources() {
     try {
       if (window.SignalSources && typeof window.SignalSources.list === "function") {
@@ -141,6 +141,11 @@
 
   function sourceLabel(id) {
     if (id === "manual") return "Added by you";
+    if (id === "research") return "Research agent";
+    if (typeof id === "string" && id.indexOf("auto:") === 0) {
+      var auto = window.SignalAutomations && window.SignalAutomations.get(id);
+      return auto ? "Automation: " + auto.name : "Automation";
+    }
     if (typeof id === "string" && id.indexOf("custom:") === 0) {
       try {
         if (window.SignalSources && typeof window.SignalSources.label === "function") {
@@ -220,6 +225,16 @@
     });
 
     updateNavCount();
+
+    // Blur the page while any sheet is open (see app.css: dialogs can't blur what's behind them).
+    var sheets = $all("dialog");
+    function syncSheetBlur() {
+      document.documentElement.classList.toggle("sheet-open", sheets.some(function (d) { return d.open; }));
+    }
+    if (sheets.length && typeof MutationObserver === "function") {
+      var mo = new MutationObserver(syncSheetBlur);
+      sheets.forEach(function (d) { mo.observe(d, { attributes: true, attributeFilter: ["open"] }); d.addEventListener("close", syncSheetBlur); });
+    }
   }
 
   function updateNavCount() {
@@ -307,7 +322,7 @@
       return l && l.source === "llm" ? l.relevance : -1;
     }
 
-    /* When the user's model has scored a row (app/ai.js), show its relevance next to the keyword
+    /* When the user's model has scored a row (app/frontend/ai.js), show its relevance next to the keyword
        match; when the model was asked and failed, say the keyword score is a fallback. */
     function aiChip(label) {
       if (!label) return "";
@@ -482,7 +497,7 @@
       var none = !lastVisible.length;
       scoreAllBtn.disabled = !ready.ok || none;
       if (!ready.ok) {
-        scoreAllNote.innerHTML = esc(ready.note.replace(/ in Preferences/, "")) + ' <a href="preferences.html#scoring">Open scoring settings</a>';
+        scoreAllNote.innerHTML = esc(ready.note.replace(/ in Settings/, "")) + ' <a href="preferences.html#scoring">Open scoring settings</a>';
       } else if (none) {
         scoreAllNote.textContent = "No signals in this view to score.";
       }
@@ -695,7 +710,7 @@
       }
       $("[data-why-summary]").textContent = summary;
 
-      // The brief from the user's model (app/ai.js) sits above the keyword check; "Ask the model" follows it
+      // The brief from the user's model (app/frontend/ai.js) sits above the keyword check; "Ask the model" follows it
       if (AI) {
         if (insight) insight.destroy();
         insight = AI.mountRowInsight(insightEl, row, prefs, { showBrief: false });

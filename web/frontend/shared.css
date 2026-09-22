@@ -526,3 +526,6 @@ html.motion-ready .hero-pipeline:not(.is-drawn) .node-pill, html.motion-ready .h
 .mode-more { margin-top: 16px; }
 .faq-single .faq-list { max-width: 940px; }
 @media (max-width: 720px) { .page-top { padding: 108px 0 16px; } }
+
+.download-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0 0 40px; }
+.download-row p { flex-basis: 100%; margin: 4px 0 0; color: var(--smoke); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; }

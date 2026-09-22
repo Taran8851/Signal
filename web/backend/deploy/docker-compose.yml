@@ -1,13 +1,13 @@
 # Signal: production stack for one small VPS.
 #
-# Run from the repo root:   docker compose -f deploy/docker-compose.yml ...
-# (the project directory is deploy/, so ${VARS} below and env_file come from deploy/.env)
+# Run from the repo root:   docker compose -f web/backend/deploy/docker-compose.yml ...
+# (the project directory is web/backend/deploy/, so ${VARS} below and env_file come from web/backend/deploy/.env)
 #
 # THE FULL STACK CANNOT START YET. `web/` and `collector/` do not exist in the repo.
 # They sit behind the "app" profile so a plain `up` only starts postgres + caddy:
 #
-#   docker compose -f deploy/docker-compose.yml up -d                 # postgres + caddy (smoke test)
-#   docker compose -f deploy/docker-compose.yml --profile app up -d --build   # everything, once web/ and collector/ exist
+#   docker compose -f web/backend/deploy/docker-compose.yml up -d                 # postgres + caddy (smoke test)
+#   docker compose -f web/backend/deploy/docker-compose.yml --profile app up -d --build   # everything, once web/ and collector/ exist
 #
 # Sized for a ~2 GiB instance. Memory limits add up to about 1.4 GiB, leaving room for the OS
 # and for Docker builds. Build images elsewhere (or add swap) if builds run out of memory.
@@ -52,10 +52,10 @@ services:
 
   web:
     profiles: ["app"]
-    # Future SvelteKit app (adapter-node). Build context does not exist yet: ../web needs a Dockerfile
+    # Future SvelteKit app (adapter-node). Build context does not exist yet: the planned app's folder needs a Dockerfile
     # that runs `node build` on port 3000.
     build:
-      context: ..
+      context: ../../..   # repo root
       dockerfile: web/Dockerfile
     restart: unless-stopped
     env_file:
@@ -86,9 +86,9 @@ services:
   collector:
     profiles: ["app"]
     # Future polling loop + Discord bot + Telegram notify. Build context does not exist yet:
-    # ../collector needs a Dockerfile. Long-running, no HTTP port.
+    # the planned collector/ needs a Dockerfile. Long-running, no HTTP port.
     build:
-      context: ..
+      context: ../../..   # repo root
       dockerfile: collector/Dockerfile
     restart: unless-stopped
     env_file:

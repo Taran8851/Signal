@@ -5,10 +5,10 @@
 # BACKUP_KEEP local copies, and uploads to S3 when BACKUP_S3_BUCKET is set.
 # Never prints secrets: credentials stay inside the container's own environment.
 #
-# Usage (on the server):   deploy/backup.sh
+# Usage (on the server):   web/backend/deploy/backup.sh
 #
 # Sample crontab (crontab -e as the deploy user, who must be in the docker group), 03:15 server time:
-#   15 3 * * * /home/ubuntu/student-signal/deploy/backup.sh >> /var/log/signal-backup.log 2>&1
+#   15 3 * * * /home/ubuntu/student-signal/web/backend/deploy/backup.sh >> /var/log/signal-backup.log 2>&1
 
 set -euo pipefail
 umask 077

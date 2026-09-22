@@ -187,6 +187,23 @@ p { margin: 0; }
 .nav a[aria-current="page"] .nav-count { background: rgba(127, 127, 127, .22); }
 
 .sidebar-foot { display: flex; flex-direction: column; gap: 16px; margin-top: auto; }
+
+/* Chat-app sidebar: New ask, the conversations (chats.js), then Inbox and Settings. */
+.sidebar .new-ask { justify-content: flex-start; gap: 8px; }
+.sidebar .new-ask svg { width: 18px; height: 18px; }
+.chat-history { flex: 1; min-height: 0; overflow-y: auto; margin: -8px -8px 0; padding: 0 8px; }
+.history-group { margin: 16px 8px 4px; color: var(--text-3); font-size: 12px; }
+.history-group:first-child { margin-top: 0; }
+.history-empty { padding: 8px; color: var(--text-3); font-size: 12px; line-height: 1.5; }
+.history-item { position: relative; display: flex; align-items: center; border-radius: 12px; }
+.history-item a { flex: 1; min-width: 0; padding: 8px 12px; overflow: hidden; border-radius: 12px; color: var(--text-2); font-size: 14px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.history-item:hover, .history-item:focus-within { background: var(--hover); }
+.history-item a:hover { color: var(--text); }
+.history-item a[aria-current="page"] { background: var(--pressed); color: var(--text); }
+.history-delete { position: absolute; right: 4px; padding: 2px 8px; border: 0; border-radius: 9999px; background: var(--panel-strong); color: var(--text-3); font: inherit; font-size: 12px; cursor: pointer; opacity: 0; }
+.history-item:hover .history-delete, .history-delete:focus-visible, .history-delete[data-armed] { opacity: 1; }
+.history-delete:hover, .history-delete[data-armed] { color: var(--warn-text); }
+.sidebar-foot .nav { gap: 4px; }
 .sidebar-label { padding: 0 8px; color: var(--text-3); font-size: 12px; }
 .demo-note { padding: 8px 16px; border-radius: 16px; background: var(--muted-bg); color: var(--text-3); font-size: 12px; line-height: 1.4; }
 
@@ -338,6 +355,11 @@ button.summary-card:hover { background: var(--panel-strong); }
 }
 .sheet[open] { display: flex; flex-direction: column; animation: sheet-in .18s linear; }
 .sheet::backdrop { background: var(--backdrop); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+/* WebKitGTK (the desktop app) doesn't apply backdrop-filter to dialogs in the top layer, so the
+   page behind an open sheet stayed sharp and showed through. While a sheet is open the page
+   itself is blurred (html.sheet-open, set by app.js), and the sheet gets a firmer surface. */
+.sheet { background: var(--panel-strong); }
+.sheet-open .app { filter: blur(8px) saturate(120%); transition: filter .15s linear; }
 @keyframes sheet-in { from { opacity: 0; transform: translateY(8px) scale(.99); } }
 
 .sheet-head { display: flex; align-items: flex-start; gap: 16px; padding: 24px 24px 16px 32px; }
@@ -426,7 +448,9 @@ button.summary-card:hover { background: var(--panel-strong); }
     padding: 8px;
     border-radius: 9999px;
   }
-  .sidebar .brand, .sidebar-foot { display: none; }
+  .sidebar .brand, .chat-history, .sidebar-foot .demo-note, .sidebar-foot [data-logout] { display: none; }
+  .sidebar-foot { display: contents; }
+  .sidebar .new-ask { flex: none; min-height: 48px; padding: 8px 16px; }
   .nav { flex: 1; flex-direction: row; justify-content: space-around; gap: 4px; }
   .nav a { flex: 1; flex-direction: column; justify-content: center; gap: 0; padding: 8px; border-radius: 9999px; font-size: 12px; }
   .nav-count { display: none; }
@@ -457,3 +481,16 @@ button.summary-card:hover { background: var(--panel-strong); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   Desktop app (html.is-desktop, set by desktop-bridge.js). The four washes are huge elements
+   under filter: blur(96px), and WebKitGTK re-rasterises that blur on every scroll frame: 53 ms a
+   frame on this laptop. Drawn as radial gradients, enlarged to cover the blur's spread, they look
+   the same (about 1% pixel difference) and scrolling holds 60 fps with every glass panel still
+   blurred. Measured on 18 Sep 2026; see docs/desktop_plan.md.
+--------------------------------------------------------------------------- */
+.is-desktop .backdrop-washes i { filter: none; transform: scale(1.4); }
+.is-desktop .backdrop-washes i:nth-child(1) { background: radial-gradient(closest-side, var(--wash-1) 0%, var(--wash-1) 20%, transparent 100%); }
+.is-desktop .backdrop-washes i:nth-child(2) { background: radial-gradient(closest-side, var(--wash-2) 0%, var(--wash-2) 20%, transparent 100%); }
+.is-desktop .backdrop-washes i:nth-child(3) { background: radial-gradient(closest-side, var(--wash-3) 0%, var(--wash-3) 20%, transparent 100%); }
+.is-desktop .backdrop-washes i:nth-child(4) { background: radial-gradient(closest-side, var(--wash-4) 0%, var(--wash-4) 20%, transparent 100%); }

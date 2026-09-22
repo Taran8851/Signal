@@ -1,5 +1,5 @@
 {
-  "_comment": "Merge into vercel.json once the VPS exists and VPS_HOSTNAME is replaced. See deploy/README.md.",
+  "_comment": "Merge into vercel.json once the VPS exists and VPS_HOSTNAME is replaced. See web/backend/deploy/README.md.",
   "rewrites": [
     {
       "source": "/console/:path*",

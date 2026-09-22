@@ -80,11 +80,17 @@
       P().ALL.forEach(function (prov) {
         var missing = prov.missing(p);
         if (missing || off.indexOf(prov.id) !== -1) {
-          setSourceState(prov.id, { missing: missing || "switched off in Preferences" });
+          setSourceState(prov.id, { missing: missing || "switched off in Settings" });
           return;
         }
         setSourceState(prov.id, { missing: null });
         out.push({ id: prov.id, name: sourceLabel(prov.id), everyMs: prov.everyMs, provider: prov });
+      });
+    }
+    // Research automations (desktop app): saved searches the user confirmed.
+    if (global.SignalAutomations) {
+      global.SignalAutomations.targets().forEach(function (a) {
+        out.push({ id: a.id, name: a.name, everyMs: a.everyMs, provider: a });
       });
     }
     if (S()) {
@@ -154,12 +160,14 @@
     var state = getState();
     if (isRunning(state)) return Promise.resolve({ skipped: "running" });
     var all = targets();
-    var due = opts.force ? all : all.filter(function (t) { return isDue(t); });
+    var due = opts.only ? all.filter(function (t) { return t.id === opts.only; })
+      : opts.force ? all : all.filter(function (t) { return isDue(t); });
     if (!all.length || !due.length) {
       setState({ lastRun: Date.now(), last: { at: Date.now(), reason: reason, checked: 0, added: 0, briefed: 0, errors: [], methods: {}, notes: [], nothingDue: !!all.length } });
       return Promise.resolve({ skipped: all.length ? "nothing_due" : "no_sources", checked: 0, added: 0 });
     }
     setState({ running: { at: Date.now(), reason: reason, done: 0, total: due.length } });
+    ownRun = true;
 
     var summary = { at: Date.now(), reason: reason, checked: 0, added: 0, briefed: 0, quiet: 0, errors: [], methods: {}, notes: [] };
     var newIds = [];
@@ -235,17 +243,21 @@
     return nextSource().then(brief).catch(function (e) {
       summary.errors.push({ source: "", message: (e && e.message) || "The check stopped because of an error." });
     }).then(function () {
+      ownRun = false;
       var st = getState();
       delete st.running;
       st.lastRun = Date.now();
       st.last = summary;
       write(KEYS.state, st);
       emit();
+      try { global.dispatchEvent(new CustomEvent("signal:checked", { detail: { reason: reason, newIds: newIds.slice() } })); } catch (e) {}
       return summary;
     });
   }
 
   function checkNow() { return runOnce("manual", { force: true }); }
+  /* One source now, e.g. an automation's "Run now". Same import, backfill and notify rules. */
+  function checkSource(id) { return runOnce("manual", { only: id }); }
 
   /* Due when it has never run, or its interval has passed. A source whose last run failed is
      retried after RETRY_MS instead of waiting for its full interval. */
@@ -259,7 +271,8 @@
 
   function tick() {
     var settings = getSettings();
-    if (!settings.on || document.hidden) return;
+    // In a browser tab, a hidden page waits. The desktop app keeps checking from the tray.
+    if (!settings.on || (document.hidden && !global.SignalDesktop)) return;
     var at = nextAt(settings, getState());
     if (at !== null && Date.now() >= at) runOnce("schedule");
   }
@@ -276,12 +289,24 @@
     });
   }
 
+  // A check this page started. Leaving the page ends it, so its lock goes too; otherwise the
+  // next page would wait LOCK_MS before checking again.
+  var ownRun = false;
+  global.addEventListener("pagehide", function () {
+    if (!ownRun) return;
+    var st = getState();
+    delete st.running;
+    write(KEYS.state, st);
+  });
+
   var started = false;
   function start() {
     if (started) return;
     started = true;
     setTimeout(tick, FIRST_CHECK_DELAY_MS);
     setInterval(tick, TICK_MS);
+    // Desktop: the app's own tick keeps running while the window is hidden.
+    if (global.SignalDesktop) global.SignalDesktop.onTick(tick);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) tick(); });
     // Another tab finished a check or changed the schedule.
     global.addEventListener("storage", function (e) { if (e.key === KEYS.state || e.key === KEYS.settings) emit(); });
@@ -330,6 +355,8 @@
     sources: sources,
     describe: describe,
     checkNow: checkNow,
+    checkSource: checkSource,
+    sourceState: sourceState,
     start: start,
     _test: { runOnce: runOnce, tick: tick, KEYS: KEYS }
   };

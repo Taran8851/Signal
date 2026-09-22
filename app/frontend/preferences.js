@@ -7,7 +7,7 @@
    2. Tag inputs (interests, boost, exclude, WikiCFP categories, Discord channels)
    3. Pickiness stops + live preview
    4. Sources (rows with their setup editors) and link lists
-   4b. Your sources — custom feeds, APIs and pages (app/sources.js), saved immediately
+   4b. Your sources — custom feeds, APIs and pages (app/frontend/sources.js), saved immediately
    5. Notifications and appearance
    6. Save / discard / reset
    7. Section index with scroll-spy */
@@ -361,7 +361,7 @@
 
 
     /* =====================================================================
-       4b. Your sources — definitions live in app/sources.js and save immediately,
+       4b. Your sources — definitions live in app/frontend/sources.js and save immediately,
            like Appearance. Imported signals go straight into the Signals list.
     ===================================================================== */
     var customEl = $("[data-custom-sources]");
@@ -721,7 +721,7 @@
         // Fetch mode: read the raw response once to inspect it
         var def0 = readForm();
         if (!S.validUrl(def0.url)) { setMapStatus(""); setError("Enter a link that starts with http:// or https://."); return; }
-        fetch(def0.url, { credentials: "omit" }).then(function (r) { return r.text(); }).then(detect).catch(function () {
+        S.fetchText({ url: def0.url }).then(detect).catch(function () {
           setMapStatus("");
           showCors(true);
           A.syncRadios("src-mode", "paste");
@@ -897,7 +897,7 @@
       saved = A.clone(draft);
       changed();
       A.updateNavCount();
-      A.toast("Preferences saved");
+      A.toast("Settings saved");
     }
 
     function renderAll() {
@@ -925,7 +925,7 @@
       renderAll();
       changed();
       A.updateNavCount();
-      A.toast("Preferences reset");
+      A.toast("Settings reset");
     });
 
     window.addEventListener("beforeunload", function (e) {
@@ -974,7 +974,7 @@
       if (a) setCurrent(a.getAttribute("data-index-link"));
     });
 
-    /* ---------- AI scoring and "Suggest my terms" (app/ai.js) ---------- */
+    /* ---------- AI scoring and "Suggest my terms" (app/frontend/ai.js) ---------- */
     if (window.SignalAI) {
       window.SignalAI.mountSettings($("[data-ai-settings]"));
       window.SignalAI.mountSuggest($("[data-ai-suggest]"), {

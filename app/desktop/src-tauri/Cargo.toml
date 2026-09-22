@@ -1,0 +1,40 @@
+[package]
+name = "signal-desktop"
+version = "0.2.1"
+description = "Signal: opportunities worth your time, checked on your laptop"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.11", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "charset", "http2", "json"] }
+tokio = { version = "1", features = ["net", "time", "sync", "rt", "process", "fs"] }
+url = "2"
+texting_robots = "0.2"
+notify-rust = "4"
+# Reading a CV the user adds: PDF text, and .docx (a zip of XML).
+pdf-extract = "0.12"
+zip = { version = "8", default-features = false, features = ["deflate"] }
+base64 = "0.23"
+# Headless browser for pages that need JavaScript, linked in (Apache-2.0). Pinned: no crates.io release.
+# "stealth" adds its browser fingerprint and TLS impersonation, used only when the user turns on
+# Stealth reading on the Research page.
+obscura = { git = "https://github.com/h4ckf0r0day/obscura", rev = "cf26f454df37b6acf717c4ee27346800ff377bc8", default-features = false, features = ["api", "stealth"] }
+
+[features]
+# Test builds only: `--eval <js>` runs JS in the window, and the page can log to stderr.
+# Never on in a release; build with `--features test-hooks` to drive the UI from scripts.
+test-hooks = []
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+# unwind, not abort: a malformed PDF can panic inside pdf-extract, and that must not close the app.
+panic = "unwind"
+strip = true

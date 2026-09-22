@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Signal fetch helper: lets the demo console read sources that block browser requests.
 //
-//   node tools/fetch-helper.mjs            # listens on http://127.0.0.1:8787
+//   node web/backend/fetch-helper.mjs      # listens on http://127.0.0.1:8787
 //
 // GET  /health                -> { ok, engine }
 // GET  /fetch?url=…&render=1  -> { ok, url, status, contentType, body, engine }
 // POST /fetch  {url, method, body, accept}  -> the same, for listing APIs that want a POST
 //      (JSON bodies only, no caller-supplied headers, same rules as GET)
 //
-// It renders with Obscura (tools/obscura, or OBSCURA_BIN) when available, otherwise it
+// It renders with Obscura (obscura next to this file, or OBSCURA_BIN) when available, otherwise it
 // uses a plain HTTP fetch. Rules, matching AGENTS.md ("Signal doesn't scrape sites that
 // forbid it"):
 //   - public http(s) only; Obscura's SSRF guard blocks private networks, and so do we
@@ -16,7 +16,7 @@
 //   - no stealth mode, no proxies, no logins, no cookies
 //   - listens on loopback only; CORS allowed for local console origins only
 //
-// Hosted (deploy/lightsail): Caddy proxies https://<site>/helper/* here, so the console calls
+// Hosted (web/backend/deploy/lightsail): Caddy proxies https://<site>/helper/* here, so the console calls
 // it same-origin. TRUST_PROXY=1 reads the client IP from X-Forwarded-For (set by Caddy only)
 // for the per-IP rate limit.
 

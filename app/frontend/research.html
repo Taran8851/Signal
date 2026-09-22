@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ask — Signal</title>
+  <meta name="description" content="Ask Signal to look for opportunities on the web, and set up searches that repeat when you ask for them.">
+  <script src="desktop-bridge.js?v=2"></script>
+  <script src="theme-boot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="preferences.css?v=4">
+  <link rel="stylesheet" href="research.css?v=3">
+</head>
+<body data-page="research" class="page-chat">
+  <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <div class="app">
+    <aside class="sidebar glass">
+      <a class="brand" href="research.html"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></a>
+      <a class="button button-secondary new-ask" href="research.html#new" data-new-ask>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        New ask
+      </a>
+      <nav class="chat-history" aria-label="Your questions" data-chat-history data-desktop-only hidden></nav>
+      <div class="sidebar-foot">
+        <nav class="nav" aria-label="Console">
+          <a href="inbox.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg>
+            <span>Inbox</span><span class="nav-count" data-nav-count>0</span>
+          </a>
+          <a href="preferences.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+        <p class="demo-note">Demo console. Everything stays in this browser.</p>
+        <button class="button button-quiet" type="button" data-logout>Log out</button>
+      </div>
+    </aside>
+
+    <main class="main chat-main">
+      <p class="notice glass" data-needs-desktop hidden>Ask runs in the Signal desktop app, which reads the web for you. In a browser, use the Inbox and Settings → Sources.</p>
+
+      <!-- The research agent (agent.js). Conversations are listed in the sidebar (chats.js). -->
+      <section class="chat" data-research aria-labelledby="chat-title">
+        <header class="chat-head">
+          <h1 class="chat-title" id="chat-title" data-chat-title>New ask</h1>
+          <button class="button button-quiet button-small" type="button" data-chat-stop hidden>Stop</button>
+        </header>
+        <p class="chat-ready grow-help" data-chat-ready hidden></p>
+        <ol class="chat-log" data-chat-log aria-live="polite"></ol>
+        <form class="chat-form glass" data-chat-form>
+          <label class="visually-hidden" for="chat-input">Your question</label>
+          <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask Signal to find opportunities…" data-chat-input></textarea>
+          <div class="chat-actions">
+            <p class="grow-help" data-chat-limits>Up to 5 searches and 15 pages per question · Enter to send, Shift+Enter for a new line</p>
+            <button class="button button-primary button-small" type="submit" data-chat-send>Ask</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <!-- A repeating search: the agent's suggestion or your own (agent.js) -->
+  <dialog class="sheet glass auto-sheet" data-auto-sheet aria-labelledby="auto-sheet-title">
+    <form class="sheet-body" method="dialog" data-auto-form>
+      <div class="sheet-head">
+        <div class="sheet-head-text">
+          <p class="sheet-kicker">Repeating search</p>
+          <h2 class="sheet-title" id="auto-sheet-title" data-auto-title>New repeating search</h2>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="auto-name">Name</label>
+        <input class="input" id="auto-name" name="name" maxlength="80" required>
+      </div>
+      <div class="field">
+        <label class="field-label" for="auto-queries">Search queries, one per line (up to 3)</label>
+        <textarea class="textarea" id="auto-queries" name="queries" rows="3" required></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label" for="auto-site">Only this site (optional)</label>
+        <input class="input" id="auto-site" name="site" placeholder="e.g. devpost.com">
+      </div>
+      <div class="field">
+        <label class="field-label" for="auto-every">How often</label>
+        <select class="input" id="auto-every" name="everyHours" data-auto-every></select>
+      </div>
+      <p class="field-error" data-auto-error role="alert"></p>
+      <div class="sheet-foot">
+        <button class="button button-quiet" type="button" data-auto-cancel>Cancel</button>
+        <button class="button button-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <p class="toast glass" data-toast role="status" hidden></p>
+  <script src="chats.js?v=1"></script>
+  <script src="app-data.js?v=3"></script>
+  <script src="sources.js?v=7"></script>
+  <script src="ai.js?v=5"></script>
+  <script src="providers.js?v=1"></script>
+  <script src="automations.js?v=1"></script>
+  <script src="scheduler.js?v=3"></script>
+  <script src="app.js?v=10"></script>
+  <script src="profile.js?v=1"></script>
+  <script src="agent.js?v=4"></script>
+</body>
+</html>

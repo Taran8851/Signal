@@ -24,7 +24,7 @@
 
      {
        id:            "anthropic" | "openai-compatible" | "local" | <new id>
-       label:         name shown in Preferences
+       label:         name shown in Settings
        defaultModel:  model id used when the user has not typed one ("" = user must type one)
        models:        suggestions for the model field (may be empty)
        needsBaseUrl:  true when requests go to a user-supplied base URL
@@ -84,7 +84,7 @@
   var MAX_REASONS = 3;
   var MAX_REASON_LENGTH = 200;
   var MAX_DESCRIPTION_LENGTH = 6000;
-  var REQUEST_TIMEOUT_MS = 30000;
+  var REQUEST_TIMEOUT_MS = 60000;
 
   /* Model choice (claude-api skill, "Current Models"): Claude Haiku 4.5 is the cheapest and
      fastest current Claude model ($1 / $5 per million tokens), which suits one short
@@ -255,9 +255,9 @@
   function readiness() {
     var s = getSettings();
     var u = usageToday();
-    if (s.mode === "keyword") return { ok: false, code: "keyword_mode", note: "Scoring mode is Keyword. Switch to Hybrid or LLM in Preferences to ask a model." };
-    if (!canCall(s)) return { ok: false, code: "no_key", note: "No API key saved. Add one in Preferences, or pick a local model." };
-    if (!s.model) return { ok: false, code: "config", note: "No model name set. Add one in Preferences." };
+    if (s.mode === "keyword") return { ok: false, code: "keyword_mode", note: "Scoring mode is Keyword. Switch to Hybrid or LLM in Settings to ask a model." };
+    if (!canCall(s)) return { ok: false, code: "no_key", note: "No API key saved. Add one in Settings, or pick a local model." };
+    if (!s.model) return { ok: false, code: "config", note: "No model name set. Add one in Settings." };
     if (u.capped) return { ok: false, code: "capped", note: "Today's cap of " + u.cap + " model calls is used. Keyword scores until tomorrow." };
     return { ok: true, code: "ok", note: "" };
   }
@@ -502,7 +502,21 @@
   function postJSON(url, headers, body, settings) {
     var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
     var timer = controller ? setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS) : null;
+    // The desktop app sends it from Rust (no CORS); a browser uses fetch.
+    var desktop = global.SignalDesktop && global.SignalDesktop.modelPost;
     return Promise.resolve().then(function () {
+      if (desktop) {
+        var timeout = new Promise(function (_, reject) {
+          setTimeout(function () { var e = new Error("timeout"); e.name = "AbortError"; reject(e); }, REQUEST_TIMEOUT_MS);
+        });
+        return Promise.race([global.SignalDesktop.modelPost(url, headers, JSON.stringify(body)), timeout]).then(function (r) {
+          return { status: r.status, ok: r.status >= 200 && r.status < 300, text: function () { return Promise.resolve(r.text); } };
+        }, function (e) {
+          if (e && e.name === "AbortError") throw e;
+          if (String(e) === "timeout") { var t = new Error("timeout"); t.name = "AbortError"; throw t; }
+          var n = new Error(String(e)); n.desktop = true; throw n;
+        });
+      }
       return global.fetch(url, {
         method: "POST",
         headers: headers,
@@ -522,6 +536,10 @@
         return json;
       });
     }, function (err) {
+      if (err && err.desktop) {
+        if (timer) clearTimeout(timer);
+        throw new AIError("network", err.message + " Check the address and your connection.");
+      }
       if (timer) clearTimeout(timer);
       if (err && err.name === "AbortError") {
         throw new AIError("timeout", "No answer from " + hostOf(url) + " after " + (REQUEST_TIMEOUT_MS / 1000) + " seconds.");
@@ -642,7 +660,7 @@
     var settings = getSettings();
     var provider = providerOf(settings);
     var key = getKey();
-    if (provider.needsKey && !key) return Promise.reject(new AIError("no_key", "No API key saved. Add one in Preferences → Scoring."));
+    if (provider.needsKey && !key) return Promise.reject(new AIError("no_key", "No API key saved. Add one in Settings → Scoring."));
     if (!settings.model) return Promise.reject(new AIError("config", "No model name set."));
     var usage = usageToday();
     if (usage.capped) return Promise.reject(new AIError("capped", "Today's cap of " + usage.cap + " model calls is used. Scores stay on keywords until tomorrow."));
@@ -655,6 +673,100 @@
       noSchema[memo] = true;
       countCall();
       return send(provider, settings, key, messages, null, opts);
+    });
+  }
+
+  /* ---- Tool calling, for the research agent (app/frontend/agent.js) ----
+     The agent keeps one provider-neutral transcript:
+       { role: "user", content }
+       { role: "assistant", text, toolCalls: [{ id, name, input }] }
+       { role: "tool", id, name, content }            content is a string
+     and each call converts it to the provider's shape. tools: [{ name, description, schema }].
+     Returns { text, toolCalls, model }. Counts against today's cap like every other call. */
+  function toAnthropicTurns(transcript) {
+    var out = [];
+    transcript.forEach(function (t) {
+      if (t.role === "user") out.push({ role: "user", content: t.content });
+      else if (t.role === "assistant") {
+        var blocks = [];
+        if (t.text) blocks.push({ type: "text", text: t.text });
+        (t.toolCalls || []).forEach(function (c) { blocks.push({ type: "tool_use", id: c.id, name: c.name, input: c.input || {} }); });
+        out.push({ role: "assistant", content: blocks.length ? blocks : [{ type: "text", text: "…" }] });
+      } else if (t.role === "tool") {
+        var result = { type: "tool_result", tool_use_id: t.id, content: t.content };
+        var last = out[out.length - 1];
+        // Results for one assistant turn go back together in a single user message.
+        if (last && last.role === "user" && Array.isArray(last.content) && last.content[0] && last.content[0].type === "tool_result") last.content.push(result);
+        else out.push({ role: "user", content: [result] });
+      }
+    });
+    return out;
+  }
+  function toChatTurns(system, transcript) {
+    var out = system ? [{ role: "system", content: system }] : [];
+    transcript.forEach(function (t) {
+      if (t.role === "user") out.push({ role: "user", content: t.content });
+      else if (t.role === "assistant") {
+        var m = { role: "assistant", content: t.text || null };
+        if (t.toolCalls && t.toolCalls.length) {
+          m.tool_calls = t.toolCalls.map(function (c) {
+            return { id: c.id, type: "function", function: { name: c.name, arguments: JSON.stringify(c.input || {}) } };
+          });
+        }
+        out.push(m);
+      } else if (t.role === "tool") out.push({ role: "tool", tool_call_id: t.id, content: t.content });
+    });
+    return out;
+  }
+
+  function callAgent(system, transcript, tools, opts) {
+    opts = opts || {};
+    var settings = getSettings();
+    var provider = providerOf(settings);
+    var key = getKey();
+    if (provider.needsKey && !key) return Promise.reject(new AIError("no_key", "No API key saved. Add one in Settings → AI scoring to use the research agent."));
+    if (!settings.model) return Promise.reject(new AIError("config", "No model name set. Add one in Settings → AI scoring."));
+    var usage = usageToday();
+    if (usage.capped) return Promise.reject(new AIError("capped", "Today's cap of " + usage.cap + " model calls is used. Raise it in Settings, or try again tomorrow."));
+    countCall();
+    var maxTokens = opts.maxTokens || 2048;
+    if (provider.id === "anthropic") {
+      var req = buildAnthropicRequest(settings, key, [], null, { maxTokens: maxTokens });
+      // Prompt caching: a marker on the instructions (tools + system, fixed for the day) and
+      // automatic caching for the growing conversation, so each step of a question re-reads
+      // the earlier steps at about a tenth of the price. Below the model's minimum it's a no-op.
+      req.body.system = [{ type: "text", text: system, cache_control: { type: "ephemeral" } }];
+      req.body.cache_control = { type: "ephemeral" };
+      req.body.messages = toAnthropicTurns(transcript);
+      req.body.tools = tools.map(function (t) { return { name: t.name, description: t.description, input_schema: t.schema }; });
+      return postJSON(req.url, req.headers, req.body, settings).then(function (json) {
+        if (json.stop_reason === "refusal") throw new AIError("refused", "The model declined to continue.");
+        var text = "", calls = [];
+        (json.content || []).forEach(function (b) {
+          if (b.type === "text") text += b.text;
+          else if (b.type === "tool_use") calls.push({ id: b.id, name: b.name, input: b.input || {} });
+        });
+        var u = json.usage || {};
+        return { text: text, toolCalls: calls, model: json.model || settings.model, cutOff: json.stop_reason === "max_tokens",
+          usage: { input: (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0), cached: u.cache_read_input_tokens || 0, output: u.output_tokens || 0 } };
+      });
+    }
+    var creq = buildChatCompletionsRequest(settings, key, [], null, { maxTokens: maxTokens });
+    creq.body.messages = toChatTurns(system, transcript);
+    creq.body.tools = tools.map(function (t) { return { type: "function", function: { name: t.name, description: t.description, parameters: t.schema } }; });
+    delete creq.body.temperature;
+    return postJSON(creq.url, creq.headers, creq.body, settings).then(function (json) {
+      var choice = json.choices && json.choices[0];
+      if (!choice || !choice.message) throw new AIError("invalid_output", "The endpoint's response had no message.");
+      var calls = (choice.message.tool_calls || []).map(function (c, i) {
+        var input = {};
+        try { input = JSON.parse((c.function && c.function.arguments) || "{}"); } catch (e) {}
+        return { id: c.id || "call_" + i, name: c.function && c.function.name, input: input };
+      });
+      var u = json.usage || {};
+      var cachedIn = (u.prompt_tokens_details && u.prompt_tokens_details.cached_tokens) || 0;
+      return { text: String(choice.message.content || ""), toolCalls: calls, model: json.model || settings.model, cutOff: choice.finish_reason === "length",
+        usage: { input: u.prompt_tokens || 0, cached: cachedIn, output: u.completion_tokens || 0 } };
     });
   }
 
@@ -1386,9 +1498,9 @@
 
       var disabledNote = "";
       if (kw.excluded) disabledNote = "Excluded by “" + kw.excludedBy.join("”, “") + "”. Excluded items never go to the model.";
-      else if (s.mode === "keyword") disabledNote = "Scoring mode is Keyword. Switch to Hybrid or LLM in Preferences to ask a model.";
-      else if (!canCall(s)) disabledNote = "No API key saved. Add one in Preferences, or pick a local model.";
-      else if (!s.model) disabledNote = "No model name set. Add one in Preferences.";
+      else if (s.mode === "keyword") disabledNote = "Scoring mode is Keyword. Switch to Hybrid or LLM in Settings to ask a model.";
+      else if (!canCall(s)) disabledNote = "No API key saved. Add one in Settings, or pick a local model.";
+      else if (!s.model) disabledNote = "No model name set. Add one in Settings.";
       else if (u.capped) disabledNote = "Today's cap of " + u.cap + " model calls is used. Keyword scores until tomorrow.";
 
       var head = "";
@@ -1665,6 +1777,9 @@
     removeKey: removeKey,
     usageToday: usageToday,
     testConnection: testConnection,
+    callAgent: callAgent,
+    callModel: callModel,
+    extractJSON: extractJSON,
 
     shouldCallLLM: shouldCallLLM,
     scoreRow: scoreRow,

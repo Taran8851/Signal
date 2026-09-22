@@ -39,11 +39,10 @@ means changing `vercel.json`, the base path, and every OAuth callback URL togeth
 
 ## 0. Before the first Vercel deploy: what Vercel publishes
 
-Vercel serves the repo root as static files, so without an ignore file `deploy/`, `docs/`,
-`reference/`, `AGENTS.md` etc. are publicly downloadable too. `deploy/.env` is git-ignored (the
-root `.gitignore` has `.env`), but a CLI upload from a laptop is safer with a root `.vercelignore`
-listing at least `deploy/`, `reference/`, `docs/`, `ref/`, `web/`, `collector/`, `packages/`,
-`*.md`, `.env`, `*.db`. (Not created by this scaffold; decide with the team.)
+Vercel publishes `web/frontend/` only (`outputDirectory` in the root `vercel.json`), and the root
+`.vercelignore` keeps `app/`, `web/backend/`, `docs/`, `reference/`, `packages/` and the rule files
+from being uploaded at all. `web/backend/deploy/.env` is git-ignored (the root `.gitignore` has
+`.env`); never add it to either list's exceptions.
 
 ## 1. Create the instance
 
@@ -127,9 +126,9 @@ Not scaffolded here; do it only if ports 80/443 turn out to be blocked.
 ```bash
 git clone <repo-url> ~/student-signal     # or rsync/scp the folder
 cd ~/student-signal
-cp deploy/.env.example deploy/.env
-chmod 600 deploy/.env
-nano deploy/.env
+cp web/backend/deploy/.env.example web/backend/deploy/.env
+chmod 600 web/backend/deploy/.env
+nano web/backend/deploy/.env
 ```
 
 Fill in at least `SITE_HOST`, `PUBLIC_ORIGIN`, and the Postgres values for the smoke test.
@@ -149,12 +148,12 @@ Save `ENCRYPTION_MASTER_KEY` in a password manager. Without it, stored API keys 
 Postgres and Caddy:
 
 ```bash
-docker compose -f deploy/docker-compose.yml up -d
-docker compose -f deploy/docker-compose.yml ps          # both should become "healthy"
-docker compose -f deploy/docker-compose.yml logs -f caddy   # watch for "certificate obtained"
+docker compose -f web/backend/deploy/docker-compose.yml up -d
+docker compose -f web/backend/deploy/docker-compose.yml ps          # both should become "healthy"
+docker compose -f web/backend/deploy/docker-compose.yml logs -f caddy   # watch for "certificate obtained"
 ```
 
-(Equivalent, explicit: `docker compose -f deploy/docker-compose.yml up -d postgres caddy`.)
+(Equivalent, explicit: `docker compose -f web/backend/deploy/docker-compose.yml up -d postgres caddy`.)
 
 **Direct to the VPS:**
 ```bash
@@ -169,7 +168,7 @@ Any other path returns 502 until `web` exists. That is expected.
 2. Deploy to Vercel.
 3. ```bash
    curl -i https://YOUR-PROJECT.vercel.app/api/healthz   # expect 200 "ok" from Caddy
-   curl -I https://YOUR-PROJECT.vercel.app/app/signal.html  # expect 200, the static console
+   curl -I https://YOUR-PROJECT.vercel.app/app/frontend/signal.html  # expect 200, the static console
    ```
    If `/api/healthz` works, the rewrite path is proven. This is plan build step 3.
 
@@ -185,9 +184,9 @@ Requirements for those directories (not yet written):
 
 Then:
 ```bash
-docker compose -f deploy/docker-compose.yml --profile app up -d --build
-docker compose -f deploy/docker-compose.yml --profile app ps
-docker compose -f deploy/docker-compose.yml --profile app logs -f web collector
+docker compose -f web/backend/deploy/docker-compose.yml --profile app up -d --build
+docker compose -f web/backend/deploy/docker-compose.yml --profile app ps
+docker compose -f web/backend/deploy/docker-compose.yml --profile app logs -f web collector
 ```
 
 Register OAuth callback URLs on the **Vercel** origin (`PUBLIC_ORIGIN`), not on `SITE_HOST`.
@@ -198,9 +197,9 @@ registry (e.g. GHCR/ECR), or add swap. (unverified)
 ## 8. Backups
 
 ```bash
-chmod +x deploy/backup.sh
+chmod +x web/backend/deploy/backup.sh
 sudo mkdir -p /var/backups/signal && sudo chown ubuntu: /var/backups/signal
-deploy/backup.sh                     # run once by hand and check the output
+web/backend/deploy/backup.sh                     # run once by hand and check the output
 ```
 
 For S3: create a private bucket, set `BACKUP_S3_BUCKET` / `BACKUP_S3_REGION` in `.env`, install the
@@ -208,7 +207,7 @@ AWS CLI (`sudo snap install aws-cli --classic`), and use the instance role from 
 
 Nightly cron (`crontab -e`):
 ```
-15 3 * * * /home/ubuntu/student-signal/deploy/backup.sh >> /var/log/signal-backup.log 2>&1
+15 3 * * * /home/ubuntu/student-signal/web/backend/deploy/backup.sh >> /var/log/signal-backup.log 2>&1
 ```
 Create the log file first: `sudo touch /var/log/signal-backup.log && sudo chown ubuntu: /var/log/signal-backup.log`.
 
@@ -223,13 +222,13 @@ cd ~/student-signal
 # Optional: fetch from S3
 aws s3 cp s3://BUCKET/signal/postgres/signal-YYYYMMDDTHHMMSSZ.sql.gz /var/backups/signal/
 
-docker compose -f deploy/docker-compose.yml --profile app stop web collector
-docker compose -f deploy/docker-compose.yml exec -T postgres \
+docker compose -f web/backend/deploy/docker-compose.yml --profile app stop web collector
+docker compose -f web/backend/deploy/docker-compose.yml exec -T postgres \
   sh -c 'dropdb -U "$POSTGRES_USER" --if-exists "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
 gunzip -c /var/backups/signal/signal-YYYYMMDDTHHMMSSZ.sql.gz \
-  | docker compose -f deploy/docker-compose.yml exec -T postgres \
+  | docker compose -f web/backend/deploy/docker-compose.yml exec -T postgres \
       sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-docker compose -f deploy/docker-compose.yml --profile app start web collector
+docker compose -f web/backend/deploy/docker-compose.yml --profile app start web collector
 ```
 (unverified) Practice a restore once before you need it. A backup you have never restored is a guess.
 
@@ -237,10 +236,10 @@ docker compose -f deploy/docker-compose.yml --profile app start web collector
 
 **App code:**
 ```bash
-deploy/backup.sh                                  # snapshot data first
+web/backend/deploy/backup.sh                                  # snapshot data first
 git log --oneline -5
 git checkout <last-good-commit>
-docker compose -f deploy/docker-compose.yml --profile app up -d --build web collector
+docker compose -f web/backend/deploy/docker-compose.yml --profile app up -d --build web collector
 ```
 If the bad release ran a database migration that the old code cannot read, restore the backup
 taken before the deploy (section 8). Take one before every deploy for this reason.
@@ -249,7 +248,7 @@ taken before the deploy (section 8). Take one before every deploy for this reaso
 restores the old `vercel.json` rewrites too.
 
 **Kill switch:** to take the app offline but keep the landing page up, stop the app services:
-`docker compose -f deploy/docker-compose.yml --profile app stop web collector`.
+`docker compose -f web/backend/deploy/docker-compose.yml --profile app stop web collector`.
 
 ## 10. Troubleshooting
 
@@ -269,7 +268,7 @@ Visitors are on the Vercel URL, but the request reaching the app has the VPS hos
   unless you add those origins too.
 
 **Caddy cannot get a certificate.**
-- `docker compose -f deploy/docker-compose.yml logs caddy` shows the ACME error.
+- `docker compose -f web/backend/deploy/docker-compose.yml logs caddy` shows the ACME error.
 - `dig +short SITE_HOST` must return the Elastic IP.
 - Ports 80 and 443 must be open in the security group (both are used for challenges).
 - Rate limited on sslip.io: wait and retry later, try `nip.io` the same way, or use your own domain.
@@ -289,5 +288,5 @@ Visitors are on the Vercel URL, but the request reaching the app has the VPS hos
   folders to the repo root.
 
 **Container keeps restarting.**
-- `docker compose -f deploy/docker-compose.yml --profile app ps` and `logs <service>`.
+- `docker compose -f web/backend/deploy/docker-compose.yml --profile app ps` and `logs <service>`.
 - `OOMKilled` in `docker inspect <container>` → raise `mem_limit` or the instance size.
