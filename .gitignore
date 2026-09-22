@@ -24,3 +24,12 @@ app/desktop/dist/
 app/desktop/src-tauri/target/
 app/desktop/src-tauri/gen/
 
+# Notes and plans stay local: every Markdown file except READMEs
+*.md
+!README.md
+
+# Dependencies and build output, wherever they end up
+target/
+dist/
+__pycache__/
+.venv/
