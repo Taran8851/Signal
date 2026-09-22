@@ -13,6 +13,8 @@ const skip = new Set(["ai-playground.html", "signal.html"]);
 rmSync(to, { recursive: true, force: true });
 cpSync(from, to, {
   recursive: true,
+  // tokens.css is a symlink to the landing's copy; copy the file, not the link.
+  dereference: true,
   filter: (src) => {
     const name = path.basename(src);
     return !skip.has(name) && !name.startsWith(".qa");

@@ -1,6 +1,7 @@
 /* Single source of truth for design tokens. Shared by shared.css (landing page) and
-   app/frontend/app.css (demo console). Values come from ref/variables.css (the Monad reference);
-   how Signal applies them is in DESIGN.md. Change a colour here, once. */
+   app/frontend/app.css (demo console, which reaches it through the app/frontend/tokens.css
+   symlink). Values come from ref/variables.css (the Monad reference); how Signal applies them
+   is in DESIGN.md. Change a colour here, once. */
 :root {
   /* Neutrals */
   --parchment: #f6f3f1;   /* page canvas — never pure white */
