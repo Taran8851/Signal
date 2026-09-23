@@ -53,9 +53,15 @@
         <p class="chat-ready grow-help" data-chat-ready hidden></p>
         <ol class="chat-log" data-chat-log aria-live="polite"></ol>
         <form class="chat-form glass" data-chat-form>
+          <!-- What this question sends with it (agent.js "context"): shown, never implied -->
+          <div class="ctx-chips" data-ctx-chips aria-label="Sent with your question"></div>
           <label class="visually-hidden" for="chat-input">Your question</label>
           <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask Signal to find opportunities…" data-chat-input></textarea>
           <div class="chat-actions">
+            <div class="ctx">
+              <button class="ctx-add" type="button" data-ctx-toggle aria-expanded="false" aria-controls="ctx-menu" aria-label="Choose what your question sends">+</button>
+              <div class="ctx-menu glass" id="ctx-menu" data-ctx-menu hidden></div>
+            </div>
             <p class="grow-help" data-chat-limits>Up to 5 searches and 15 pages per question · Enter to send, Shift+Enter for a new line</p>
             <button class="button button-primary button-small" type="submit" data-chat-send>Ask</button>
           </div>
@@ -97,16 +103,33 @@
     </form>
   </dialog>
 
+  <!-- Exactly what the next question sends to the model (agent.js systemText) -->
+  <dialog class="sheet glass ctx-sheet" data-ctx-sheet aria-labelledby="ctx-sheet-title">
+    <div class="sheet-body">
+      <div class="sheet-head">
+        <div class="sheet-head-text">
+          <p class="sheet-kicker">Sent with your next question</p>
+          <h2 class="sheet-title" id="ctx-sheet-title" tabindex="-1">What your model receives</h2>
+        </div>
+      </div>
+      <p class="grow-help" data-ctx-tools></p>
+      <pre class="ctx-pre" data-ctx-pre></pre>
+      <div class="sheet-foot">
+        <button class="button button-primary" type="button" data-ctx-close>Close</button>
+      </div>
+    </div>
+  </dialog>
+
   <p class="toast glass" data-toast role="status" hidden></p>
   <script src="chats.js?v=1"></script>
   <script src="app-data.js?v=3"></script>
-  <script src="sources.js?v=7"></script>
+  <script src="sources.js?v=8"></script>
   <script src="ai.js?v=5"></script>
   <script src="providers.js?v=1"></script>
   <script src="automations.js?v=1"></script>
   <script src="scheduler.js?v=3"></script>
   <script src="app.js?v=10"></script>
-  <script src="profile.js?v=1"></script>
-  <script src="agent.js?v=4"></script>
+  <script src="profile.js?v=2"></script>
+  <script src="agent.js?v=6"></script>
 </body>
 </html>

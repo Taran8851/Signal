@@ -545,7 +545,8 @@
     var digest;
     try { digest = pageDigest(html, def.url); } catch (e) { return Promise.resolve({ items: parsePage(html, def.url), method: "page", note: "" }); }
     function bySearch(note) {
-      var found = searchPage(digest, readPrefs());
+      // def.prefs: the research agent passes {} when the student left topic words out of the chat.
+      var found = searchPage(digest, def.prefs || readPrefs());
       if (found.length) return { items: found, method: "search", note: note || "" };
       return { items: parsePage(html, def.url), method: "page", note: note || "" };
     }

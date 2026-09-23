@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Set up Signal</title>
+  <meta name="description" content="First run: tell Signal what counts as a signal for you.">
+  <meta name="robots" content="noindex">
+  <script src="desktop-bridge.js?v=2"></script>
+  <script src="theme-boot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="setup.css?v=2">
+</head>
+<body data-page="setup">
+  <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <main class="setup">
+    <section class="setup-card glass" aria-labelledby="step-title">
+      <header class="setup-head">
+        <span class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SIGNAL</span></span>
+        <p class="setup-step" data-step-count aria-live="polite">Step 1 of 6</p>
+      </header>
+
+      <div class="setup-body">
+
+        <!-- 1. What Signal does -->
+        <div class="step" data-step="0">
+          <h1 id="step-title">Signal finds you less.</h1>
+          <p class="lede">It watches the places opportunities appear, scores them against what you
+            say you care about, and shows you the few worth your time.</p>
+          <ul class="facts">
+            <li>
+              <span class="fact-key">Everything stays here</span>
+              <span class="fact-val">Your words, your CV and your sources live on this laptop. Signal
+                has no account and no server. Only the model you choose sees anything, and only
+                what a task needs.</span>
+            </li>
+            <li>
+              <span class="fact-key">The first check is quiet</span>
+              <span class="fact-val">Signal stores what it finds on the first pass and tells you
+                about none of it, so you don't get six months of backlog at once.</span>
+            </li>
+            <li>
+              <span class="fact-key">Five short steps</span>
+              <span class="fact-val">Your model, you, what you care about, where to look, and how
+                picky to be. All optional except one topic, all changeable later in Settings.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 2. Model, scoring mode, search -->
+        <div class="step" data-step="1" hidden>
+          <h1>Plug in a model?</h1>
+          <p class="lede">Optional. Without one, Signal scores by your words alone — fast, free and
+            it explains every match. With one, it can suggest your words from your profile and brief
+            each opportunity: why it fits you, what it asks for, first steps.</p>
+
+          <div class="field">
+            <p class="field-label" id="l-provider">Provider</p>
+            <select class="select" data-provider aria-labelledby="l-provider"></select>
+          </div>
+
+          <div class="field" data-model-field>
+            <p class="field-label" id="l-model">Model</p>
+            <input class="input" type="text" data-model aria-labelledby="l-model" placeholder="Model name">
+          </div>
+
+          <div class="field" data-baseurl-field hidden>
+            <p class="field-label" id="l-baseurl">Address</p>
+            <input class="input" type="url" data-baseurl aria-labelledby="l-baseurl" placeholder="https://…">
+          </div>
+
+          <div class="field" data-key-field>
+            <p class="field-label" id="l-key">API key</p>
+            <p class="field-help" data-key-hint>It is stored on this laptop and sent only to the provider you chose.</p>
+            <input class="input" type="password" data-key aria-labelledby="l-key" placeholder="Paste your key" autocomplete="off" spellcheck="false">
+          </div>
+
+          <!-- What the model is allowed to spend calls on. ai.js modes: keyword / hybrid / llm. -->
+          <div class="field">
+            <p class="field-label" id="l-mode">What decides what reaches you</p>
+            <div class="choices" data-mode role="radiogroup" aria-labelledby="l-mode"></div>
+            <p class="field-help">At most 50 model calls a day; past that, scoring drops to your words
+              until the next day. Change the cap in Settings.</p>
+          </div>
+
+          <div class="switch-line" data-brief-line>
+            <div>
+              <p class="field-label">Brief new signals with my model</p>
+              <p class="field-help">One call for each new signal the mode above sends to the model.</p>
+            </div>
+            <label class="switch"><input type="checkbox" data-brief><span></span><span class="sr-only">Brief new signals with my model</span></label>
+          </div>
+
+          <!-- Desktop only: the Research page searches the web through Firecrawl (search.rs). -->
+          <div class="field" data-firecrawl-field hidden>
+            <p class="field-label" id="l-firecrawl">Firecrawl key, for Research (optional)</p>
+            <p class="field-help" data-firecrawl-help>The Research page searches the web through
+              Firecrawl. Without a key it can't search. Get one at firecrawl.dev.</p>
+            <input class="input" type="password" data-firecrawl aria-labelledby="l-firecrawl" placeholder="fc-…" autocomplete="off" spellcheck="false">
+          </div>
+
+          <p class="note" data-model-status aria-live="polite">No model? Skip this step. Signal scores by your words
+            alone, and you can add a model any time in Settings.</p>
+        </div>
+
+        <!-- 3. About you: saved to the profile (profile.js), same fields as Settings → Your profile -->
+        <div class="step" data-step="2" hidden>
+          <h1>Who are you?</h1>
+          <p class="lede">Optional. This is your profile: Signal uses it to tell whether an
+            opportunity is open to you, and your model uses it to suggest your words. It stays on
+            this laptop, and you can edit it in Settings → Your profile.</p>
+
+          <div class="field">
+            <p class="field-label" id="l-cv">Your CV</p>
+            <div class="cv-pick" data-cv-pick-wrap hidden>
+              <button class="button button-secondary button-small" type="button" data-cv-pick>Add your CV</button>
+              <input class="sr-only" type="file" accept=".pdf,.docx,.txt,.md" data-cv-file tabindex="-1" aria-hidden="true">
+              <span class="field-help" data-cv-status aria-live="polite">PDF, Word (.docx) or text.</span>
+            </div>
+            <textarea class="textarea" data-cv-text aria-labelledby="l-cv" rows="4" placeholder="Or paste it here."></textarea>
+          </div>
+
+          <div class="profile-grid">
+            <div class="field">
+              <p class="field-label" id="l-level">Where you are now</p>
+              <select class="select" data-fact="level" aria-labelledby="l-level">
+                <option value="">Choose…</option><option>High school</option><option>1st-year undergraduate</option><option>2nd-year undergraduate</option><option>3rd-year undergraduate</option><option>4th-year / final-year undergraduate</option><option>Master's student</option><option>PhD student</option><option>Graduated</option>
+              </select>
+            </div>
+            <div class="field">
+              <p class="field-label" id="l-field">Field of study</p>
+              <input class="input" data-fact="field" aria-labelledby="l-field" placeholder="e.g. Computer Science">
+            </div>
+            <div class="field">
+              <p class="field-label" id="l-inst">Institution</p>
+              <input class="input" data-fact="institution" aria-labelledby="l-inst">
+            </div>
+            <div class="field">
+              <p class="field-label" id="l-grad">Graduating in</p>
+              <input class="input" data-fact="gradYear" inputmode="numeric" aria-labelledby="l-grad" placeholder="e.g. 2028">
+            </div>
+            <div class="field">
+              <p class="field-label" id="l-country">Citizenship</p>
+              <input class="input" data-fact="country" aria-labelledby="l-country" placeholder="e.g. India">
+            </div>
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="l-about">In your own words</p>
+            <p class="field-help">What you like, what you want to try next, and what you don't want.</p>
+            <textarea class="textarea" data-about aria-labelledby="l-about" maxlength="4000" rows="4"
+              placeholder="I like systems and security, I've done one hackathon and want a research internship next summer. Not interested in web3."></textarea>
+          </div>
+        </div>
+
+        <!-- 4. Topics -->
+        <div class="step" data-step="3" hidden>
+          <h1>What are you looking for?</h1>
+          <p class="lede">Signal reads every opportunity and looks for these words. A word in the
+            title counts for more than one in the description.</p>
+
+          <!-- Shown only with a connected model. -->
+          <div class="field describe" data-describe hidden>
+            <div class="describe-actions">
+              <button class="button button-secondary button-small" type="button" data-suggest>Suggest words from my profile</button>
+              <span class="describe-status" data-suggest-status aria-live="polite"></span>
+            </div>
+            <div class="suggestions" data-suggestions hidden></div>
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="l-interests">Topics you care about</p>
+            <p class="field-help">The main things you want to hear about.</p>
+            <div class="tagbox" data-tags="interests" data-placeholder="Add a topic and press Enter" aria-labelledby="l-interests"></div>
+          </div>
+
+          <details class="field starters-more" data-starters-wrap>
+            <summary class="field-label">Or start from a preset</summary>
+            <div class="starters" data-starters></div>
+          </details>
+
+          <div class="field">
+            <p class="field-label" id="l-boost">Words that make something worth a look</p>
+            <p class="field-help">Extra points on top of a topic match. Optional.</p>
+            <div class="tagbox" data-tags="boost" data-placeholder="Add a word and press Enter" aria-labelledby="l-boost"></div>
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="l-exclude">Words that rule something out</p>
+            <p class="field-help">Anything matching these is archived on arrival, never shown. Optional.</p>
+            <div class="tagbox" data-tags="exclude" data-placeholder="Add a word and press Enter" aria-labelledby="l-exclude"></div>
+          </div>
+
+          <p class="note" data-topics-note hidden>Add at least one topic, or Signal has nothing to look for.</p>
+        </div>
+
+        <!-- 5. Sources, with the extra details some of them need -->
+        <div class="step" data-step="4" hidden>
+          <h1>Where should it look?</h1>
+          <p class="lede">Turn off anything you don't want checked. Three need a detail from you
+            before they start; add it here or later in Settings.</p>
+          <div class="sources" data-sources></div>
+
+          <div class="field">
+            <p class="field-label" id="l-cfp">WikiCFP categories</p>
+            <p class="field-help">Category names as WikiCFP writes them, like security or robotics.</p>
+            <div class="suggestion-row" data-cfp-suggestions hidden></div>
+            <div class="tagbox" data-tags="cfpCategories" data-placeholder="Add a category and press Enter" aria-labelledby="l-cfp"></div>
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="l-feeds">RSS / Google Alerts feed links</p>
+            <p class="field-help">Any RSS or Atom link. Google Alerts can make one: google.com/alerts →
+              Show options → Deliver to “RSS feed”.</p>
+            <div class="alert-hints" data-alert-hints hidden></div>
+            <div class="tagbox" data-tags="feeds" data-url data-placeholder="https://… and press Enter" aria-labelledby="l-feeds"></div>
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="l-watch">Pages to watch</p>
+            <p class="field-help">Fellowship or lab pages with no feed. Signal tells you when new text appears.</p>
+            <div class="tagbox" data-tags="watch" data-url data-placeholder="https://… and press Enter" aria-labelledby="l-watch"></div>
+          </div>
+
+          <p class="note" data-url-note hidden>Links need to start with http:// or https://.</p>
+          <p class="note">Discord bot needs the bot invited to your server first. Set it up in
+            Settings → Sources.</p>
+        </div>
+
+        <!-- 6. Pickiness and schedule -->
+        <div class="step" data-step="5" hidden>
+          <h1>How picky, and how often?</h1>
+          <p class="lede">Match strength is the score from your words. Only what clears the
+            bar is worth telling you about.</p>
+
+          <div class="field">
+            <p class="field-label" id="l-threshold">Tell me when something reaches</p>
+            <div class="choices" data-threshold role="radiogroup" aria-labelledby="l-threshold"></div>
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="l-every">Check for new things every</p>
+            <div class="segmented" data-every role="radiogroup" aria-labelledby="l-every"></div>
+          </div>
+
+          <div class="switch-line">
+            <div>
+              <p class="field-label">Check in the background</p>
+              <p class="field-help">Signal keeps checking while it sits in the tray.</p>
+            </div>
+            <label class="switch"><input type="checkbox" data-schedule-on checked><span></span><span class="sr-only">Check in the background</span></label>
+          </div>
+
+          <p class="note">The first check starts within a minute of finishing and is quiet: it stores
+            what it finds and notifies you about none of it, so the inbox may look empty at first.
+            After that, new matches arrive as desktop notifications. A message written to you, or a
+            page you watch changing, always reaches you, whatever the bar is set to.</p>
+        </div>
+
+      </div>
+
+      <footer class="setup-foot">
+        <button class="button button-quiet" type="button" data-back hidden>Back</button>
+        <div class="foot-right">
+          <button class="button button-quiet" type="button" data-skip hidden>Skip for now</button>
+          <button class="button button-primary" type="button" data-next>Start</button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <script src="app-data.js?v=3"></script>
+  <script src="ai.js?v=5"></script>
+  <script src="profile.js?v=2"></script>
+  <script src="setup.js?v=3"></script>
+</body>
+</html>

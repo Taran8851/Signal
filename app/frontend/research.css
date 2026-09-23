@@ -98,3 +98,25 @@
 @keyframes pulse { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
 .step.is-running summary { color: var(--text); }
 .step.is-running summary::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 8px; border-radius: 50%; background: currentColor; vertical-align: middle; animation: pulse 1.2s linear infinite; }
+
+/* What a question sends: chips above the composer, the + menu, and the full view (agent.js) */
+.ctx-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ctx-chips:empty { display: none; }
+.ctx-chips .chip { min-height: 28px; padding: 0 8px 0 12px; font-size: 12px; }
+.ctx-chips .chip button { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 9999px; background: none; color: inherit; cursor: pointer; }
+.ctx-chips .chip button:hover { background: var(--hover); }
+.ctx-chips .chip.is-fixed { padding-right: 12px; }
+.ctx { position: relative; flex: none; }
+.ctx-add { width: 32px; height: 32px; padding: 0; border: 1px solid var(--panel-border); border-radius: 9999px; background: none; color: var(--text-2); font: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.ctx-add:hover, .ctx-add[aria-expanded="true"] { background: var(--hover); color: var(--text); }
+.ctx-menu { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 5; display: flex; flex-direction: column; gap: 4px; width: 320px; padding: 8px; border-radius: 16px; background: var(--panel-strong); box-shadow: var(--glass-shadow); }
+.ctx-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: start; padding: 8px; border-radius: 12px; cursor: pointer; }
+.ctx-item:hover { background: var(--hover); }
+.ctx-item input { margin-top: 2px; }
+.ctx-item .grow-label { font-size: 14px; }
+.ctx-item .grow-help { grid-column: 2; margin: 0; }
+.ctx-view { margin-top: 4px; padding: 8px; border: 0; border-top: 1px solid var(--line); background: none; color: var(--text-2); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.ctx-view:hover { color: var(--text); }
+.ctx-sheet { width: min(760px, calc(100vw - 32px)); }
+.ctx-sheet .sheet-body > .grow-help { margin: 0; }
+.ctx-pre { margin: 0; max-height: 55vh; overflow: auto; padding: 16px; border-radius: 16px; background: var(--chip-bg); color: var(--text-2); font-family: var(--font-mono, monospace); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }

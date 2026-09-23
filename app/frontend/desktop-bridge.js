@@ -19,6 +19,11 @@
   try { localStorage.setItem("signal_demo_session", "1"); } catch (e) {}
   if (/login\.html$/.test(location.pathname)) { location.replace("research.html"); return; }
 
+  // First run: send the user through setup once. setup.js writes signal_demo_setup on finish.
+  var setupDone = false;
+  try { setupDone = !!(JSON.parse(localStorage.getItem("signal_demo_setup") || "{}") || {}).done; } catch (e) {}
+  if (!setupDone && !/setup\.html$/.test(location.pathname)) { location.replace("setup.html"); return; }
+
   // A fresh launch (sessionStorage is per run of the app): a check can't be running yet, so
   // drop any lock left by a check the app was quit in the middle of.
   try {

@@ -1,0 +1,181 @@
+/* First-run setup. Layout only — every colour, radius and control comes from app.css tokens
+   and its existing components (.glass, .button, .chip, .field, .input, .segmented, .switch). */
+
+.setup {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 32px 16px;
+}
+
+.setup-card {
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 64px);
+  border-radius: 40px;
+  box-shadow: var(--glass-shadow);
+}
+
+.setup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 40px 0;
+}
+.setup-step { color: var(--text-3); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+
+.setup-body { overflow-y: auto; padding: 24px 40px 32px; }
+
+.step { display: flex; flex-direction: column; gap: 24px; }
+.step h1 { font-size: 40px; line-height: 1.1; }
+.step .lede { max-width: 56ch; color: var(--text-2); font-size: 16px; line-height: 1.6; }
+
+/* Step 1 facts */
+.facts { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.facts li { display: flex; flex-direction: column; gap: 4px; padding-top: 16px; border-top: 1px solid var(--line); }
+.fact-key { font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.fact-val { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+
+/* Chip input */
+.tagbox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-strong);
+}
+.tagbox:focus-within { border-color: var(--focus); }
+.tagbox .chip { min-height: 32px; padding: 0 8px 0 16px; font-size: 14px; }
+.tagbox .chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.tagbox .chip button:hover { background: var(--hover); }
+.tagbox input {
+  flex: 1 1 12ch;
+  min-width: 12ch;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.tagbox input:focus { outline: none; }
+.tagbox input::placeholder { color: var(--text-3); }
+
+.starters { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Threshold choices — one per line, because each needs its meaning spelled out */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choices label { position: relative; display: block; }
+.choices input { position: absolute; opacity: 0; pointer-events: none; }
+.choices label > span {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 16px 24px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-strong);
+  cursor: pointer;
+  transition: background .15s linear, border-color .15s linear;
+}
+.choices label > span:hover { background: var(--hover); }
+.choices input:checked + span { border-color: var(--selected-bg); }
+.choices input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+.choice-n { flex: none; font-family: var(--font-display); font-size: 24px; line-height: 1; }
+.choice-text { color: var(--text-2); font-size: 14px; line-height: 1.5; }
+.choices input:checked + span .choice-text { color: var(--text); }
+.choice-tag { margin-left: 8px; color: var(--text-3); font-size: 12px; }
+
+/* Sources */
+.sources { display: flex; flex-direction: column; gap: 8px; }
+.source-group { margin: 8px 0 0; color: var(--text-3); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+.source {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 24px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-strong);
+}
+.source-label { font-size: 14px; }
+.source-note { color: var(--text-3); font-size: 12px; line-height: 1.5; }
+.source[data-off="1"] .source-label, .source[data-off="1"] .source-note { opacity: .55; }
+
+.switch-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+
+.note { padding: 16px 24px; border-radius: 16px; background: var(--chip-bg); color: var(--text-2); font-size: 12px; line-height: 1.6; }
+
+.setup-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 40px 24px;
+  border-top: 1px solid var(--line);
+}
+.setup-foot .foot-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* About you */
+.cv-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
+
+/* Alerts queries the model suggested: text to copy into Google Alerts */
+.alert-hints { display: flex; flex-wrap: wrap; gap: 8px; }
+.alert-hints .suggestion-label { flex-basis: 100%; }
+.alert-query { padding: 4px 16px; border-radius: 9999px; background: var(--chip-bg); color: var(--text-2); font-size: 12px; user-select: all; }
+
+@media (max-width: 720px) {
+  .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .setup { padding: 16px; }
+  .setup-card { border-radius: 24px; max-height: calc(100vh - 32px); }
+  .setup-head { padding: 16px 24px 0; }
+  .setup-body { padding: 16px 24px 24px; }
+  .setup-foot { padding: 16px 24px; }
+  .step h1 { font-size: 32px; }
+}
+
+/* Topics step, with a model: describe yourself, then add or dismiss each suggested word */
+.describe .textarea { width: 100%; }
+.describe-actions { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
+.describe-status { color: var(--text-2); font-size: 12px; }
+.suggestions { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+.suggestion-label { margin: 0 0 8px; color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.suggestion-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip.suggestion { min-height: 32px; padding: 0 8px 0 0; font-size: 14px; border-style: dashed; }
+.chip.suggestion button { border: 0; background: none; cursor: pointer; border-radius: 999px; }
+.chip.suggestion .suggestion-add { padding: 0 8px 0 16px; min-height: 32px; }
+.chip.suggestion button:hover { background: var(--hover); }
+
+/* Presets sit behind a disclosure so they are a fallback, not the way in */
+.starters-more > summary { cursor: pointer; list-style: none; }
+.starters-more > summary::-webkit-details-marker { display: none; }
+.starters-more > summary::before { content: "+ "; color: var(--text-3); }
+.starters-more[open] > summary::before { content: "− "; }
+.starters-more .starters { margin-top: 8px; }

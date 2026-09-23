@@ -125,6 +125,10 @@
                   <div class="field"><label class="field-label" for="pf-age">Age (optional)</label><input class="input" id="pf-age" name="age" inputmode="numeric"></div>
                   <div class="field"><label class="field-label" for="pf-other">Anything else that matters</label><input class="input" id="pf-other" name="other" placeholder="e.g. woman in tech, first-generation student"></div>
                 </div>
+                <div class="field">
+                  <label class="field-label" for="pf-about">In your own words (used to suggest your words)</label>
+                  <textarea class="textarea" id="pf-about" rows="3" name="about" maxlength="4000"></textarea>
+                </div>
               </div>
               <div class="grow profile-actions">
                 <button class="button button-primary button-small" type="submit">Save profile</button>
@@ -419,6 +423,13 @@
           <div class="group glass reset-group">
             <div class="grow">
               <div class="grow-text">
+                <p class="grow-label">Run setup again</p>
+                <p class="grow-help">The first-run steps, filled in with what you have now.</p>
+              </div>
+              <a class="button button-secondary button-small" href="setup.html">Open setup</a>
+            </div>
+            <div class="grow">
+              <div class="grow-text">
                 <p class="grow-label">Reset to defaults</p>
                 <p class="grow-help">Puts interests, pickiness, built-in sources and notifications back. Appearance and your own sources stay as they are.</p>
               </div>
@@ -574,14 +585,14 @@
 
   <script src="chats.js?v=1"></script>
   <script src="app-data.js?v=3"></script>
-  <script src="sources.js?v=7"></script>
+  <script src="sources.js?v=8"></script>
   <script src="ai.js?v=5"></script>
   <script src="providers.js?v=1"></script>
   <script src="automations.js?v=1"></script>
   <script src="scheduler.js?v=3"></script>
   <script src="app.js?v=10"></script>
   <script src="preferences.js?v=6"></script>
-  <script src="profile.js?v=1"></script>
-  <script src="agent.js?v=4"></script>
+  <script src="profile.js?v=2"></script>
+  <script src="agent.js?v=6"></script>
 </body>
 </html>

@@ -13,7 +13,8 @@
    4. Guardrail: every requirement the model cites must be quoted from the page, or it's
       dropped; with none left the answer is "Unclear". Never a guess.
 
-   Stores: signal_demo_profile { cv, facts, summary, summaryKey }, signal_demo_eligibility. */
+   Stores: signal_demo_profile { cv, facts, about, summary, summaryKey }, signal_demo_eligibility.
+   `about` is the student's own words from setup; it feeds term suggestions, not eligibility. */
 (function (global) {
   "use strict";
 
@@ -31,9 +32,9 @@
 
   function get() {
     var p = read(KEY, {}) || {};
-    return { cv: p.cv || "", facts: p.facts || {}, summary: p.summary || "", summaryKey: p.summaryKey || "" };
+    return { cv: p.cv || "", facts: p.facts || {}, about: p.about || "", summary: p.summary || "", summaryKey: p.summaryKey || "" };
   }
-  function has() { var p = get(); return !!(p.cv.trim() || Object.keys(p.facts).some(function (k) { return String(p.facts[k] || "").trim(); })); }
+  function has() { var p = get(); return !!(p.cv.trim() || p.about.trim() || Object.keys(p.facts).some(function (k) { return String(p.facts[k] || "").trim(); })); }
   function save(patch) {
     var next = Object.assign(get(), patch || {});
     write(KEY, next);
