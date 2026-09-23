@@ -25,6 +25,9 @@ jobs:
           - os: ubuntu-24.04
             bundles: deb,appimage
     runs-on: ${{ matrix.os }}
+    env:
+      HAS_INSIDER: ${{ secrets.SIGNAL_INSIDER_CONFIG != '' }}
+      HAS_DEPLOY: ${{ secrets.VPS_DEPLOY_KEY != '' }}
     steps:
       # app/frontend/tokens.css is a symlink to the landing page's copy; without this,
       # Windows checks it out as a text file holding the path, and the app loses its styles.
@@ -38,9 +41,12 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      # Registry and git checkouts only. With the target folder cached, V8's build step was restored
+      # as done while the library it downloads was not: "could not find native static library rusty_v8".
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: app/desktop/src-tauri -> target
+          cache-targets: "false"
 
       # Obscura's stealth feature builds BoringSSL: cmake is on both runners, NASM isn't on Windows.
       - if: runner.os == 'Windows'
@@ -53,6 +59,17 @@ jobs:
 
       - run: npm ci
         working-directory: app/desktop
+
+      # Insider builds: the gateway settings come from a repository secret (not the repo), the
+      # same JSON as ~/adal_/signal-insider/insider.json. Without the secret this is a plain build.
+      - name: Insider config
+        if: env.HAS_INSIDER == 'true'
+        shell: bash
+        env:
+          INSIDER: ${{ secrets.SIGNAL_INSIDER_CONFIG }}
+        run: |
+          printf '%s' "$INSIDER" > "$RUNNER_TEMP/insider.json"
+          echo "SIGNAL_INSIDER_CONFIG=$RUNNER_TEMP/insider.json" >> "$GITHUB_ENV"
 
       # Compile first, on its own: when it fails, the errors become annotations, which GitHub
       # shows on the run page (and in its public API) without opening the full log.
@@ -80,6 +97,21 @@ jobs:
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
           releaseName: Signal ${{ github.ref_name }}
           releaseDraft: true
+
+      # Publish to the website's download folder on the VPS (secret VPS_DEPLOY_KEY: a key that
+      # can only write there). Without the secret, the installers stay as build artifacts only.
+      - name: Upload to the website
+        if: env.HAS_DEPLOY == 'true'
+        shell: bash
+        env:
+          DEPLOY_KEY: ${{ secrets.VPS_DEPLOY_KEY }}
+        run: |
+          key="$RUNNER_TEMP/deploy_key"; printf '%s\n' "$DEPLOY_KEY" > "$key"; chmod 600 "$key"
+          cd app/desktop/src-tauri/target/release/bundle
+          for f in nsis/*.exe msi/*.msi deb/*.deb appimage/*.AppImage; do
+            [ -f "$f" ] && scp -i "$key" -o StrictHostKeyChecking=accept-new "$f" deploy@100.59.200.218:
+          done
+          rm -f "$key"
 
       - uses: actions/upload-artifact@v4
         with:
