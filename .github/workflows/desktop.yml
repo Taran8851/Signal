@@ -54,6 +54,22 @@ jobs:
       - run: npm ci
         working-directory: app/desktop
 
+      # Compile first, on its own: when it fails, the errors become annotations, which GitHub
+      # shows on the run page (and in its public API) without opening the full log.
+      - name: Compile
+        shell: bash
+        working-directory: app/desktop
+        run: |
+          node scripts/copy-app.mjs
+          cd src-tauri
+          set +e
+          cargo build --release 2>&1 | tee ../build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            grep -E "error|-->|= note" ../build.log | grep -v "Compiling" | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+          fi
+          exit "$status"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
