@@ -122,7 +122,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-logout]").forEach(function (b) { b.hidden = true; });
     document.querySelectorAll("a.brand").forEach(function (a) { a.setAttribute("href", "research.html"); });
-    document.querySelectorAll(".demo-note").forEach(function (p) { p.textContent = "Everything stays on this laptop."; });
+    document.querySelectorAll(".demo-note").forEach(function (p) { p.textContent = "Everything stays on this device."; });
     document.querySelectorAll("[data-desktop-only]").forEach(function (el) { el.hidden = false; });
     syncTray();
   });

@@ -688,7 +688,7 @@
     ["level", "field", "institution", "gradYear", "country", "residence", "age", "other"].forEach(function (k) { if (f.elements[k]) f.elements[k].value = p.facts[k] || ""; });
     var clr = $("[data-profile-clear]");
     clr.removeAttribute("data-armed"); clr.textContent = "Remove";
-    $("[data-profile-note]").textContent = global.SignalProfile.has() ? "Saved on this laptop." : "";
+    $("[data-profile-note]").textContent = global.SignalProfile.has() ? "Saved on this device." : "";
   }
   function initProfile() {
     var f = $("[data-profile-form]");
@@ -722,7 +722,7 @@
         about: String((f.elements.about && f.elements.about.value) || "").trim().slice(0, 4000) });
       fillProfile();
       render();
-      toast("Profile saved on this laptop.");
+      toast("Profile saved on this device.");
     });
   }
 
@@ -875,7 +875,7 @@
       else if (t.hasAttribute("data-cv-pick")) $("[data-cv-file]").click();
       else if (t.hasAttribute("data-profile-clear")) {
         if (!t.getAttribute("data-armed")) { t.setAttribute("data-armed", "1"); t.textContent = "Remove for good?"; return; }
-        global.SignalProfile.clear(); fillProfile(); toast("Profile removed from this laptop.");
+        global.SignalProfile.clear(); fillProfile(); toast("Profile removed from this device.");
       }
       else if (t.hasAttribute("data-confirm-auto")) {
         var id = t.getAttribute("data-confirm-auto");
@@ -921,7 +921,7 @@
         var v = $('[data-provider-key="' + pid + '"]').value.trim();
         if (!v) return;
         var keys = {}; keys[pid] = { key: v };
-        saveProviders(keys).then(function () { toast("Key saved on this laptop."); });
+        saveProviders(keys).then(function () { toast("Key saved on this device."); });
       } else if (t.hasAttribute("data-provider-saveurl")) {
         var uid = t.getAttribute("data-provider-saveurl");
         var u = $('[data-provider-url="' + uid + '"]').value.trim();

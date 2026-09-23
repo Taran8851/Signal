@@ -1,7 +1,7 @@
 /* Signal profile and "Is this open to me?" (desktop app; Research page and the agent).
 
    Your profile: a CV you add (PDF, .docx or text, read by the app) and a few facts that decide
-   eligibility. It stays on this laptop; only a short summary is ever sent, and only to your
+   eligibility. It stays on this device; only a short summary is ever sent, and only to your
    own model, when a check runs.
 
    A check, cheapest first:

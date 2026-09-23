@@ -437,3 +437,9 @@
 }
 .src-state { margin-top: 4px; color: var(--text-3); font-size: 12px; }
 .src-state.is-error { color: var(--warn-text, var(--text-2)); }
+
+/* Phones: section intros shrink so the controls come first. */
+@media (max-width: 520px) {
+  .pset-title h2 { font-size: 24px; }
+  .pset-title p { font-size: 12px; }
+}

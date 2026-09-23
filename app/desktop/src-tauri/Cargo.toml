@@ -4,27 +4,41 @@ version = "0.2.5"
 description = "Signal: opportunities worth your time, checked on your laptop"
 edition = "2021"
 
+# The app is a library so Android can load it; main.rs is the desktop entry point.
+[lib]
+name = "signal_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2.11", features = ["tray-icon"] }
-tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0.13", default-features = false, features = ["rustls", "charset", "http2", "json"] }
 tokio = { version = "1", features = ["net", "time", "sync", "rt", "process", "fs"] }
 url = "2"
 texting_robots = "0.2"
-notify-rust = "4"
 # Reading a CV the user adds: PDF text, and .docx (a zip of XML).
 pdf-extract = "0.12"
 zip = { version = "8", default-features = false, features = ["deflate"] }
 base64 = "0.23"
+
+# Desktop only: the tray's single running copy, system notifications, and Obscura (V8 is not
+# built for Android).
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"
+notify-rust = "4"
 # Headless browser for pages that need JavaScript, linked in (Apache-2.0). Pinned: no crates.io release.
 # "stealth" adds its browser fingerprint and TLS impersonation, used only when the user turns on
 # Stealth reading on the Research page.
 obscura = { git = "https://github.com/h4ckf0r0day/obscura", rev = "cf26f454df37b6acf717c4ee27346800ff377bc8", default-features = false, features = ["api", "stealth"] }
+
+# Android: notifications and opening links in the browser, through Tauri's own plugins.
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+tauri-plugin-notification = "2"
+tauri-plugin-opener = "2"
 
 [features]
 # Test builds only: `--eval <js>` runs JS in the window, and the page can log to stderr.

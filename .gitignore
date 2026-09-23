@@ -22,7 +22,7 @@ web/backend/*.tar.gz
 # Desktop build output
 app/desktop/dist/
 app/desktop/src-tauri/target/
-app/desktop/src-tauri/gen/
+app/desktop/src-tauri/gen/schemas/
 
 # Notes and plans stay local: every Markdown file except READMEs
 *.md

@@ -440,7 +440,7 @@ button.summary-card:hover { background: var(--panel-strong); }
     top: auto;
     left: 16px;
     right: 16px;
-    bottom: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));   /* above Android's gesture bar */
     z-index: 15;
     flex-direction: row;
     align-items: center;
@@ -454,7 +454,7 @@ button.summary-card:hover { background: var(--panel-strong); }
   .nav { flex: 1; flex-direction: row; justify-content: space-around; gap: 4px; }
   .nav a { flex: 1; flex-direction: column; justify-content: center; gap: 0; padding: 8px; border-radius: 9999px; font-size: 12px; }
   .nav-count { display: none; }
-  .main { padding: 24px 16px 128px; }
+  .main { padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(128px + env(safe-area-inset-bottom, 0px)); }
   .page-head h1 { font-size: 40px; }
   .summary-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
   .summary-card { padding: 16px; }
@@ -494,3 +494,30 @@ button.summary-card:hover { background: var(--panel-strong); }
 .is-desktop .backdrop-washes i:nth-child(2) { background: radial-gradient(closest-side, var(--wash-2) 0%, var(--wash-2) 20%, transparent 100%); }
 .is-desktop .backdrop-washes i:nth-child(3) { background: radial-gradient(closest-side, var(--wash-3) 0%, var(--wash-3) 20%, transparent 100%); }
 .is-desktop .backdrop-washes i:nth-child(4) { background: radial-gradient(closest-side, var(--wash-4) 0%, var(--wash-4) 20%, transparent 100%); }
+
+/* ---------------------------------------------------------------------------
+   Phones (the Android app, and narrow browser windows). Less text, smaller type, a slimmer
+   tab bar: the content starts on the first screen instead of below a page of explanation.
+--------------------------------------------------------------------------- */
+@media (max-width: 520px) {
+  .main { padding-left: 16px; padding-right: 16px; }
+  .page-head { gap: 8px; margin-bottom: 16px; }
+  .page-head h1 { font-size: 32px; }
+  .page-lede { margin-top: 4px; font-size: 13px; }
+  .page-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+  .page-actions .button { min-height: 40px; padding: 0 16px; font-size: 13px; }
+  .page-actions-note { display: none; }
+  .schedule-bar { padding: 12px 16px; border-radius: 20px; }
+  .schedule-text { font-size: 12px; }
+  .summary-grid { gap: 8px; margin-bottom: 16px; }
+  .summary-card { padding: 12px; border-radius: 16px; }
+  .summary-card b { font-size: 24px; }
+  .toolbar { gap: 8px; }
+  .input, .select { min-height: 40px; font-size: 13px; }
+  /* Slimmer tab bar */
+  .sidebar { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 4px; }
+  .sidebar .new-ask { min-height: 40px; padding: 4px 12px; font-size: 12px; }
+  .nav a { padding: 4px 8px; font-size: 11px; }
+  .nav a svg { width: 18px; height: 18px; }
+  .main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+}

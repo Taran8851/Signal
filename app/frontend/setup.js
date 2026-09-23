@@ -32,7 +32,7 @@
      takes an address, and a default model. */
   var MODEL_PROVIDERS = [
     { id: "anthropic", label: "Anthropic", model: "claude-haiku-4-5", baseUrl: null,
-      hint: "Starts with sk-ant-. Stored on this laptop, sent only to Anthropic." },
+      hint: "Starts with sk-ant-. Stored on this device, sent only to Anthropic." },
     { id: "openai-compatible", label: "OpenAI-compatible endpoint", model: "", baseUrl: "https://api.openai.com/v1",
       hint: "Sent as a Bearer token to the address above." },
     { id: "local", label: "Local (Ollama, LM Studio)", model: "", baseUrl: "http://127.0.0.1:11434/v1",

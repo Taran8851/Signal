@@ -5,6 +5,7 @@
   "description": "Signal as a desktop app (Tauri 2). The UI is the console in ../frontend.",
   "scripts": {
     "copy-app": "node scripts/copy-app.mjs",
+    "tauri": "tauri",
     "dev": "tauri dev",
     "build": "tauri build",
     "icon": "tauri icon icon.svg"
