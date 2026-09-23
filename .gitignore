@@ -33,3 +33,7 @@ target/
 dist/
 __pycache__/
 .venv/
+
+# The website (landing page, fetch helper, server deploy scripts) lives on this laptop and the VPS, not in this repo.
+web/
+vercel.json
