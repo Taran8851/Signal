@@ -75,7 +75,22 @@ pub struct SearchOut {
     pub notes: Vec<String>,
 }
 
+/// Set at startup from Tauri's app config folder (the same ~/.config/app.studentos.signal on
+/// Linux, %APPDATA% on Windows, the app's own folder on Android). `--mcp` runs without a window,
+/// so it falls back to working the folder out itself.
+static CONFIG_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+pub fn set_config_dir(dir: PathBuf) {
+    let _ = CONFIG_DIR.set(dir);
+}
+
 pub fn config_dir() -> PathBuf {
+    if let Some(d) = CONFIG_DIR.get() {
+        return d.clone();
+    }
+    #[cfg(windows)]
+    if let Some(a) = std::env::var_os("APPDATA") {
+        return PathBuf::from(a).join("app.studentos.signal");
+    }
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
@@ -295,11 +310,14 @@ async fn scrape_one(base: &str, key: &str, url: &str) -> Result<String, String> 
 /// started from the desktop menu often has a shorter PATH than a terminal).
 pub fn ddgs_path() -> Option<PathBuf> {
     let mut dirs: Vec<PathBuf> = std::env::var_os("PATH").map(|p| std::env::split_paths(&p).collect()).unwrap_or_default();
-    if let Some(home) = std::env::var_os("HOME") {
-        dirs.push(PathBuf::from(&home).join(".local/bin"));
+    // pipx puts it in ~/.local/bin on every platform (%USERPROFILE%\.local\bin on Windows).
+    if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
+        dirs.push(PathBuf::from(&home).join(".local").join("bin"));
     }
+    #[cfg(unix)]
     dirs.push(PathBuf::from("/usr/local/bin"));
-    dirs.into_iter().map(|d| d.join("ddgs")).find(|p| p.is_file())
+    let name = if cfg!(windows) { "ddgs.exe" } else { "ddgs" };
+    dirs.into_iter().map(|d| d.join(name)).find(|p| p.is_file())
 }
 
 async fn ddgs_search(q: &str, count: usize) -> Result<Vec<Hit>, String> {

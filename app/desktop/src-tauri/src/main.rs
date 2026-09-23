@@ -286,6 +286,9 @@ fn main() {
         }))
         .invoke_handler(tauri::generate_handler![fetch_url, set_checks_on, notify, search_web, read_page, search_settings, save_search_settings, open_external, debug_log, model_request, extract_document])
         .setup(|app| {
+            if let Ok(dir) = app.path().app_config_dir() {
+                search::set_config_dir(dir);
+            }
             build_tray(app)?;
             // The console's own timers slow down or stop while the window is hidden, so the
             // app drives the schedule with a tick of its own.
