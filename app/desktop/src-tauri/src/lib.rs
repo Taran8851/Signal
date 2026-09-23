@@ -7,15 +7,42 @@ mod fetch;
 #[cfg(desktop)]
 mod mcp;
 mod page;
-#[cfg(desktop)]
-mod render;
 mod search;
 
-/// Obscura (V8) isn't built for Android: pages that need JavaScript are read without it there.
-#[cfg(mobile)]
-mod render {
-    pub async fn render(_url: &str, _stealth: bool) -> Result<String, String> {
-        Err("Pages that need JavaScript can't be read on this device yet.".into())
+/// Every HTTP client in the app starts here. On Android the default certificate check calls into
+/// Android's own verifier, which needs a JNI hook-up the Tauri template doesn't do (every HTTPS
+/// request panicked). There the client checks certificates itself against Mozilla's root list.
+pub(crate) fn http_client() -> reqwest::ClientBuilder {
+    let b = reqwest::Client::builder();
+    #[cfg(mobile)]
+    let b = b.tls_certs_only(
+        webpki_root_certs::TLS_SERVER_ROOT_CERTS.iter().filter_map(|c| reqwest::Certificate::from_der(c.as_ref()).ok()),
+    );
+    b
+}
+
+/// Signal's honest user agent, shared with the desktop renderer.
+pub const USER_AGENT: &str = fetch::UA;
+
+/// Pages that need JavaScript. The desktop program registers Obscura here (main.rs,
+/// render_obscura.rs); Android has no renderer and reads those pages without it.
+pub mod render {
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::sync::OnceLock;
+
+    pub type RenderFn = fn(String, bool) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send>>;
+    static RENDERER: OnceLock<RenderFn> = OnceLock::new();
+
+    pub fn set_renderer(f: RenderFn) {
+        let _ = RENDERER.set(f);
+    }
+
+    pub async fn render(url: &str, stealth: bool) -> Result<String, String> {
+        match RENDERER.get() {
+            Some(f) => f(url.to_string(), stealth).await,
+            None => Err("Pages that need JavaScript can't be read on this device yet.".into()),
+        }
     }
 }
 
@@ -144,7 +171,7 @@ async fn model_request(url: String, headers: std::collections::HashMap<String, S
     if body.len() > 4 * 1024 * 1024 {
         return Err("That request is too large.".into());
     }
-    let client = reqwest::Client::builder()
+    let client = http_client()
         .timeout(Duration::from_secs(180))
         .build()
         .map_err(|_| "Signal couldn't set up a connection.".to_string())?;
@@ -348,9 +375,14 @@ pub fn run() {
             build_tray(app)?;
             #[cfg(mobile)]
             {
-                // Android 13+ asks once before an app may post notifications.
-                use tauri_plugin_notification::NotificationExt;
-                let _ = app.notification().request_permission();
+                // Android 13+ asks once before an app may post notifications. The call waits for
+                // Android's answer, and made here it blocked the thread that delivers every reply to
+                // the page: nothing in the app answered. So it runs on a thread of its own.
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    use tauri_plugin_notification::NotificationExt;
+                    let _ = handle.notification().request_permission();
+                });
             }
             // The console's own timers slow down or stop while the window is hidden, so the
             // app drives the schedule with a tick of its own.

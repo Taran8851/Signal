@@ -20,6 +20,9 @@
   var AI = global.SignalAI;
   var P = global.SignalProfile;
   var core = global.__TAURI__ && global.__TAURI__.core ? global.__TAURI__.core : null;
+  /* Insider builds (insider-config.js): the model and search come from Signal's gateway, unlocked
+     with an invite code. The gateway holds the keys; the app only ever has the invite. */
+  var INS = global.SignalInsider || null;
   var KEYS = {
     prefs: "signal_demo_prefs",
     schedule: "signal_demo_schedule",
@@ -370,9 +373,73 @@
     });
   }
 
+  /* ---------- insider: invite code ---------- */
+  var inviteField = $("[data-invite-field]");
+  var inviteInput = $("[data-invite]");
+  function deviceId() {
+    var id = null;
+    try { id = localStorage.getItem("signal_insider_device"); } catch (e) {}
+    if (!id) {
+      var b = new Uint8Array(12);
+      global.crypto.getRandomValues(b);
+      id = "dev-" + Array.prototype.map.call(b, function (x) { return ("0" + x.toString(16)).slice(-2); }).join("");
+      try { localStorage.setItem("signal_insider_device", id); } catch (e) {}
+    }
+    return id;
+  }
+  function gatewayPost(route, token, body) {
+    var headers = { "content-type": "application/json", authorization: "Bearer " + token };
+    var send = global.SignalDesktop && global.SignalDesktop.modelPost
+      ? global.SignalDesktop.modelPost(INS.gateway + route, headers, JSON.stringify(body || {}))
+      : fetch(INS.gateway + route, { method: "POST", headers: headers, body: JSON.stringify(body || {}) })
+          .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); });
+    return send.then(function (r) {
+      var j = {};
+      try { j = JSON.parse(r.text); } catch (e) {}
+      if (r.status !== 200) throw new Error((j.error && j.error.message) || "Signal's server answered " + r.status + ".");
+      return j;
+    });
+  }
+  function connectInsider() {
+    var code = inviteInput.value.trim().toLowerCase();
+    if (!/^sig-[0-9a-f]{12}$/.test(code)) {
+      modelStatus.textContent = "An invite code looks like sig- followed by 12 letters and numbers.";
+      return;
+    }
+    var token = code + "." + deviceId();
+    nextBtn.disabled = true;
+    modelStatus.textContent = "Checking your invite…";
+    gatewayPost("/activate", token).then(function (r) {
+      var ai = read(KEYS.ai, null) || {};
+      ai.provider = "openai-compatible";
+      ai.baseUrl = INS.gateway + "/v1";
+      ai.model = r.model || INS.model;
+      ai.mode = state.mode;
+      write(KEYS.ai, ai);
+      AI.setKey(token);
+      if (!core) return r;
+      // Search and page reads: the gateway stands in for "Firecrawl (your server)", tried first.
+      return core.invoke("search_settings").then(function (sset) {
+        var list = (sset.providers || []).map(function (p) {
+          var own = p.id === "firecrawl_self";
+          return { id: p.id, on: own, perDay: own ? 1000 : p.perDay, key: own ? token : null, url: own ? INS.gateway + "/firecrawl" : null };
+        }).sort(function (a, b) { return (b.id === "firecrawl_self") - (a.id === "firecrawl_self"); });
+        return core.invoke("save_search_settings", { providers: list, stealth: null });
+      }).then(function () { return r; });
+    }).then(function (r) {
+      modelReady = true;
+      modelStatus.textContent = "You're in" + (r.name ? ", " + r.name : "") + ". This invite is on " + r.devices + " of " + r.maxDevices + " devices.";
+      show(STEP_ABOUT);
+    }, function (err) {
+      modelReady = false;
+      modelStatus.textContent = (err && err.message) || "Signal's server couldn't be reached.";
+    }).then(function () { nextBtn.disabled = false; });
+  }
+
   /* Next on the model step: save, then check the model answers before moving on. A failure
      puts back whatever was stored before, so skipping leaves no half-working model behind. */
   function connectModel() {
+    if (INS) return connectInsider();
     var before = { ai: localStorage.getItem(KEYS.ai), key: localStorage.getItem(KEYS.aiKey) };
     var fc = saveFirecrawl().catch(function () {
       modelStatus.textContent = "The Firecrawl key couldn't be saved. Add it later in Settings → Search & reading.";
@@ -599,7 +666,8 @@
 
   function finish() {
     savePrefs();
-    write(KEYS.setup, { done: true, at: new Date().toISOString() });
+    /* insider: "invite" or "skipped", so desktop-bridge.js knows setup saw the invite step. */
+    write(KEYS.setup, { done: true, at: new Date().toISOString(), insider: INS ? (modelReady ? "invite" : "skipped") : undefined });
     location.href = "inbox.html";
   }
 
@@ -619,6 +687,20 @@
     saveFirecrawl().catch(function () {});
     show(STEP_ABOUT);
   });
+
+  if (INS) {
+    inviteField.hidden = false;
+    [].slice.call(document.querySelectorAll("[data-own-model]")).forEach(function (el) { el.hidden = true; });
+    baseUrlField.hidden = true;
+    fcField.remove();                                   /* search comes with the invite */
+    var stepModel = $('[data-step="1"]');
+    stepModel.querySelector("h1").textContent = "Enter your invite";
+    stepModel.querySelector(".lede").textContent = "You're trying " + (INS.name || "Signal") + " early. Your invite brings Signal's own model and web search, so there's no key to set up.";
+    modelStatus.textContent = modelStatusDefault = "No invite? Skip this step. Signal still works by your words alone.";
+    var savedKey = AI && AI.hasKey() ? (localStorage.getItem(KEYS.aiKey) || "") : "";
+    var m = /^(sig-[0-9a-f]{12})\./.exec(savedKey);
+    if (m) { inviteInput.value = m[1]; modelReady = true; }
+  }
 
   show(0);
 })(window);

@@ -183,9 +183,10 @@
 /* Phones: setup fills the screen, with smaller type, so each step fits without a wall of text. */
 @media (max-width: 520px) {
   .setup { padding: 0; }
-  .setup-card { width: 100%; max-height: none; min-height: 100vh; border-radius: 0; box-shadow: none; }
+  /* Exactly one screen: the steps scroll, the Back / Continue bar stays on screen. */
+  .setup-card { width: 100%; height: 100vh; height: 100dvh; max-height: none; border-radius: 0; box-shadow: none; }
   .setup-head { padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 0; }
-  .setup-body { flex: 1; padding: 16px 20px 24px; }
+  .setup-body { flex: 1; min-height: 0; padding: 16px 20px 24px; }
   .setup-foot { padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px)); }
   .step { gap: 16px; }
   .step h1 { font-size: 28px; }

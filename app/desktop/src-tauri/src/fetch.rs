@@ -122,7 +122,7 @@ async fn check_url(raw: &str) -> Result<(Url, SocketAddr), String> {
 }
 
 fn client_for(u: &Url, addr: SocketAddr) -> Result<reqwest::Client, String> {
-    let mut b = reqwest::Client::builder()
+    let mut b = crate::http_client()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(TIMEOUT)
         .user_agent(UA);

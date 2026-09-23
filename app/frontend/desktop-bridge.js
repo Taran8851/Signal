@@ -22,6 +22,11 @@
   // First run: send the user through setup once. setup.js writes signal_demo_setup on finish.
   var setupDone = false;
   try { setupDone = !!(JSON.parse(localStorage.getItem("signal_demo_setup") || "{}") || {}).done; } catch (e) {}
+  // Insider builds: an install that finished setup before it had the invite step (an update over
+  // the plain app) goes through setup once more, or the model and search never get set up.
+  if (setupDone && global.SignalInsider) {
+    try { setupDone = !!(JSON.parse(localStorage.getItem("signal_demo_setup") || "{}") || {}).insider; } catch (e) {}
+  }
   if (!setupDone && !/setup\.html$/.test(location.pathname)) { location.replace("setup.html"); return; }
 
   // A fresh launch (sessionStorage is per run of the app): a check can't be running yet, so
@@ -125,5 +130,74 @@
     document.querySelectorAll(".demo-note").forEach(function (p) { p.textContent = "Everything stays on this device."; });
     document.querySelectorAll("[data-desktop-only]").forEach(function (el) { el.hidden = false; });
     syncTray();
+    if (global.SignalInsider) addFeedback();
   });
+
+  /* Insider builds: "Send feedback" goes to the gateway with the invite, and nowhere else. In the
+     sidebar on desktop (hidden on phones, where the sidebar is the tab bar) and in Settings. */
+  function addFeedback() {
+    var INS = global.SignalInsider;
+    var sheet = document.createElement("dialog");
+    sheet.className = "sheet glass feedback-sheet";
+    sheet.setAttribute("aria-labelledby", "feedback-title");
+    sheet.innerHTML =
+      '<form class="sheet-body" method="dialog">' +
+      '<div class="sheet-head"><div class="sheet-head-text"><p class="sheet-kicker">' + (INS.name || "Signal") + '</p>' +
+      '<h2 class="sheet-title" id="feedback-title" tabindex="-1">Send feedback</h2></div></div>' +
+      '<div class="field"><label class="field-label" for="feedback-text">What worked, what didn\'t, what you wanted it to do</label>' +
+      '<textarea class="textarea" id="feedback-text" rows="6" maxlength="4000" data-feedback-text></textarea></div>' +
+      '<p class="grow-help" data-feedback-status aria-live="polite">Goes to the Signal team with the app version and this page. Nothing else is sent.</p>' +
+      '<div class="sheet-foot"><button class="button button-quiet" type="button" data-feedback-cancel>Cancel</button>' +
+      '<button class="button button-primary" type="submit">Send</button></div></form>';
+    document.body.appendChild(sheet);
+    var text = sheet.querySelector("[data-feedback-text]"), status = sheet.querySelector("[data-feedback-status]");
+    var help = status.textContent;
+    function open() { status.textContent = help; sheet.showModal(); text.focus(); }
+    sheet.querySelector("[data-feedback-cancel]").addEventListener("click", function () { sheet.close(); });
+    sheet.querySelector("form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var body = text.value.trim();
+      if (!body) { status.textContent = "Write something first."; return; }
+      var token = "";
+      try { token = localStorage.getItem("signal_demo_ai_key") || ""; } catch (err) {}
+      if (!/^sig-/.test(token)) { status.textContent = "Enter your invite in setup first (Settings → Run setup again)."; return; }
+      status.textContent = "Sending…";
+      var version = T.app && T.app.getVersion ? T.app.getVersion() : Promise.resolve("");
+      version.catch(function () { return ""; }).then(function (v) {
+        var page = (location.pathname.split("/").pop() || "").replace(".html", "");
+        return invoke("model_request", { url: INS.gateway + "/feedback",
+          headers: { "content-type": "application/json", authorization: "Bearer " + token },
+          body: JSON.stringify({ text: body, version: v, page: page }) });
+      }).then(function (r) {
+        if (r.status !== 200) throw new Error("status " + r.status);
+        text.value = "";
+        sheet.close();
+        if (global.SignalApp && global.SignalApp.toast) global.SignalApp.toast("Thanks. Your feedback was sent.");
+      }).catch(function () { status.textContent = "It couldn't be sent. Check your connection and try again."; });
+    });
+
+    var foot = document.querySelector(".sidebar-foot");
+    if (foot) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "button button-quiet button-small feedback-open";
+      b.textContent = "Send feedback";
+      b.addEventListener("click", open);
+      foot.insertBefore(b, foot.firstChild);
+    }
+    var reset = document.querySelector(".reset-group");
+    if (reset) {
+      var row = document.createElement("div");
+      row.className = "grow";
+      row.innerHTML = '<div class="grow-text"><p class="grow-label">Send feedback</p>' +
+        '<p class="grow-help">Tell the Signal team what worked and what didn\'t.</p></div>';
+      var rb = document.createElement("button");
+      rb.type = "button";
+      rb.className = "button button-secondary button-small";
+      rb.textContent = "Write feedback";
+      rb.addEventListener("click", open);
+      row.appendChild(rb);
+      reset.insertBefore(row, reset.firstChild);
+    }
+  }
 })(window);

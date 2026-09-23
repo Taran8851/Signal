@@ -521,3 +521,8 @@ button.summary-card:hover { background: var(--panel-strong); }
   .nav a svg { width: 18px; height: 18px; }
   .main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Insider builds: "Send feedback" (desktop-bridge.js). The sidebar copy is desktop only; on phones
+   the sidebar is the tab bar, and Settings has the same button. */
+.feedback-sheet { width: min(560px, calc(100vw - 32px)); }
+@media (max-width: 900px) { .sidebar .feedback-open { display: none; } }

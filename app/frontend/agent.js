@@ -583,7 +583,11 @@
     if (!core) return { ok: false, note: "" };
     var AI = global.SignalAI;
     var s = AI.getSettings();
-    if (!AI.canCall(s) || !s.model) return { ok: false, note: "Add a model key in Settings → AI scoring to ask the agent. Repeating searches work without one." };
+    if (!AI.canCall(s) || !s.model) {
+      return global.SignalInsider
+        ? { ok: false, note: "Enter your invite to ask Signal.", link: ["setup.html", "Enter invite"] }
+        : { ok: false, note: "Add a model key in Settings → AI scoring to ask the agent. Repeating searches work without one." };
+    }
     return { ok: true, note: "" };
   }
 
@@ -833,7 +837,8 @@
       var r = ready();
       var readyNote = $("[data-chat-ready]");
       readyNote.hidden = r.ok;
-      readyNote.innerHTML = r.ok ? "" : esc(r.note) + ' <a class="inline-link" href="preferences.html#scoring">Open Settings</a>';
+      var link = r.link || ["preferences.html#scoring", "Open Settings"];
+      readyNote.innerHTML = r.ok ? "" : esc(r.note) + ' <a class="inline-link" href="' + link[0] + '">' + esc(link[1]) + "</a>";
       var input = $("[data-chat-input]");
       input.disabled = !r.ok;
       $("[data-chat-form]").addEventListener("submit", function (e) {

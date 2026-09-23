@@ -6,13 +6,14 @@
   <title>Set up Signal</title>
   <meta name="description" content="First run: tell Signal what counts as a signal for you.">
   <meta name="robots" content="noindex">
-  <script src="desktop-bridge.js?v=2"></script>
+  <script src="insider-config.js"></script>
+  <script src="desktop-bridge.js?v=3"></script>
   <script src="theme-boot.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="app.css?v=6">
-  <link rel="stylesheet" href="setup.css?v=3">
+  <link rel="stylesheet" href="setup.css?v=4">
 </head>
 <body data-page="setup">
   <div class="backdrop-washes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -53,12 +54,20 @@
             it explains every match. With one, it can suggest your words from your profile and brief
             each opportunity: why it fits you, what it asks for, first steps.</p>
 
-          <div class="field">
+          <!-- Insider builds only (insider-config.js): an invite code instead of a provider and key. -->
+          <div class="field" data-invite-field hidden>
+            <p class="field-label" id="l-invite">Invite code</p>
+            <p class="field-help">From the person who invited you. It works on up to 3 of your devices,
+              and Signal's own model and search come with it.</p>
+            <input class="input" type="text" data-invite aria-labelledby="l-invite" placeholder="sig-…" autocomplete="off" autocapitalize="off" spellcheck="false">
+          </div>
+
+          <div class="field" data-own-model>
             <p class="field-label" id="l-provider">Provider</p>
             <select class="select" data-provider aria-labelledby="l-provider"></select>
           </div>
 
-          <div class="field" data-model-field>
+          <div class="field" data-model-field data-own-model>
             <p class="field-label" id="l-model">Model</p>
             <input class="input" type="text" data-model aria-labelledby="l-model" placeholder="Model name">
           </div>
@@ -68,7 +77,7 @@
             <input class="input" type="url" data-baseurl aria-labelledby="l-baseurl" placeholder="https://…">
           </div>
 
-          <div class="field" data-key-field>
+          <div class="field" data-key-field data-own-model>
             <p class="field-label" id="l-key">API key</p>
             <p class="field-help" data-key-hint>It is stored on this device and sent only to the provider you chose.</p>
             <input class="input" type="password" data-key aria-labelledby="l-key" placeholder="Paste your key" autocomplete="off" spellcheck="false">
@@ -271,6 +280,6 @@
   <script src="app-data.js?v=3"></script>
   <script src="ai.js?v=5"></script>
   <script src="profile.js?v=2"></script>
-  <script src="setup.js?v=3"></script>
+  <script src="setup.js?v=4"></script>
 </body>
 </html>

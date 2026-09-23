@@ -228,7 +228,7 @@ pub async fn search(query: &str, site: Option<&str>, count: usize) -> SearchOut 
 const FIRECRAWL_CLOUD: &str = "https://api.firecrawl.dev";
 
 async fn firecrawl_search(base: &str, key: &str, q: &str, count: usize) -> Result<Vec<Hit>, String> {
-    let client = reqwest::Client::builder().timeout(Duration::from_secs(60)).user_agent(crate::fetch::UA).build().map_err(|e| e.to_string())?;
+    let client = crate::http_client().timeout(Duration::from_secs(60)).user_agent(crate::fetch::UA).build().map_err(|e| e.to_string())?;
     let res = client
         .post(format!("{}/v2/search", base.trim_end_matches('/')))
         .bearer_auth(key.trim())
@@ -290,7 +290,7 @@ pub async fn firecrawl_scrape(url: &str) -> Result<String, String> {
 }
 
 async fn scrape_one(base: &str, key: &str, url: &str) -> Result<String, String> {
-    let client = reqwest::Client::builder().timeout(Duration::from_secs(90)).user_agent(crate::fetch::UA).build().map_err(|e| e.to_string())?;
+    let client = crate::http_client().timeout(Duration::from_secs(90)).user_agent(crate::fetch::UA).build().map_err(|e| e.to_string())?;
     let res = client
         .post(format!("{}/v2/scrape", base.trim_end_matches('/')))
         .bearer_auth(key.trim())

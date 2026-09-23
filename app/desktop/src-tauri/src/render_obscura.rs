@@ -1,5 +1,6 @@
-//! Renders pages that need JavaScript, with Obscura linked into the app (no sidecar, no
-//! download). A V8 isolate can't move between threads, so one worker thread owns the
+//! Renders pages that need JavaScript, with Obscura linked into the desktop program (no sidecar,
+//! no download). It lives in the binary, not in lib.rs: the library is also built as a shared
+//! library for Android, and V8 can't be linked into one. main.rs registers it with the library. A V8 isolate can't move between threads, so one worker thread owns the
 //! rendering and takes jobs from a queue; renders run one at a time.
 //!
 //! Callers check the URL (public address, robots.txt) before asking for a render. Obscura
@@ -50,7 +51,7 @@ async fn render_one(url: &str, stealth: bool) -> Result<String, String> {
     // Stealth: Obscura's consistent browser fingerprint and TLS impersonation, with its own
     // matching user agent. Otherwise Signal says who it is.
     let builder = obscura::Browser::builder().stealth(stealth);
-    let builder = if stealth { builder } else { builder.user_agent(crate::fetch::UA) };
+    let builder = if stealth { builder } else { builder.user_agent(signal_lib::USER_AGENT) };
     let browser = builder
         .build()
         .map_err(|e| format!("The page renderer couldn't start: {e}"))?;

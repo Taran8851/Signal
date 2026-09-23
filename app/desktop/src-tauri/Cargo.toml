@@ -1,6 +1,6 @@
 [package]
 name = "signal-desktop"
-version = "0.2.5"
+version = "0.2.7"
 description = "Signal: opportunities worth your time, checked on your laptop"
 edition = "2021"
 
@@ -39,6 +39,8 @@ obscura = { git = "https://github.com/h4ckf0r0day/obscura", rev = "cf26f454df37b
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
+# Mozilla's root certificates, so HTTPS works without Android's JNI-bound verifier (lib.rs http_client).
+webpki-root-certs = "1"
 
 [features]
 # Test builds only: `--eval <js>` runs JS in the window, and the page can log to stderr.
