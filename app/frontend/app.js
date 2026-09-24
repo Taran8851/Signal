@@ -37,7 +37,15 @@
 
   function getRows() {
     var rows = read(KEYS.rows, null);
-    if (!Array.isArray(rows)) { rows = clone(D.RAW_ROWS); write(KEYS.rows, rows); }
+    if (!Array.isArray(rows)) { rows = clone(D.START_ROWS); write(KEYS.rows, rows); }
+    // Installs before 0.2.8 started from the website's sample rows. Drop them once, by their fixed
+    // ids; real signals never use those.
+    if (window.__TAURI__ && !read("signal_demo_rows_cleared", false)) {
+      var sample = D.RAW_ROWS.map(function (r) { return r.id; });
+      rows = rows.filter(function (r) { return sample.indexOf(r.id) === -1; });
+      write(KEYS.rows, rows);
+      write("signal_demo_rows_cleared", true);
+    }
     return rows;
   }
   function saveRows(rows) { write(KEYS.rows, rows); }

@@ -39,7 +39,7 @@
   // Same fallback as app.js getRows(): an empty store starts from the demo rows.
   function readRows() {
     var rows = read(KEYS.rows, null);
-    if (!Array.isArray(rows)) rows = global.SignalData ? clone(global.SignalData.RAW_ROWS) : [];
+    if (!Array.isArray(rows)) rows = global.SignalData ? clone(global.SignalData.START_ROWS) : [];
     return rows;
   }
   function writeRows(rows) { write(KEYS.rows, rows); }

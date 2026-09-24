@@ -150,6 +150,9 @@
     SUGGESTIONS: SUGGESTIONS,
     THRESHOLDS: THRESHOLDS,
     RAW_ROWS: RAW_ROWS,
+    /* What an empty inbox starts from: the sample rows on the website demo, nothing in the app
+       (desktop, Android), where every signal must come from a real check. */
+    START_ROWS: global.__TAURI__ ? [] : RAW_ROWS,
     scoreItem: scoreItem
   };
 })(window);

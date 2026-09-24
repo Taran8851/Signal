@@ -1292,7 +1292,7 @@
 
   function readRows() {
     var rows = read(KEYS.rows, null);
-    return Array.isArray(rows) ? rows : (D ? D.RAW_ROWS : []);
+    return Array.isArray(rows) ? rows : (D ? D.START_ROWS : []);
   }
   function readPrefs() {
     var saved = read(KEYS.prefs, {});
