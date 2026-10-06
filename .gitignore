@@ -44,3 +44,5 @@ vercel.json
 a.txt
 n8n/
 assets/
+.vercel
+.env*
