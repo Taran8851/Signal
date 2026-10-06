@@ -297,7 +297,9 @@
           var status = x.m.excluded ? "archived" : r.status;
           if (state.status !== "all" && status !== state.status) return false;
           if (state.closingSoon && !(x.d && x.d.days >= 0 && x.d.days <= 7)) return false;
-          if (state.kind && r.kind !== state.kind) return false;
+          // "bigtech" is not a kind: it is hackathons that name a big tech company (app-data.js, BIG_TECH).
+          if (state.kind === "bigtech") { if (!D.isBigTechHackathon(r)) return false; }
+          else if (state.kind && r.kind !== state.kind) return false;
           if (state.source && r.source !== state.source) return false;
           if (q && (r.title + " " + r.body + " " + (r.note || "")).toLowerCase().indexOf(q) === -1) return false;
           return true;

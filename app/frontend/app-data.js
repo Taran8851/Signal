@@ -70,6 +70,21 @@
     return new RegExp("(?<![\\p{L}\\p{N}])" + escaped + "(?:s|es|'s)?(?![\\p{L}\\p{N}])", "iu");
   }
 
+  /* ===== BIG TECH — edit this array to change what the inbox's "Big tech hackathons" filter matches =====
+     A filter only: it never changes a score, the order, or what notifies you. Rows carry no
+     organiser field, so this looks for the company's name in the title and description. Names
+     are matched with their capitals ("Apple", not "apple"; "Meta", not "meta-learning"). */
+  var BIG_TECH = ["Google", "Meta", "Facebook", "Amazon", "AWS", "Apple", "Netflix", "Microsoft"];
+  var BIG_TECH_RES = BIG_TECH.map(function (name) {
+    var escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp("(?<![\\p{L}\\p{N}-])" + escaped + "(?:'s)?(?![\\p{L}\\p{N}-])", "u");
+  });
+  function isBigTechHackathon(item) {
+    if (!item || item.kind !== "hackathon") return false;
+    var text = (item.title || "") + "\n" + (item.body || "");
+    return BIG_TECH_RES.some(function (re) { return re.test(text); });
+  }
+
   /* Score one item against a profile. Mirrors scoreText() in signals.ts:
        interest term in the title → +4, in the body only → +3 (not both)
        boost term anywhere        → +2
@@ -153,6 +168,8 @@
     /* What an empty inbox starts from: the sample rows on the website demo, nothing in the app
        (desktop, Android), where every signal must come from a real check. */
     START_ROWS: global.__TAURI__ ? [] : RAW_ROWS,
-    scoreItem: scoreItem
+    scoreItem: scoreItem,
+    BIG_TECH: BIG_TECH,
+    isBigTechHackathon: isBigTechHackathon
   };
 })(window);

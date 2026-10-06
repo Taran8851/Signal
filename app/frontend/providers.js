@@ -17,6 +17,9 @@
 
   var S = global.SignalSources;
   var HOUR = 3600000;
+  /* Hackathon boards are checked once a day. Listings stay open for weeks, so a daily check loses
+     nothing and asks far less of the sites. (The reference collector used 3 h, and 12 h for MLH.) */
+  var DAY = 24 * HOUR;
   var MAX_PER_SOURCE = 60;
 
   function clean(s, max) { return S.clean(s, max); }
@@ -55,7 +58,7 @@
 
   var devpost = {
     id: "devpost",
-    everyMs: 3 * HOUR,
+    everyMs: DAY,
     missing: function () { return null; },
     poll: function (ctx) {
       var out = [];
@@ -93,7 +96,7 @@
 
   var devfolio = {
     id: "devfolio",
-    everyMs: 3 * HOUR,
+    everyMs: DAY,
     missing: function () { return null; },
     poll: function () {
       return postJson("https://api.devfolio.co/api/search/hackathons", { type: "application_open", from: 0, size: 50 })
@@ -124,7 +127,7 @@
 
   var unstop = {
     id: "unstop",
-    everyMs: 3 * HOUR,
+    everyMs: DAY,
     missing: function () { return null; },
     poll: function () {
       var out = [];
@@ -162,7 +165,7 @@
 
   var mlh = {
     id: "mlh",
-    everyMs: 12 * HOUR,
+    everyMs: DAY,
     missing: function () { return null; },
     poll: function () {
       var now = new Date();
