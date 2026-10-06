@@ -610,7 +610,9 @@
     if (json.stop_reason === "max_tokens") throw new AIError("invalid_output", "The model's reply was cut off before it finished.");
     var text = (json.content || []).filter(function (b) { return b && b.type === "text"; })
       .map(function (b) { return b.text; }).join("");
-    return { text: text, model: json.model || settings.model };
+    var ua = json.usage || {};
+    return { text: text, model: json.model || settings.model,
+      usage: { input: (ua.input_tokens || 0) + (ua.cache_read_input_tokens || 0) + (ua.cache_creation_input_tokens || 0), cached: ua.cache_read_input_tokens || 0, output: ua.output_tokens || 0 } };
   }
 
   /* ---- OpenAI-compatible and Local: POST {baseUrl}/chat/completions ----
@@ -642,7 +644,9 @@
     if (!choice || !choice.message) throw new AIError("invalid_output", "The endpoint's response had no message.");
     if (choice.finish_reason === "length") throw new AIError("invalid_output", "The model's reply was cut off before it finished.");
     if (choice.message.refusal) throw new AIError("refused", "The model declined to read this item.");
-    return { text: String(choice.message.content || ""), model: json.model || settings.model };
+    var uc = json.usage || {};
+    return { text: String(choice.message.content || ""), model: json.model || settings.model,
+      usage: { input: uc.prompt_tokens || 0, cached: (uc.prompt_tokens_details && uc.prompt_tokens_details.cached_tokens) || 0, output: uc.completion_tokens || 0 } };
   }
 
   var noSchema = {}; // provider|baseUrl|model → true once a server refused response_format

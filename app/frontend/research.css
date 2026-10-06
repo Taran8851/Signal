@@ -130,3 +130,7 @@
   .chat-actions { justify-content: space-between; }
   .ctx-menu { width: min(320px, calc(100vw - 48px)); }
 }
+
+/* Lean chat cards (agent.js askLean): why it fits, and the page's own summary */
+.found-why { display: block; margin-top: 4px; color: var(--text); font-size: 13px; line-height: 1.45; }
+.found-summary { display: block; margin-top: 2px; }

@@ -419,6 +419,350 @@
     return { title: title, text: text, links: links, url: url };
   }
 
+  /* =====================================================================
+     Basic facts from one page, by rules only (the lean chat in agent.js): no model call.
+     opportunityFromPage(html, url) → { title, summary, tags, deadline, link, readable,
+     listing, items, how }. `how` records where each field came from ("og:title", "h1",
+     "phrase", …) so a reader, or a benchmark, can see what was found and what was a fallback.
+     The rest of the details stay on the site: the card links there.
+  ===================================================================== */
+  var OPP_KINDS = [
+    ["hackathon", /\b(hackathons?|buildathon|hack ?days?|ctf|capture[- ]the[- ]flag|game ?jams?)\b/i],
+    ["internship", /\b(internships?|interns)\b/i],
+    ["fellowship", /\bfellowships?\b/i],
+    ["summer school", /\b(?:summer|winter|spring) schools?\b/i],
+    ["research programme", /\b(research (?:program(?:me)?s?|internships?|fellowships?)|undergraduate research|SRFP|REU)\b/i],
+    ["scholarship", /\bscholarships?\b/i],
+    ["call for papers", /\b(call for (?:papers|submissions|abstracts|proposals)|cfp)\b/i],
+    ["open source", /\b(open[- ]source|summer of code|gsoc|outreachy)\b/i],
+    ["competition", /\b(competitions?|contests?|olympiads?)\b/i],
+    ["course", /\b(courses?|bootcamps?|lecture series)\b/i]
+  ];
+  var OPP_TOPICS = ["AI", "machine learning", "deep learning", "NLP", "computer vision", "robotics", "security",
+    "systems", "data science", "web", "blockchain", "quantum", "healthcare", "climate", "design", "biology",
+    "physics", "mathematics", "finance", "HCI"];
+  var OPP_TOPIC_RES = OPP_TOPICS.map(function (t) {
+    return [t, new RegExp("(^|[^A-Za-z0-9])" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "s?(?=$|[^A-Za-z0-9])", t === "AI" ? "" : "i")];
+  });
+  /* Wider than DEADLINE_RE: the phrasings deadline pages actually use ("last date to apply",
+     "applications close on Friday, 10 October 2026"). Still only a date right after a phrase. */
+  var OPP_DEADLINE_RE = new RegExp("(?:deadline|last date(?: to apply| for (?:applications?|submissions?|registrations?))?|apply (?:by|before)" +
+    "|applications? (?:close|closes|closing|are due|due|open until|accepted until)|closing date|closes?(?: on)?|register by" +
+    "|registrations? (?:close|closes|deadline|ends)|submissions? (?:close|closes|due|deadline)|submit by|due (?:date|by|on)" +
+    "|received by|(?:must be )?submitted by|no later than|on or before)" +
+    // Up to ~80 characters of words may sit between the phrase and its date ("the deadline for
+    // applications in science, engineering, and mathematics is October 1, 2026"), never digits or
+    // a line break.
+    "[^0-9\\n]{0,80}?(?:is\\s+|on\\s+|by\\s+|:\\s*)?(?:[A-Za-z]+day,?\\s+)?" + DATE_FORMS, "gi");
+  var LISTING_TITLE_RE = /\b(hackathons|internships|opportunities|fellowships|events|programs|programmes|competitions|jobs)\b/i;
+  // A date first, then the phrase: "15th February 2026 | Deadline for applications" (dates tables).
+  var OPP_DEADLINE_AFTER_RE = new RegExp(DATE_FORMS + "[ |:,\\-–]{0,8}(?:deadline|last date|applications? (?:close|closes|due))", "gi");
+  // A window: "Apply from 16th March 2026 to 3rd April 2026", "open until September 25th, 2026".
+  var OPP_UNTIL_RE = new RegExp("(?:open|accepted|accepting applications|runs?) until\\s+(?:[A-Za-z]+day,?\\s+)?" + DATE_FORMS, "gi");
+  var OPP_RANGE_RE = new RegExp("(?:apply|applications?(?: (?:are )?(?:open|accepted))?|registrations?) (?:from|between) " + DATE_FORMS + "[^\\n]{0,12}?(?:to|until|till|and|-|–) " + DATE_FORMS, "gi");
+  var OPP_ANY_DATE_RE = new RegExp(DATE_FORMS, "g");
+  var DEAD_PAGE_RE = /\b(404|page not found|not found|default web ?page|plesk|coming soon|domain (?:is )?for sale)\b/i;
+
+  function firstGood(list, min) {
+    for (var i = 0; i < list.length; i++) if (list[i][0] && list[i][0].length >= (min || 1)) return list[i];
+    return ["", ""];
+  }
+  /* "MLSS 2027 | OIST" → "MLSS 2027"; keeps the whole string when the first part is too short. */
+  function dropSiteName(t) {
+    var parts = cleanText(t).split(/\s+[|–—·]\s+|\s+-\s+/);
+    return parts[0] && parts[0].length >= 8 ? parts[0] : cleanText(t);
+  }
+  /* Where it is: the site's country domain, or a country the page names at least twice. */
+  var COUNTRY_TLDS = { in: "India", uk: "UK", ca: "Canada", de: "Germany", jp: "Japan", sg: "Singapore", au: "Australia", fr: "France", nl: "Netherlands", ch: "Switzerland", eu: "Europe" };
+  var COUNTRY_NAMES = ["India", "USA", "United States", "UK", "Canada", "Germany", "Japan", "Singapore", "Australia", "Europe", "Switzerland"];
+  function placeOf(url, text) {
+    var tld = (hostOf(url).match(/\.([a-z]{2})$/) || [])[1];
+    if (tld && COUNTRY_TLDS[tld]) return COUNTRY_TLDS[tld];
+    var best = "", n = 0;
+    COUNTRY_NAMES.forEach(function (c) {
+      var k = (String(text).match(new RegExp("\\b" + c + "\\b", "g")) || []).length;
+      if (k >= 2 && k > n) { best = c; n = k; }
+    });
+    return best === "United States" ? "USA" : best;
+  }
+  function tagsOf(text) {
+    var tags = [];
+    OPP_KINDS.forEach(function (k) { if (k[1].test(text)) tags.push(k[0]); });
+    OPP_TOPIC_RES.forEach(function (t) { if (t[1].test(text)) tags.push(t[0]); });
+    return tags.slice(0, 6);
+  }
+  function dateOf(s) { return parseDateValue(String(s).replace(/(\d)(?:st|nd|rd|th)/, "$1")); }
+  /* The deadline, line by line: a date never pairs with a phrase on another line (list items). */
+  /* Every deadline the page states, line by line (a date never pairs with a phrase on another line). */
+  function deadlinesIn(text) {
+    var tries = [[OPP_RANGE_RE, 2], [OPP_UNTIL_RE, 1], [OPP_DEADLINE_RE, 1], [OPP_DEADLINE_AFTER_RE, 1]];
+    var lines = String(text).split("\n"), out = [];
+    for (var t = 0; t < tries.length; t++) {
+      for (var i = 0; i < lines.length; i++) {
+        var re = tries[t][0], m;
+        re.lastIndex = 0;
+        while ((m = re.exec(lines[i]))) { var d = dateOf(m[tries[t][1]]); if (d && out.indexOf(d) === -1) out.push(d); }
+      }
+    }
+    return out;
+  }
+  /* Several rounds (spring and autumn calls, two intakes): the next one still open, else the last one. */
+  function pickDeadline(dates) {
+    if (!dates.length) return null;
+    var today = new Date().toISOString().slice(0, 10);
+    var sorted = dates.slice().sort();
+    return sorted.filter(function (d) { return d >= today; })[0] || sorted[sorted.length - 1];
+  }
+  function deadlineIn(text) { return pickDeadline(deadlinesIn(text)); }
+  /* Dates tables: a column headed "Deadline" (or "Last date", "Due", "Closes") holds deadlines even
+     though each date cell has no phrase of its own. */
+  var DEADLINE_HEAD_RE = /\b(deadline|last date|due|closes?|closing|apply by|submission)\b/i;
+  function tableDeadlines(root) {
+    var out = [];
+    Array.prototype.forEach.call(root.querySelectorAll("table"), function (table) {
+      var rows = Array.prototype.slice.call(table.querySelectorAll("tr"));
+      if (rows.length < 2) return;
+      var head = rows.filter(function (r) { return r.querySelector("th"); })[0] || rows[0];
+      var cols = [];
+      Array.prototype.forEach.call(head.children, function (c, k) { if (DEADLINE_HEAD_RE.test(cleanText(c.textContent))) cols.push(k); });
+      if (!cols.length) return;
+      rows.forEach(function (r) {
+        if (r === head) return;
+        cols.forEach(function (k) {
+          var cell = r.children[k];
+          if (!cell) return;
+          OPP_ANY_DATE_RE.lastIndex = 0;
+          var m = OPP_ANY_DATE_RE.exec(cleanText(cell.textContent));
+          var d = m && dateOf(m[1]);
+          if (d && out.indexOf(d) === -1) out.push(d);
+        });
+      });
+    });
+    return out;
+  }
+  function latestDateIn(text) {
+    var best = null, m;
+    OPP_ANY_DATE_RE.lastIndex = 0;
+    while ((m = OPP_ANY_DATE_RE.exec(text))) { var d = dateOf(m[1]); if (d && (!best || d > best)) best = d; }
+    return best;
+  }
+  /* Text that keeps its structure: blocks on their own lines, table cells joined by " | ". */
+  function linesOf(el) {
+    var h = String(el.innerHTML || "")
+      .replace(/<\/?(td|th)\b[^>]*>/gi, " | ")
+      .replace(/<(br|\/p|\/div|\/li|\/tr|\/h[1-6]|\/section|\/article|\/dd|\/dt|\/table|\/ul|\/ol|\/blockquote)\b[^>]*>/gi, "\n")
+      .replace(/<[^>]+>/g, " ");
+    return decodeEntities(h).split("\n").map(function (l) { return l.replace(/\s+/g, " ").trim(); }).filter(Boolean).join("\n");
+  }
+  function sharesWord(a, b) {
+    var words = {}; String(b).toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) { if (w.length >= 4) words[w] = 1; });
+    return String(a).toLowerCase().split(/[^a-z0-9]+/).some(function (w) { return w.length >= 4 && words[w]; });
+  }
+
+  /* Listing or single, from the page's components rather than its words. A listing repeats
+     one component (card, row, tile): siblings with the same tag and classes, each with a title,
+     a link of its own and usually a date, an action (apply, register…) or an image. Menus
+     repeat too, but their items are short links with none of that, so they score low. */
+  var CARD_ACTION_RE = /\b(apply|register|participate|view details|details|join|enrol+|submit|explore|know more|see more)\b/i;
+  var CARD_DATE_RE = new RegExp(DATE_FORMS + "|\\b\\d+\\s+days?\\s+(?:left|to go)\\b|\\b(?:ends|closes|starts) in\\b|\\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?\\s+\\d{1,2}\\b", "i");
+  /* Text with a space between elements, so "Indian Army" + "Ministry of Defence" don't run together. */
+  function spacedText(el) {
+    var out = [];
+    (function walk(n) { for (var c = n.firstChild; c; c = c.nextSibling) { if (c.nodeType === 3) out.push(c.nodeValue); else if (c.nodeType === 1) walk(c); } })(el);
+    return cleanText(out.join(" "));
+  }
+  // Component names say what a block is: "CompactHackathonCard" is a card; "latest-news-scroller" is not a listing.
+  var CARD_NAME_RE = /(card|item|tile|listing|result|event|hackathon|job|opportunit|program|challenge|internship|posting|contest)/i;
+  var SIDE_NAME_RE = /(sidebar|widget|aside|related|recent|latest|news|scroller|carousel|footer|menu|breadcrumb|pagination|share|social)/i;
+  function inSideBlock(el, root) {
+    for (var e = el; e && e !== root; e = e.parentElement) {
+      if (e.tagName === "ASIDE" || SIDE_NAME_RE.test(e.tagName + " " + (e.id || "") + " " + (e.getAttribute("class") || ""))) return true;
+    }
+    return false;
+  }
+  function cardTitle(el) {
+    if (el.tagName === "TR") {              // table rows: the first filled cell names the entry
+      var cell = Array.prototype.filter.call(el.children, function (td) { return cleanText(td.textContent).length >= 2; })[0];
+      if (cell) return cleanText(spacedText(cell), 200);
+    }
+    var h = el.querySelector("h1, h2, h3, h4, h5, h6, [class*=title], [class*=name]");
+    var t = h ? cleanText(spacedText(h), 200) : "";
+    if (t.length >= 6) return t;
+    var best = "";
+    Array.prototype.forEach.call(el.querySelectorAll("a[href]"), function (a) { var s = cleanText(spacedText(a), 200); if (s.length > best.length) best = s; });
+    return best.length >= 6 ? best : "";
+  }
+  function cardLink(el, base) {
+    var h = el.querySelector("h1 a[href], h2 a[href], h3 a[href], h4 a[href], [class*=title] a[href]") || (el.matches && el.matches("a[href]") ? el : null) ||
+      el.querySelector("a[href]");
+    if (!h) return "";
+    var raw = h.getAttribute("href") || "";
+    if (/^(#|javascript:|mailto:)/i.test(raw)) return "";
+    try { return new URL(raw, base).href.replace(/#.*$/, ""); } catch (e) { return ""; }
+  }
+  function cardsOf(root, base) {
+    var best = null;
+    Array.prototype.forEach.call(root.querySelectorAll("*"), function (parent) {
+      var kids = parent.children;
+      if (!kids || kids.length < 3 || inSideBlock(parent, root)) return;
+      var groups = {};
+      Array.prototype.forEach.call(kids, function (k) {
+        var cls = String(k.getAttribute("class") || "").split(/\s+/).map(function (c) { return c.replace(/\d+/g, ""); }).filter(Boolean).sort().join(".");
+        var sig = k.tagName + "." + cls;
+        (groups[sig] = groups[sig] || []).push(k);
+      });
+      Object.keys(groups).forEach(function (sig) {
+        var g = groups[sig];
+        if (g.length < 3) return;
+        var cards = [], links = {}, titles = {};
+        g.forEach(function (el) {
+          var text = cleanText(el.textContent);
+          if (text.length < 20 || text.length > 3000) return;
+          var title = cardTitle(el), link = cardLink(el, base);
+          if (!title || !link) return;
+          var s = 2 + (CARD_DATE_RE.test(text) ? 1 : 0) + (CARD_ACTION_RE.test(text) ? 0.5 : 0) + (el.querySelector("img") ? 0.5 : 0) +
+            (CARD_NAME_RE.test(sig) ? 0.5 : 0);
+          links[link] = 1; titles[title.toLowerCase()] = 1;
+          cards.push({ el: el, title: title, link: link, text: text, score: s });
+        });
+        // Most members must be real cards, each pointing somewhere different.
+        if (cards.length < 3 || cards.length < 0.6 * g.length || Object.keys(links).length < 0.8 * cards.length || Object.keys(titles).length < 0.6 * cards.length) return;
+        var mean = cards.reduce(function (a, c) { return a + c.score; }, 0) / cards.length;
+        if (mean < 2.5) return; // title + link alone is a menu; a card also carries a date, an action or an image
+        var total = mean * Math.min(cards.length, 30);
+        if (!best || total > best.total) best = { total: total, mean: mean, cards: cards };
+      });
+    });
+    return best;
+  }
+
+  /* JSON-LD blocks, flattened (@graph, arrays). */
+  function jsonLdOf(doc) {
+    var out = [];
+    Array.prototype.forEach.call(doc.querySelectorAll('script[type="application/ld+json"]'), function (s) {
+      var v; try { v = JSON.parse(s.textContent); } catch (e) { return; }
+      (function add(x) { if (Array.isArray(x)) x.forEach(add); else if (x && typeof x === "object") { out.push(x); if (x["@graph"]) add(x["@graph"]); } })(v);
+    });
+    return out;
+  }
+  function ldFirst(lds, path) {
+    for (var i = 0; i < lds.length; i++) {
+      var v = path.split(".").reduce(function (o, k) { return o && o[k]; }, lds[i]);
+      if (typeof v === "string" && cleanText(v)) return cleanText(v);
+    }
+    return "";
+  }
+  /* "GKS Scholarship 2027 - Global Korea Scholarship 2027 Apply Now - GKS Scholarship" → drop only the
+     trailing parts that are the site's own name. */
+  function stripSite(t, site) {
+    var s = cleanText(t).replace(/\s+[-|–—·]\s*$/, "");
+    if (!s) return "";
+    var parts = s.split(/\s+[|–—·]\s+|\s+-\s+/), lower = String(site || "").toLowerCase();
+    while (parts.length > 1) {
+      var last = parts[parts.length - 1].toLowerCase();
+      if (lower && (lower.indexOf(last) !== -1 || last.indexOf(lower) !== -1)) parts.pop(); else break;
+    }
+    return parts.join(" - ");
+  }
+  // Bot checks and walls: Signal never gets around them; the card falls back to the search result.
+  var BLOCKED_RE = /(just a moment|attention required|checking your browser|verify you are (a )?human|access denied|enable javascript and cookies|ddos protection|are you a robot)/i;
+
+  /* Field order follows metascraper (MIT, microlink.io): each field tries its sources from most to
+     least specific and takes the first that answers. (Mozilla Readability was tried for the main
+     content on 2026-09-25 and made deadlines worse on the labelled pages, so it is not used.) */
+  function opportunityFromPage(html, url) {
+    if (!global.DOMParser) throw parseError("This browser can't read pages.");
+    var doc = new global.DOMParser().parseFromString(String(html || ""), "text/html");
+    var meta = function (sel) { var el = doc.querySelector(sel); return el ? cleanText(el.getAttribute("content") || el.getAttribute("href")) : ""; };
+    // Lookups never throw: an engine without case-insensitive selectors ([class*="logo" i]) just finds nothing.
+    var q = function (sel) { try { return doc.querySelector(sel); } catch (e) { return null; } };
+    var textOf = function (sel) { var el = q(sel); return el ? cleanText(spacedText(el), 200) : ""; };
+    var lds = jsonLdOf(doc);
+    var how = {};
+
+    // Publisher (metascraper-publisher order), then the <title> suffix, then the host.
+    var titleParts = cleanText(doc.title).split(/\s+[|–—·]\s+|\s+-\s+/);
+    var logoImg = q('[class*="logo" i] img[alt]');
+    var logoAlt = logoImg ? logoImg.getAttribute("alt") : "";
+    var site = firstGood([[ldFirst(lds, "publisher.name"), "jsonld"], [meta('meta[property="og:site_name"]'), "og:site_name"],
+      [meta('meta[name="application-name"]'), "application-name"], [meta('meta[name="apple-mobile-web-app-title"]'), "app-title"],
+      [meta('meta[name="publisher"]'), "publisher"], [textOf("#logo"), "#logo"], [textOf(".logo"), ".logo"], [textOf('a[class*="brand" i]'), "brand"],
+      [cleanText(logoAlt || ""), "logo alt"], [titleParts.length > 1 ? titleParts[titleParts.length - 1] : "", "title suffix"], [hostOf(url), "host"]], 2);
+    how.site = site[1];
+
+    Array.prototype.forEach.call(doc.querySelectorAll("script, style, noscript, template, svg, iframe, nav, footer, header [role=navigation]"), function (el) { el.remove(); });
+    // The page's main part: <main>, else a lone <article> (on a listing, every card is an article).
+    var articles = doc.querySelectorAll("article");
+    var main = doc.querySelector("main, [role=main]") || (articles.length === 1 ? articles[0] : null) || doc.body || doc.documentElement;
+    var body = main;
+    var lines = linesOf(body);
+    var text = cleanText(lines);
+
+    // Title (metascraper-title order), then a plain <h1>. The site's name is trimmed off the end.
+    var h1 = cleanText(spacedText(doc.querySelector("h1") || doc.createElement("i")), 200).replace(/\s+Home\s*\/.*$/, "");
+    var title = firstGood([[stripSite(meta('meta[property="og:title"]'), site[0]), "og:title"], [stripSite(meta('meta[name="twitter:title"]'), site[0]), "twitter:title"],
+      [stripSite(doc.title, site[0]), "title"], [ldFirst(lds, "headline") || ldFirst(lds, "title"), "jsonld"], [textOf(".post-title"), ".post-title"],
+      [textOf(".entry-title"), ".entry-title"], [textOf('h1[class*="title" i]'), "h1.title"], [h1, "h1"]], 4);
+    if (title[0] && site[0] && title[0].toLowerCase() === site[0].toLowerCase() && h1.length >= 4) title = [h1, "h1"];
+    how.title = title[1];
+
+    var blocked = BLOCKED_RE.test(cleanText(doc.title) + " " + h1 + " " + text.slice(0, 400));
+    var dead = blocked || (DEAD_PAGE_RE.test(cleanText(doc.title) + " " + h1) && text.length < 2000);
+
+    // Description (metascraper-description order). A site-wide description ("Explore careers at …")
+    // shares no word with this page's title, so it falls through to the first real paragraph.
+    var para = "";
+    Array.prototype.some.call(body.querySelectorAll("p"), function (p) {
+      var t = cleanText(p.textContent);
+      if (t.length >= 80 && !/cookie|privacy|javascript/i.test(t)) { para = t; return true; }
+      return false;
+    });
+    var own = function (d) { return d.length >= 50 && d !== title[0] && sharesWord(d, title[0]) ? d : ""; };
+    var summary = firstGood([[own(meta('meta[property="og:description"]')), "og:description"], [own(meta('meta[name="twitter:description"]')), "twitter:description"],
+      [own(meta('meta[name="description"]')), "meta"], [own(meta('meta[itemprop="description"]')), "itemprop"], [own(ldFirst(lds, "description")), "jsonld"],
+      [para, "paragraph"]]);
+    how.summary = summary[1];
+
+    var canonical = meta('link[rel="canonical"]');
+    var link = canonical && hostOf(canonical) === hostOf(url) ? canonical : url;
+    how.link = link === url ? "url" : "canonical";
+
+    // Deadlines: phrases in the text, dates tables by column, and JobPosting.validThrough. With
+    // several rounds, the next one still open wins.
+    var found = deadlinesIn(lines).concat(tableDeadlines(body));
+    var valid = parseDateValue(String(ldFirst(lds, "validThrough")).slice(0, 10));
+    if (valid) found.push(valid);
+    var deadline = pickDeadline(found);
+    how.deadline = deadline ? "phrase" : "";
+    site = site[0];
+    // Closed only when the stated deadline has passed. With no deadline and every date on the
+    // page in the past, the page is "stale": kept, with a note, since a posted date is not a close.
+    var today = new Date().toISOString().slice(0, 10), latest = latestDateIn(lines);
+    var closed = !!(deadline && deadline < today);
+    var stale = !deadline && !!(latest && latest < today);
+
+    // A listing: the page repeats one card component (cardsOf). Each card becomes an opportunity.
+    var listing = false, items = [];
+    var cards = cardsOf(main, url);
+    if (cards && cards.cards.length >= 3) {
+      listing = true;
+      items = cards.cards.slice(0, PAGE_ITEMS_MAX).map(function (c) {
+        var cl = linesOf(c.el);
+        var rest = cleanText(c.text.replace(c.title, ""), 220);
+        var dl = deadlineIn(cl), any = latestDateIn(cl);
+        var raw = (c.text.match(CARD_DATE_RE) || [""])[0];
+        return { title: c.title, summary: rest, tags: tagsOf(c.text), deadline: dl, date: dl ? null : any, when: dl || any ? "" : cleanText(raw, 40), link: c.link };
+      });
+    }
+
+    return {
+      title: title[0], summary: cleanText(summary[0], 220),
+      tags: (function (t, place) { return place && t.indexOf(place) === -1 ? t.concat(place) : t; })(tagsOf(title[0] + " " + summary[0] + " " + text.slice(0, 3000)), placeOf(link, text)),
+      deadline: deadline, closed: closed, stale: stale, link: link, site: cleanText(site, 60), readable: text.length >= 300 && !dead, dead: dead, blocked: blocked,
+      listing: listing, items: items, how: how
+    };
+  }
+
   function dateInPageText(value, text) {
     var d = parseDateValue(value);
     if (!d) return null;
@@ -1065,6 +1409,7 @@
     stripHtml: stripHtml,
     decodeEntities: decodeEntities,
     importItems: importItems,
+    opportunityFromPage: opportunityFromPage,
     detectMapping: detectMapping,
     hasAI: hasAI,
     mapWithAI: mapWithAI,
