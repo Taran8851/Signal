@@ -55,8 +55,8 @@ You need:
 Then:
 
 ```sh
-git clone https://github.com/Taran8851/Research_agent.git
-cd Research_agent/app/desktop
+git clone https://github.com/Taran8851/signal.git
+cd signal/app/desktop
 npm ci
 npx tauri dev                          # run it
 npx tauri build                        # Linux: .deb and AppImage
