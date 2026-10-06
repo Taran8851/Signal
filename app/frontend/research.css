@@ -16,6 +16,8 @@
 .ask-suggestion { padding: 12px 16px; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--panel-strong); color: var(--text-2); font: inherit; font-size: 14px; line-height: 1.4; text-align: left; cursor: pointer; }
 .ask-suggestion:hover { border-color: var(--text-3); color: var(--text); }
 
+/* Long links and unbroken strings wrap inside the column instead of widening it. */
+.msg { min-width: 0; overflow-wrap: anywhere; }
 .msg p + p, .msg p + ul, .msg ul + p { margin-top: 8px; }
 .msg ul { margin: 8px 0 0; padding-left: 20px; }
 .msg li + li { margin-top: 4px; }

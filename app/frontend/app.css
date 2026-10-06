@@ -433,7 +433,9 @@ button.summary-card:hover { background: var(--panel-strong); }
    9. Responsive + reduced motion
 --------------------------------------------------------------------------- */
 @media (max-width: 900px) {
-  .app { grid-template-columns: 1fr; padding: 0; }
+  /* minmax(0, …), not a bare 1fr: a bare 1fr column grows to fit its widest unbreakable content
+     (a long chat title, a URL), which pushed the whole page wider than a phone screen. */
+  .app { grid-template-columns: minmax(0, 1fr); padding: 0; }
   /* The sidebar becomes a floating tab bar, like iOS. */
   .sidebar {
     position: fixed;

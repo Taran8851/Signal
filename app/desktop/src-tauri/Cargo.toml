@@ -1,6 +1,6 @@
 [package]
 name = "signal-desktop"
-version = "0.2.8"
+version = "0.2.9"
 description = "Signal: opportunities worth your time, checked on your laptop"
 edition = "2021"
 
