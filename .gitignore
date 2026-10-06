@@ -37,3 +37,10 @@ __pycache__/
 # The website (landing page, fetch helper, server deploy scripts) lives on this laptop and the VPS, not in this repo.
 web/
 vercel.json
+.vercelignore
+
+# Local scratch: tool state, a file listing, a private automation stack, generated-media metadata
+.claude/
+a.txt
+n8n/
+assets/

@@ -1,7 +1,7 @@
 {
   "name": "signal-desktop",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.8",
   "description": "Signal as a desktop app (Tauri 2). The UI is the console in ../frontend.",
   "scripts": {
     "copy-app": "node scripts/copy-app.mjs",

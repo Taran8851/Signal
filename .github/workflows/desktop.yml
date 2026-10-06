@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       HAS_INSIDER: ${{ secrets.SIGNAL_INSIDER_CONFIG != '' }}
-      HAS_DEPLOY: ${{ secrets.VPS_DEPLOY_KEY != '' }}
+      HAS_DEPLOY: ${{ secrets.VPS_DEPLOY_KEY != '' && secrets.VPS_DEPLOY_HOST != '' }}
     steps:
       # app/frontend/tokens.css is a symlink to the landing page's copy; without this,
       # Windows checks it out as a text file holding the path, and the app loses its styles.
@@ -60,8 +60,8 @@ jobs:
       - run: npm ci
         working-directory: app/desktop
 
-      # Insider builds: the gateway settings come from a repository secret (not the repo), the
-      # same JSON as ~/adal_/signal-insider/insider.json. Without the secret this is a plain build.
+      # Insider builds: the gateway settings ({ gateway, model, name }) come from a repository
+      # secret, not the repo. Without the secret (every fork) this is a plain build.
       - name: Insider config
         if: env.HAS_INSIDER == 'true'
         shell: bash
@@ -98,18 +98,20 @@ jobs:
           releaseName: Signal ${{ github.ref_name }}
           releaseDraft: true
 
-      # Publish to the website's download folder on the VPS (secret VPS_DEPLOY_KEY: a key that
-      # can only write there). Without the secret, the installers stay as build artifacts only.
+      # Publish to the website's download folder (secrets VPS_DEPLOY_KEY: a key that can only
+      # write there, and VPS_DEPLOY_HOST: user@host). Without both, the installers stay as build
+      # artifacts only.
       - name: Upload to the website
         if: env.HAS_DEPLOY == 'true'
         shell: bash
         env:
           DEPLOY_KEY: ${{ secrets.VPS_DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.VPS_DEPLOY_HOST }}
         run: |
           key="$RUNNER_TEMP/deploy_key"; printf '%s\n' "$DEPLOY_KEY" > "$key"; chmod 600 "$key"
           cd app/desktop/src-tauri/target/release/bundle
           for f in nsis/*.exe msi/*.msi deb/*.deb appimage/*.AppImage; do
-            [ -f "$f" ] && scp -i "$key" -o StrictHostKeyChecking=accept-new "$f" deploy@100.59.200.218:
+            [ -f "$f" ] && scp -i "$key" -o StrictHostKeyChecking=accept-new "$f" "$DEPLOY_HOST:"
           done
           rm -f "$key"
 
