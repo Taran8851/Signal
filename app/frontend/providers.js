@@ -192,6 +192,17 @@
 
   /* ---------------- WikiCFP ---------------- */
 
+  /* A WikiCFP feed entry ends with the event's dates: "... [Ghent, Belgium] [Aug 11, 2025 - Aug 14, 2025]".
+     A quiet category's feed still lists events from past years, so anything that has already
+     ended is left out. Entries without dates (about 1 in 20) are kept. */
+  var CFP_DATES_RE = /\[([A-Z][a-z]{2} \d{1,2}, \d{4})\s*-\s*([A-Z][a-z]{2} \d{1,2}, \d{4})\]\s*$/;
+  function cfpEnded(description, now) {
+    var m = CFP_DATES_RE.exec(String(description || "").trim());
+    if (!m) return false;
+    var end = Date.parse(m[2]);
+    return !isNaN(end) && end + 24 * HOUR < now;
+  }
+
   var wikicfp = {
     id: "wikicfp",
     everyMs: 6 * HOUR,
@@ -207,7 +218,9 @@
         // http only: wikicfp.com doesn't listen on 443
         return S.fetchText({ url: "http://www.wikicfp.com/cfp/rss?cat=" + encodeURIComponent(cat) })
           .then(function (xml) {
+            var now = Date.now();
             S.parseFeedText(xml).slice(0, MAX_PER_SOURCE).forEach(function (e) {
+              if (cfpEnded(text(e.body), now)) return;
               out.push(item({
                 external_id: "wikicfp:" + (e.external_id || e.url),
                 title: e.title,

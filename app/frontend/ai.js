@@ -72,7 +72,7 @@
   };
 
   /* Bump when the default prompt or the request shape changes, so cached answers are not reused. */
-  var PROMPT_VERSION = "brief-v2";
+  var PROMPT_VERSION = "brief-v3";
 
   /* History engine minimum. The real app waits for 10 saved/applied items (AGENTS.md →
      "Customization is the core product claim"). The demo data has only 4, so the demo uses 3. */
@@ -172,7 +172,9 @@
     " \"effort\": \"low\" | \"medium\" | \"high\",",
     " \"firstSteps\": [<up to 3 concrete next actions>],",
     " \"fields\": [<up to 4 topic tags, 1 to 3 words each>]}",
-    "Keep every list item under 16 words."
+    "Keep every list item under 16 words.",
+    "The message gives today's date. If the item's own dates show it is already over or its deadline has",
+    "passed, start the summary with \"Already over\" and give a relevance of 2 or lower."
   ].join("\n");
 
   function read(key, fallback) {
@@ -834,7 +836,8 @@
     } else {
       var messages = [
         { role: "system", content: systemText(settings) },
-        { role: "user", content: "Student profile\n" + profileText(prefs) + "\n\n" + itemText(row) }
+        // Today's date goes in the user message: the system prompt stays the same from day to day.
+        { role: "user", content: "Today's date: " + todayKey() + "\n\nStudent profile\n" + profileText(prefs) + "\n\n" + itemText(row) }
       ];
       p = callModel(messages, BRIEF_SCHEMA, { maxTokens: 4096 }).then(function (r) {
         var v = validateBrief(extractJSON(r.text));
