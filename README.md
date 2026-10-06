@@ -14,7 +14,7 @@ Linux · Windows · MIT licence · your own model key · no account
 [Screenshots](#screenshots) · [Build it](#build-it) · [How it decides](#how-it-decides) ·
 [What works today](#what-works-today-and-what-does-not) · [Measured numbers](#measured-numbers)
 
-<a href="docs/screenshots/inbox.png"><img src="docs/screenshots/inbox.png" alt="The Signals inbox: four new signals, each with its source, deadline and the terms it matched" width="860"></a>
+<a href="docs/screenshots/inbox.png"><img src="docs/screenshots/inbox.png" alt="The Signals inbox in the desktop app after a first check: 61 new signals, 4 closing in the next 7 days, and a note that 40 were stored quietly" width="860"></a>
 
 </div>
 
@@ -34,21 +34,24 @@ a build made from this repo. It is module 01 of Student OS; no other module is b
 
 ## Screenshots
 
-Taken from the console running in a browser, with its built-in demo rows. Click one to see it
-full size.
+Taken from the desktop app on Linux, on a clean profile. The inbox holds what a first check of
+the built-in public sources found that minute, plus the app's ten sample rows. Click one to see
+it full size.
 
-| Every signal says why it is here | You define what counts |
+| The few that match, best first | Every signal says why it is here |
 |---|---|
-| <a href="docs/screenshots/signal-detail.png"><img src="docs/screenshots/signal-detail.png" alt="A signal's detail view: the matched terms, the points each one added, and the total against the threshold" width="420"></a> | <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Settings: interest topics at +4 in a title or +3 in a description, boost words at +2, and words that archive an item" width="420"></a> |
-| The terms that matched, the points each one added, and the total against your threshold. | Interest terms, boost terms, exclude terms, threshold, sources, notifications. |
+| <a href="docs/screenshots/inbox-list.png"><img src="docs/screenshots/inbox-list.png" alt="The inbox sorted by best match: each row shows its source, deadline and the terms it matched" width="420"></a> | <a href="docs/screenshots/signal-detail.png"><img src="docs/screenshots/signal-detail.png" alt="A signal's detail view: the matched terms, the points each one added, and the total against the threshold" width="420"></a> |
+| Source, deadline and matched terms on every row. | The points each term added, and the total against your threshold. This one is a sample row. |
 
-| Set up in five short steps |
-|---|
-| <a href="docs/screenshots/setup.png"><img src="docs/screenshots/setup.png" alt="First-run setup: no account, no server, and the first check notifies you about nothing" width="560"></a> |
-| The first check stores what it finds and notifies you about none of it. No backlog. |
+| You define what counts | Sources are open |
+|---|---|
+| <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Settings, Interests: topics at +4 in a title or +3 in a description, boost words at +2, and words that archive an item" width="420"></a> | <a href="docs/screenshots/sources.png"><img src="docs/screenshots/sources.png" alt="Settings, Sources: automatic checks, how often, and adding your own feed, JSON API or page" width="420"></a> |
+| Interest terms, boost terms and exclude terms. | Check every 15 minutes to 3 hours, and add your own feed, API or page. |
 
-There is no screenshot of the Ask page here. It only runs in the desktop app, with a model
-connected.
+| Ask | First run |
+|---|---|
+| <a href="docs/screenshots/ask.png"><img src="docs/screenshots/ask.png" alt="The Ask page: a question box with up to 5 searches and 15 pages per question" width="420"></a> | <a href="docs/screenshots/setup.png"><img src="docs/screenshots/setup.png" alt="First-run setup: no account, no server, and the first check notifies you about nothing" width="420"></a> |
+| The research agent, before a model key is added. Up to 5 searches and 15 pages per question. | No account, no server. The first check stores what it finds and notifies you about none of it. |
 
 ## Build it
 
